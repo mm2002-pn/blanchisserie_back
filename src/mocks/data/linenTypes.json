@@ -1,0 +1,182 @@
+[
+  {
+    "id": "lt-001",
+    "code": "LP-001",
+    "name": "Drap 1 personne",
+    "category": "Linge Plat",
+    "averageWeight": 600,
+    "billingMode": "Pièce",
+    "unitPrice": 400,
+    "estimatedProcessingTime": 45
+  },
+  {
+    "id": "lt-002",
+    "code": "LP-002",
+    "name": "Drap 2 personnes",
+    "category": "Linge Plat",
+    "averageWeight": 800,
+    "billingMode": "Pièce",
+    "unitPrice": 500,
+    "estimatedProcessingTime": 45
+  },
+  {
+    "id": "lt-003",
+    "code": "LP-003",
+    "name": "Taie d'oreiller / Housse de coussin",
+    "category": "Linge Plat",
+    "averageWeight": 200,
+    "billingMode": "Pièce",
+    "unitPrice": 150,
+    "estimatedProcessingTime": 30
+  },
+  {
+    "id": "lt-004",
+    "code": "LP-004",
+    "name": "Housse de couette 2 personnes",
+    "category": "Linge Plat",
+    "averageWeight": 1500,
+    "billingMode": "Pièce",
+    "unitPrice": 800,
+    "estimatedProcessingTime": 50
+  },
+  {
+    "id": "lt-005",
+    "code": "LP-005",
+    "name": "Grande serviette éponge",
+    "category": "Linge Plat",
+    "averageWeight": 500,
+    "billingMode": "Pièce",
+    "unitPrice": 300,
+    "estimatedProcessingTime": 40
+  },
+  {
+    "id": "lt-006",
+    "code": "LP-006",
+    "name": "Petite serviette éponge",
+    "category": "Linge Plat",
+    "averageWeight": 300,
+    "billingMode": "Pièce",
+    "unitPrice": 200,
+    "estimatedProcessingTime": 35
+  },
+  {
+    "id": "lt-007",
+    "code": "LP-007",
+    "name": "Nappe légère",
+    "category": "Linge Plat",
+    "averageWeight": 250,
+    "billingMode": "Pièce",
+    "unitPrice": 350,
+    "estimatedProcessingTime": 40
+  },
+  {
+    "id": "lt-008",
+    "code": "LP-008",
+    "name": "Nappe épaisse",
+    "category": "Linge Plat",
+    "averageWeight": 700,
+    "billingMode": "Pièce",
+    "unitPrice": 600,
+    "estimatedProcessingTime": 50
+  },
+  {
+    "id": "lt-009",
+    "code": "LP-009",
+    "name": "Torchon / Serviette de table",
+    "category": "Linge Plat",
+    "averageWeight": 100,
+    "billingMode": "Pièce",
+    "unitPrice": 100,
+    "estimatedProcessingTime": 25
+  },
+  {
+    "id": "lt-010",
+    "code": "LF-001",
+    "name": "Jean taille adulte",
+    "category": "Linge Forme",
+    "averageWeight": 700,
+    "billingMode": "Pièce",
+    "unitPrice": 800,
+    "estimatedProcessingTime": 60
+  },
+  {
+    "id": "lt-011",
+    "code": "LF-002",
+    "name": "Pantalon coton adulte",
+    "category": "Linge Forme",
+    "averageWeight": 500,
+    "billingMode": "Pièce",
+    "unitPrice": 600,
+    "estimatedProcessingTime": 55
+  },
+  {
+    "id": "lt-012",
+    "code": "LF-003",
+    "name": "Pantalon coton enfant",
+    "category": "Linge Forme",
+    "averageWeight": 120,
+    "billingMode": "Pièce",
+    "unitPrice": 300,
+    "estimatedProcessingTime": 40
+  },
+  {
+    "id": "lt-013",
+    "code": "LF-004",
+    "name": "Jupe",
+    "category": "Linge Forme",
+    "averageWeight": 400,
+    "billingMode": "Pièce",
+    "unitPrice": 500,
+    "estimatedProcessingTime": 50
+  },
+  {
+    "id": "lt-014",
+    "code": "LF-005",
+    "name": "Chemise adulte",
+    "category": "Linge Forme",
+    "averageWeight": 200,
+    "billingMode": "Pièce",
+    "unitPrice": 400,
+    "estimatedProcessingTime": 45
+  },
+  {
+    "id": "lt-015",
+    "code": "LF-006",
+    "name": "T-shirt adulte",
+    "category": "Linge Forme",
+    "averageWeight": 150,
+    "billingMode": "Pièce",
+    "unitPrice": 300,
+    "estimatedProcessingTime": 35
+  },
+  {
+    "id": "lt-016",
+    "code": "LF-007",
+    "name": "Robe légère adulte",
+    "category": "Linge Forme",
+    "averageWeight": 150,
+    "billingMode": "Pièce",
+    "unitPrice": 600,
+    "estimatedProcessingTime": 50
+  },
+  {
+    "id": "lt-017",
+    "code": "LF-008",
+    "name": "Robe épaisse",
+    "category": "Linge Forme",
+    "averageWeight": 500,
+    "billingMode": "Pièce",
+    "unitPrice": 900,
+    "estimatedProcessingTime": 60
+  },
+  {
+    "id": "lt-018",
+    "code": "LF-009",
+    "name": "Sweat-shirt adulte",
+    "category": "Linge Forme",
+    "averageWeight": 400,
+    "billingMode": "Pièce",
+    "unitPrice": 500,
+    "estimatedProcessingTime": 50
+  }
+]

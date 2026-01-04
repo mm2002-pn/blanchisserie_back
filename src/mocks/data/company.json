@@ -1,0 +1,23 @@
+{
+  "id": "company-001",
+  "officialName": "Blanchisserie Professionnelle Hôtelière",
+  "address": "Zone Industrielle, Dakar, Sénégal",
+  "siret": "SN-BPH-2023-001",
+  "phone": "+221 33 123 45 67",
+  "email": "contact@blanchisserie-pro.sn",
+  "currency": "XOF",
+  "weightUnit": "kg",
+  "dateFormat": "dd/MM/yyyy",
+  "timezone": "Africa/Dakar",
+  "integrations": {
+    "scalesAPI": {
+      "ipAddress": "192.168.1.50",
+      "protocol": "TCP"
+    }
+  },
+  "backupSchedule": {
+    "frequency": "daily",
+    "time": "02:00",
+    "location": "backup_server"
+  }
+}

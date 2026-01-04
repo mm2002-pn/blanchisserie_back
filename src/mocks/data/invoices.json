@@ -1,0 +1,188 @@
+[
+  {
+    "id": "inv-001",
+    "invoiceNumber": "FACT-2024-001",
+    "orderId": "ord-001",
+    "orderReference": "CMD-2024-089",
+    "clientId": "client-001",
+    "clientName": "Hôtel Radisson Blu Dakar",
+    "invoiceDate": "2024-12-25",
+    "dueDate": "2025-01-24",
+    "status": "Payée",
+    "subtotal": 450000,
+    "taxRate": 0.18,
+    "taxAmount": 81000,
+    "totalAmount": 531000,
+    "paidAmount": 531000,
+    "paidDate": "2024-12-26",
+    "paymentMethod": "Virement bancaire",
+    "items": [
+      {
+        "description": "Linge plat blanc - 120 pièces",
+        "quantity": 120,
+        "weight": 58000,
+        "unitPrice": 3000,
+        "total": 360000
+      },
+      {
+        "description": "Service repassage",
+        "quantity": 120,
+        "unitPrice": 750,
+        "total": 90000
+      }
+    ],
+    "notes": "Paiement reçu avec remerciements"
+  },
+  {
+    "id": "inv-002",
+    "invoiceNumber": "FACT-2024-002",
+    "orderId": "ord-002",
+    "orderReference": "CMD-2024-090",
+    "clientId": "client-002",
+    "clientName": "Pullman Teranga",
+    "invoiceDate": "2024-12-26",
+    "dueDate": "2025-01-10",
+    "status": "En attente",
+    "subtotal": 320000,
+    "taxRate": 0.18,
+    "taxAmount": 57600,
+    "totalAmount": 377600,
+    "paidAmount": 0,
+    "paidDate": null,
+    "paymentMethod": null,
+    "items": [
+      {
+        "description": "Linge couleur - 85 pièces",
+        "quantity": 85,
+        "weight": 42000,
+        "unitPrice": 2800,
+        "total": 238000
+      },
+      {
+        "description": "Service express (24h)",
+        "quantity": 1,
+        "unitPrice": 82000,
+        "total": 82000
+      }
+    ],
+    "notes": "Délai de paiement : 15 jours"
+  },
+  {
+    "id": "inv-003",
+    "invoiceNumber": "FACT-2024-003",
+    "orderId": "ord-003",
+    "orderReference": "CMD-2024-091",
+    "clientId": "client-003",
+    "clientName": "King Fahd Palace",
+    "invoiceDate": "2024-12-27",
+    "dueDate": "2025-01-26",
+    "status": "En attente",
+    "subtotal": 280000,
+    "taxRate": 0.18,
+    "taxAmount": 50400,
+    "totalAmount": 330400,
+    "paidAmount": 0,
+    "paidDate": null,
+    "paymentMethod": null,
+    "items": [
+      {
+        "description": "Linge plat blanc - 70 pièces",
+        "quantity": 70,
+        "weight": 34000,
+        "unitPrice": 4000,
+        "total": 280000
+      }
+    ],
+    "notes": "Client privilégié - Tarif préférentiel"
+  },
+  {
+    "id": "inv-004",
+    "invoiceNumber": "FACT-2024-004",
+    "orderId": "ord-004",
+    "orderReference": "CMD-2024-092",
+    "clientId": "client-004",
+    "clientName": "Hôtel Terrou-Bi",
+    "invoiceDate": "2024-12-28",
+    "dueDate": "2025-01-11",
+    "status": "En retard",
+    "subtotal": 195000,
+    "taxRate": 0.18,
+    "taxAmount": 35100,
+    "totalAmount": 230100,
+    "paidAmount": 0,
+    "paidDate": null,
+    "paymentMethod": null,
+    "items": [
+      {
+        "description": "Linge forme - 60 pièces",
+        "quantity": 60,
+        "weight": 30000,
+        "unitPrice": 3250,
+        "total": 195000
+      }
+    ],
+    "notes": "Relance à effectuer"
+  },
+  {
+    "id": "inv-005",
+    "invoiceNumber": "FACT-2024-005",
+    "orderId": "ord-005",
+    "orderReference": "CMD-2024-093",
+    "clientId": "client-005",
+    "clientName": "Hôtel Ngor Diarama",
+    "invoiceDate": "2024-12-20",
+    "dueDate": "2025-01-04",
+    "status": "Payée",
+    "subtotal": 520000,
+    "taxRate": 0.18,
+    "taxAmount": 93600,
+    "totalAmount": 613600,
+    "paidAmount": 613600,
+    "paidDate": "2024-12-22",
+    "paymentMethod": "Chèque",
+    "items": [
+      {
+        "description": "Linge plat blanc - 150 pièces",
+        "quantity": 150,
+        "weight": 72000,
+        "unitPrice": 3000,
+        "total": 450000
+      },
+      {
+        "description": "Service pliage",
+        "quantity": 150,
+        "unitPrice": 466,
+        "total": 70000
+      }
+    ],
+    "notes": "Paiement reçu par chèque"
+  },
+  {
+    "id": "inv-006",
+    "invoiceNumber": "FACT-2024-006",
+    "orderId": "ord-006",
+    "orderReference": "CMD-2024-094",
+    "clientId": "client-006",
+    "clientName": "Restaurant Le Lagon",
+    "invoiceDate": "2024-12-29",
+    "dueDate": "2025-01-12",
+    "status": "Brouillon",
+    "subtotal": 85000,
+    "taxRate": 0.18,
+    "taxAmount": 15300,
+    "totalAmount": 100300,
+    "paidAmount": 0,
+    "paidDate": null,
+    "paymentMethod": null,
+    "items": [
+      {
+        "description": "Nappes et serviettes - 35 pièces",
+        "quantity": 35,
+        "weight": 12000,
+        "unitPrice": 2428,
+        "total": 85000
+      }
+    ],
+    "notes": "Facture en cours de validation"
+  }
+]

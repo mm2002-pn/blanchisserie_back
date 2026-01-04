@@ -1,0 +1,162 @@
+[
+  {
+    "id": "tariff-001",
+    "code": "TARIF-STD-2024",
+    "name": "Tarif standard 2024",
+    "type": "Standard",
+    "description": "Grille tarifaire par défaut pour tous les clients",
+    "validFrom": "2024-01-01",
+    "validUntil": null,
+    "isActive": true,
+    "isDefault": true,
+    "items": [
+      {
+        "linenTypeCode": "LP-001",
+        "linenTypeName": "Drap 1 personne",
+        "pricePerKg": 3000,
+        "pricePerPiece": 1800,
+        "billingMode": "piece"
+      },
+      {
+        "linenTypeCode": "LP-002",
+        "linenTypeName": "Drap 2 personnes",
+        "pricePerKg": 3000,
+        "pricePerPiece": 2400,
+        "billingMode": "piece"
+      },
+      {
+        "linenTypeCode": "LP-003",
+        "linenTypeName": "Taie oreiller",
+        "pricePerKg": 3000,
+        "pricePerPiece": 600,
+        "billingMode": "piece"
+      },
+      {
+        "linenTypeCode": "LP-005",
+        "linenTypeName": "Grande serviette",
+        "pricePerKg": 3000,
+        "pricePerPiece": 1500,
+        "billingMode": "piece"
+      },
+      {
+        "linenTypeCode": "LF-001",
+        "linenTypeName": "Jean adulte",
+        "pricePerKg": 3500,
+        "pricePerPiece": 2450,
+        "billingMode": "piece"
+      }
+    ]
+  },
+  {
+    "id": "tariff-002",
+    "code": "TARIF-PREMIUM-2024",
+    "name": "Tarif premium 5 étoiles",
+    "type": "Premium",
+    "description": "Tarif préférentiel pour hôtels 5 étoiles (volume >100kg/semaine)",
+    "validFrom": "2024-01-01",
+    "validUntil": null,
+    "isActive": true,
+    "isDefault": false,
+    "applicableClients": ["Radisson Blu Dakar", "King Fahd Palace", "Pullman Teranga"],
+    "items": [
+      {
+        "linenTypeCode": "LP-001",
+        "linenTypeName": "Drap 1 personne",
+        "pricePerKg": 2700,
+        "pricePerPiece": 1620,
+        "billingMode": "piece"
+      },
+      {
+        "linenTypeCode": "LP-002",
+        "linenTypeName": "Drap 2 personnes",
+        "pricePerKg": 2700,
+        "pricePerPiece": 2160,
+        "billingMode": "piece"
+      },
+      {
+        "linenTypeCode": "LP-003",
+        "linenTypeName": "Taie oreiller",
+        "pricePerKg": 2700,
+        "pricePerPiece": 540,
+        "billingMode": "piece"
+      },
+      {
+        "linenTypeCode": "LP-005",
+        "linenTypeName": "Grande serviette",
+        "pricePerKg": 2700,
+        "pricePerPiece": 1350,
+        "billingMode": "piece"
+      }
+    ]
+  },
+  {
+    "id": "tariff-003",
+    "code": "TARIF-EXPRESS-2024",
+    "name": "Tarif service express",
+    "type": "Service",
+    "description": "Supplément pour traitement express (24h)",
+    "validFrom": "2024-01-01",
+    "validUntil": null,
+    "isActive": true,
+    "isDefault": false,
+    "items": [
+      {
+        "linenTypeCode": "ALL",
+        "linenTypeName": "Tous types de linge",
+        "pricePerKg": 1500,
+        "pricePerPiece": null,
+        "billingMode": "kg"
+      }
+    ]
+  },
+  {
+    "id": "tariff-004",
+    "code": "TARIF-RESTAURANT-2024",
+    "name": "Tarif restaurants",
+    "type": "Segment",
+    "description": "Grille spéciale pour nappes et serviettes de table",
+    "validFrom": "2024-01-01",
+    "validUntil": null,
+    "isActive": true,
+    "isDefault": false,
+    "applicableClients": ["Restaurant Le Lagon"],
+    "items": [
+      {
+        "linenTypeCode": "NAE-001",
+        "linenTypeName": "Nappe 2 personnes",
+        "pricePerKg": 3200,
+        "pricePerPiece": 1600,
+        "billingMode": "piece"
+      },
+      {
+        "linenTypeCode": "NAE-002",
+        "linenTypeName": "Nappe 4 personnes",
+        "pricePerKg": 3200,
+        "pricePerPiece": 3200,
+        "billingMode": "piece"
+      },
+      {
+        "linenTypeCode": "NAE-003",
+        "linenTypeName": "Serviette de table",
+        "pricePerKg": 3200,
+        "pricePerPiece": 400,
+        "billingMode": "piece"
+      }
+    ]
+  },
+  {
+    "id": "tariff-005",
+    "code": "TARIF-FORFAIT-MENSUEL",
+    "name": "Forfait mensuel 1000kg",
+    "type": "Forfait",
+    "description": "Forfait mensuel pour 1000kg de linge (toutes catégories)",
+    "validFrom": "2024-01-01",
+    "validUntil": null,
+    "isActive": true,
+    "isDefault": false,
+    "monthlyPrice": 2500000,
+    "monthlyKgLimit": 1000,
+    "overagePricePerKg": 2800,
+    "items": []
+  }
+]

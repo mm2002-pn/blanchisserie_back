@@ -1,0 +1,467 @@
+[
+  {
+    "id": "ord-today-001",
+    "orderNumber": "CMD-2026-101",
+    "reference": "CMD-2026-101",
+    "clientId": "c-001",
+    "clientName": "Hôtel Plaza",
+    "status": "Collectée",
+    "workflowState": "COLLECTE_COMPLETED",
+    "services": [
+      {
+        "service": "nettoyage",
+        "items": [
+          { "type": "drap", "quantity": 25 },
+          { "type": "serviette", "quantity": 40 },
+          { "type": "nappe", "quantity": 15 }
+        ]
+      },
+      {
+        "service": "blanchisserie",
+        "items": [
+          { "type": "taie", "quantity": 30 },
+          { "type": "torchon", "quantity": 20 }
+        ]
+      }
+    ],
+    "collectionDate": "2026-01-04T08:30:00Z",
+    "deliveryDate": "2026-01-06T16:00:00Z",
+    "assignedDriverId": "u-005",
+    "vehicleId": "veh-001",
+    "collectionPhotos": [
+      "/uploads/collections/cmd-101-photo1.jpg",
+      "/uploads/collections/cmd-101-photo2.jpg"
+    ],
+    "collectionIssues": [],
+    "receptionDateTime": null,
+    "weighingDateTime": null,
+    "triage": null,
+    "invoiceId": null,
+    "createdAt": "2026-01-03T14:00:00Z"
+  },
+  {
+    "id": "ord-today-002",
+    "orderNumber": "CMD-2026-102",
+    "reference": "CMD-2026-102",
+    "clientId": "c-002",
+    "clientName": "Hôtel Savana",
+    "status": "Collectée",
+    "workflowState": "COLLECTE_COMPLETED",
+    "services": [
+      {
+        "service": "blanchisserie",
+        "items": [
+          { "type": "drap", "quantity": 18 },
+          { "type": "serviette", "quantity": 25 },
+          { "type": "peignoir", "quantity": 10 }
+        ]
+      }
+    ],
+    "collectionDate": "2026-01-04T08:30:00Z",
+    "deliveryDate": "2026-01-06T16:00:00Z",
+    "assignedDriverId": "u-005",
+    "vehicleId": "veh-001",
+    "collectionPhotos": [
+      "/uploads/collections/cmd-102-photo1.jpg"
+    ],
+    "collectionIssues": [],
+    "receptionDateTime": null,
+    "weighingDateTime": null,
+    "triage": null,
+    "invoiceId": null,
+    "createdAt": "2026-01-03T15:00:00Z"
+  },
+  {
+    "id": "ord-today-003",
+    "orderNumber": "CMD-2026-103",
+    "reference": "CMD-2026-103",
+    "clientId": "c-003",
+    "clientName": "Hôtel Teranga",
+    "status": "Collectée",
+    "workflowState": "COLLECTE_COMPLETED",
+    "services": [
+      {
+        "service": "nettoyage",
+        "items": [
+          { "type": "drap", "quantity": 45 },
+          { "type": "taie", "quantity": 50 },
+          { "type": "serviette", "quantity": 60 },
+          { "type": "nappe", "quantity": 25 }
+        ]
+      },
+      {
+        "service": "blanchisserie",
+        "items": [
+          { "type": "peignoir", "quantity": 20 },
+          { "type": "rideau", "quantity": 15 }
+        ]
+      },
+      {
+        "service": "aqua_clean",
+        "items": [
+          { "type": "tapis", "quantity": 8 },
+          { "type": "couverture", "quantity": 12 }
+        ]
+      }
+    ],
+    "collectionDate": "2026-01-04T09:15:00Z",
+    "deliveryDate": "2026-01-06T17:00:00Z",
+    "assignedDriverId": "u-008",
+    "vehicleId": "veh-002",
+    "collectionPhotos": [
+      "/uploads/collections/cmd-103-photo1.jpg",
+      "/uploads/collections/cmd-103-photo2.jpg",
+      "/uploads/collections/cmd-103-photo3.jpg"
+    ],
+    "collectionIssues": [],
+    "receptionDateTime": null,
+    "weighingDateTime": null,
+    "triage": null,
+    "invoiceId": null,
+    "createdAt": "2026-01-03T16:00:00Z"
+  },
+  {
+    "id": "ord-today-004",
+    "orderNumber": "CMD-2026-104",
+    "reference": "CMD-2026-104",
+    "clientId": "c-004",
+    "clientName": "Hôtel Farid",
+    "status": "Collectée",
+    "workflowState": "COLLECTE_COMPLETED",
+    "services": [
+      {
+        "service": "nettoyage",
+        "items": [
+          { "type": "drap", "quantity": 12 },
+          { "type": "serviette", "quantity": 15 },
+          { "type": "torchon", "quantity": 10 }
+        ]
+      }
+    ],
+    "collectionDate": "2026-01-04T09:15:00Z",
+    "deliveryDate": "2026-01-06T15:00:00Z",
+    "assignedDriverId": "u-008",
+    "vehicleId": "veh-002",
+    "collectionPhotos": [
+      "/uploads/collections/cmd-104-photo1.jpg"
+    ],
+    "collectionIssues": [],
+    "receptionDateTime": null,
+    "weighingDateTime": null,
+    "triage": null,
+    "invoiceId": null,
+    "createdAt": "2026-01-03T17:00:00Z"
+  },
+  {
+    "id": "ord-today-005",
+    "orderNumber": "CMD-2026-105",
+    "reference": "CMD-2026-105",
+    "clientId": "c-005",
+    "clientName": "Restaurant Le Cedre",
+    "status": "Collectée",
+    "workflowState": "COLLECTE_COMPLETED",
+    "services": [
+      {
+        "service": "nettoyage",
+        "items": [
+          { "type": "nappe", "quantity": 35 },
+          { "type": "serviette", "quantity": 50 },
+          { "type": "torchon", "quantity": 40 }
+        ]
+      },
+      {
+        "service": "blanchisserie",
+        "items": [
+          { "type": "nappe", "quantity": 20 }
+        ]
+      }
+    ],
+    "collectionDate": "2026-01-04T10:00:00Z",
+    "deliveryDate": "2026-01-06T18:00:00Z",
+    "assignedDriverId": "u-009",
+    "vehicleId": "veh-005",
+    "collectionPhotos": [
+      "/uploads/collections/cmd-105-photo1.jpg",
+      "/uploads/collections/cmd-105-photo2.jpg"
+    ],
+    "collectionIssues": [],
+    "receptionDateTime": null,
+    "weighingDateTime": null,
+    "triage": null,
+    "invoiceId": null,
+    "createdAt": "2026-01-03T08:00:00Z"
+  },
+  {
+    "id": "ord-001",
+    "orderNumber": "CMD-2026-089",
+    "reference": "CMD-2026-089",
+    "clientId": "c-001",
+    "clientName": "Hôtel Plaza",
+    "status": "Livrée",
+    "workflowState": "LIVRAISON_COMPLETED",
+    "estimatedSize": "XL",
+    "estimatedWeight": 600000,
+    "actualWeight": 840000,
+    "deviation": 40,
+    "collectionDate": "2025-12-28T08:00:00Z",
+    "deliveryDate": "2025-12-30T16:00:00Z",
+    "assignedDriverId": "u-005",
+    "vehicleId": "veh-002",
+    "collectionPhotos": [
+      "/uploads/collections/cmd-089-photo1.jpg",
+      "/uploads/collections/cmd-089-photo2.jpg"
+    ],
+    "visualEstimation": "Moyen (3-4 chariots)",
+    "collectionIssues": [],
+    "receptionDateTime": "2025-12-28T09:15:00Z",
+    "weighingDateTime": "2025-12-28T09:20:00Z",
+    "triage": {
+      "completedAt": "2025-12-28T10:30:00Z",
+      "items": [
+        {
+          "linenTypeCode": "LP-001",
+          "linenTypeName": "Drap 2 personnes",
+          "weight": 400000,
+          "pieces": 500,
+          "unitPrice": 300,
+          "totalPrice": 120000
+        },
+        {
+          "linenTypeCode": "LP-002",
+          "linenTypeName": "Drap 1 personne",
+          "weight": 100000,
+          "pieces": 167,
+          "unitPrice": 400,
+          "totalPrice": 40000
+        },
+        {
+          "linenTypeCode": "LP-005",
+          "linenTypeName": "Grande serviette",
+          "weight": 240000,
+          "pieces": 480,
+          "unitPrice": 250,
+          "totalPrice": 60000
+        },
+        {
+          "linenTypeCode": "LF-009",
+          "linenTypeName": "Nappe légère",
+          "weight": 0,
+          "pieces": 60,
+          "unitPrice": 500,
+          "totalPrice": 30000
+        },
+        {
+          "linenTypeCode": "LF-002",
+          "linenTypeName": "Chemise",
+          "weight": 0,
+          "pieces": 40,
+          "unitPrice": 400,
+          "totalPrice": 16000
+        }
+      ],
+      "totalWeight": 740000,
+      "totalPieces": 1247,
+      "totalAmount": 266000
+    },
+    "invoiceId": "inv-001",
+    "invoiceAmount": 266000,
+    "estimatedInvoiceAmount": 180000,
+    "invoiceDeviation": 86000,
+    "createdAt": "2025-12-27T10:00:00Z"
+  },
+  {
+    "id": "ord-002",
+    "orderNumber": "CMD-2026-090",
+    "reference": "CMD-2026-090",
+    "clientId": "c-002",
+    "clientName": "Hôtel Savana",
+    "status": "En production",
+    "workflowState": "LAVAGE_IN_PROGRESS",
+    "estimatedSize": "M",
+    "estimatedWeight": 300000,
+    "actualWeight": 550000,
+    "deviation": 83,
+    "collectionDate": "2026-01-02T07:30:00Z",
+    "deliveryDate": "2026-01-04T17:00:00Z",
+    "assignedDriverId": "u-005",
+    "vehicleId": "veh-002",
+    "collectionPhotos": [
+      "/uploads/collections/cmd-090-photo1.jpg"
+    ],
+    "visualEstimation": "Gros (5-7 chariots)",
+    "collectionIssues": [],
+    "receptionDateTime": "2026-01-02T09:15:00Z",
+    "weighingDateTime": "2026-01-02T09:25:00Z",
+    "triage": {
+      "completedAt": "2026-01-02T10:45:00Z",
+      "items": [
+        {
+          "linenTypeCode": "LP-001",
+          "linenTypeName": "Drap 2 personnes",
+          "weight": 320000,
+          "pieces": 400,
+          "unitPrice": 300,
+          "totalPrice": 96000
+        },
+        {
+          "linenTypeCode": "LP-006",
+          "linenTypeName": "Petite serviette",
+          "weight": 180000,
+          "pieces": 600,
+          "unitPrice": 200,
+          "totalPrice": 36000
+        },
+        {
+          "linenTypeCode": "LF-009",
+          "linenTypeName": "Nappe légère",
+          "weight": 0,
+          "pieces": 50,
+          "unitPrice": 500,
+          "totalPrice": 25000
+        }
+      ],
+      "totalWeight": 500000,
+      "totalPieces": 1050,
+      "totalAmount": 157000
+    },
+    "invoiceId": null,
+    "createdAt": "2026-01-01T14:00:00Z"
+  },
+  {
+    "id": "ord-003",
+    "orderNumber": "CMD-2026-091",
+    "reference": "CMD-2026-091",
+    "clientId": "c-003",
+    "clientName": "Hôtel Teranga",
+    "status": "Réceptionnée",
+    "workflowState": "TRIAGE_PENDING",
+    "estimatedSize": "XL",
+    "estimatedWeight": 800000,
+    "actualWeight": 450000,
+    "deviation": -44,
+    "collectionDate": "2026-01-03T09:00:00Z",
+    "deliveryDate": "2026-01-05T15:00:00Z",
+    "assignedDriverId": "u-005",
+    "vehicleId": "veh-001",
+    "collectionPhotos": [
+      "/uploads/collections/cmd-091-photo1.jpg",
+      "/uploads/collections/cmd-091-photo2.jpg"
+    ],
+    "visualEstimation": "Moyen (3-4 chariots)",
+    "collectionIssues": [],
+    "receptionDateTime": "2026-01-03T10:30:00Z",
+    "weighingDateTime": "2026-01-03T10:35:00Z",
+    "triage": null,
+    "invoiceId": null,
+    "createdAt": "2026-01-02T11:00:00Z"
+  },
+  {
+    "id": "ord-004",
+    "orderNumber": "CMD-2026-092",
+    "reference": "CMD-2026-092",
+    "clientId": "c-004",
+    "clientName": "Hôtel Farid",
+    "status": "En attente",
+    "workflowState": "COLLECTE_SCHEDULED",
+    "estimatedSize": "S",
+    "estimatedWeight": 150000,
+    "actualWeight": null,
+    "deviation": null,
+    "collectionDate": "2026-01-05T08:00:00Z",
+    "deliveryDate": "2026-01-07T16:00:00Z",
+    "assignedDriverId": null,
+    "vehicleId": null,
+    "collectionPhotos": [],
+    "visualEstimation": null,
+    "collectionIssues": [],
+    "receptionDateTime": null,
+    "weighingDateTime": null,
+    "triage": null,
+    "invoiceId": null,
+    "createdAt": "2026-01-04T09:30:00Z"
+  },
+  {
+    "id": "ord-005",
+    "orderNumber": "CMD-2026-093",
+    "reference": "CMD-2026-093",
+    "clientId": "c-005",
+    "clientName": "Restaurant Le Cedre",
+    "status": "Confirmée",
+    "workflowState": "COLLECTE_SCHEDULED",
+    "estimatedSize": "M",
+    "estimatedWeight": 400000,
+    "actualWeight": null,
+    "deviation": null,
+    "collectionDate": "2026-01-05T10:00:00Z",
+    "deliveryDate": "2026-01-07T18:00:00Z",
+    "assignedDriverId": null,
+    "vehicleId": null,
+    "collectionPhotos": [],
+    "visualEstimation": null,
+    "collectionIssues": [],
+    "receptionDateTime": null,
+    "weighingDateTime": null,
+    "triage": null,
+    "invoiceId": null,
+    "createdAt": "2026-01-04T11:00:00Z"
+  },
+  {
+    "id": "ord-006",
+    "orderNumber": "CMD-2026-088",
+    "reference": "CMD-2026-088",
+    "clientId": "c-001",
+    "clientName": "Hôtel Plaza",
+    "status": "Livrée",
+    "workflowState": "LIVRAISON_COMPLETED",
+    "estimatedSize": "M",
+    "estimatedWeight": 400000,
+    "actualWeight": 820000,
+    "deviation": 105,
+    "collectionDate": "2025-12-20T08:00:00Z",
+    "deliveryDate": "2025-12-22T16:00:00Z",
+    "assignedDriverId": "u-005",
+    "vehicleId": "veh-002",
+    "collectionPhotos": [],
+    "visualEstimation": "Gros (5-7 chariots)",
+    "collectionIssues": [],
+    "receptionDateTime": "2025-12-20T09:00:00Z",
+    "weighingDateTime": "2025-12-20T09:10:00Z",
+    "triage": {
+      "completedAt": "2025-12-20T10:30:00Z",
+      "items": [
+        {
+          "linenTypeCode": "LP-001",
+          "linenTypeName": "Drap 2 personnes",
+          "weight": 480000,
+          "pieces": 600,
+          "unitPrice": 300,
+          "totalPrice": 144000
+        },
+        {
+          "linenTypeCode": "LP-005",
+          "linenTypeName": "Grande serviette",
+          "weight": 280000,
+          "pieces": 560,
+          "unitPrice": 250,
+          "totalPrice": 70000
+        },
+        {
+          "linenTypeCode": "LF-009",
+          "linenTypeName": "Nappe légère",
+          "weight": 0,
+          "pieces": 40,
+          "unitPrice": 500,
+          "totalPrice": 20000
+        }
+      ],
+      "totalWeight": 760000,
+      "totalPieces": 1200,
+      "totalAmount": 234000
+    },
+    "invoiceId": "inv-006",
+    "invoiceAmount": 234000,
+    "estimatedInvoiceAmount": 120000,
+    "invoiceDeviation": 114000,
+    "createdAt": "2025-12-19T10:00:00Z"
+  }
+]

@@ -1,0 +1,61 @@
+[
+  {
+    "id": "svc-001",
+    "code": "REP-MAIN",
+    "name": "Repassage à la main",
+    "description": "Repassage manuel pour articles délicats",
+    "unitPrice": 500,
+    "unit": "pièce",
+    "estimatedTime": 15,
+    "requiredSkills": ["Repassage délicat"],
+    "compatibleLinenTypes": ["lt-014", "lt-016", "lt-017"]
+  },
+  {
+    "id": "svc-002",
+    "code": "PLIAGE-SPEC",
+    "name": "Pliage spécial",
+    "description": "Pliage selon spécifications client",
+    "unitPrice": 200,
+    "unit": "pièce",
+    "estimatedTime": 5,
+    "compatibleLinenTypes": null
+  },
+  {
+    "id": "svc-003",
+    "code": "EMBPACK",
+    "name": "Emballage individuel",
+    "description": "Emballage sous film plastique individuel",
+    "unitPrice": 150,
+    "unit": "pièce",
+    "estimatedTime": 3
+  },
+  {
+    "id": "svc-004",
+    "code": "DECATISSAGE",
+    "name": "Décatissage",
+    "description": "Traitement vapeur pour nappes de banquet",
+    "unitPrice": 800,
+    "unit": "pièce",
+    "estimatedTime": 20,
+    "compatibleLinenTypes": ["lt-007", "lt-008"]
+  },
+  {
+    "id": "svc-005",
+    "code": "NETT-SEC",
+    "name": "Nettoyage à sec",
+    "description": "Nettoyage pour textiles délicats non lavables à l'eau",
+    "unitPrice": 2000,
+    "unit": "pièce",
+    "estimatedTime": 120,
+    "requiredSkills": ["Nettoyage à sec certifié"]
+  },
+  {
+    "id": "svc-006",
+    "code": "LIVR-EXPRESS",
+    "name": "Livraison express",
+    "description": "Livraison dans les 24h",
+    "unitPrice": 5000,
+    "unit": "forfait",
+    "estimatedTime": 0
+  }
+]

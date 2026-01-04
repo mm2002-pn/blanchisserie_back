@@ -1,0 +1,68 @@
+[
+  {
+    "id": "c-001",
+    "name": "Hôtel Radisson Blu",
+    "type": "Hôtel 5 étoiles",
+    "address": "Route de la Corniche Ouest, Dakar",
+    "phone": "+221 33 869 20 00",
+    "email": "blanchisserie@radisson-dakar.com",
+    "contactPerson": "M. Pierre Dubois",
+    "isActive": true,
+    "createdAt": "2023-01-15T00:00:00Z"
+  },
+  {
+    "id": "c-002",
+    "name": "Hôtel Pullman Teranga",
+    "type": "Hôtel 5 étoiles",
+    "address": "Place de l'Indépendance, Dakar",
+    "phone": "+221 33 849 92 00",
+    "email": "housekeeping@pullman-teranga.com",
+    "contactPerson": "Mme Sophie Martin",
+    "isActive": true,
+    "createdAt": "2023-02-10T00:00:00Z"
+  },
+  {
+    "id": "c-003",
+    "name": "Hôtel King Fahd Palace",
+    "type": "Hôtel 5 étoiles",
+    "address": "Route de la Corniche Ouest, Dakar",
+    "phone": "+221 33 859 25 25",
+    "email": "linge@kingfahdpalace.sn",
+    "contactPerson": "M. Ahmed Al-Fayed",
+    "isActive": true,
+    "createdAt": "2023-03-05T00:00:00Z"
+  },
+  {
+    "id": "c-004",
+    "name": "Hôtel Djoloff",
+    "type": "Hôtel 4 étoiles",
+    "address": "Avenue Cheikh Anta Diop, Dakar",
+    "phone": "+221 33 824 32 09",
+    "email": "intendance@hoteldjoloff.sn",
+    "contactPerson": "M. Alioune Sarr",
+    "isActive": true,
+    "createdAt": "2023-04-20T00:00:00Z"
+  },
+  {
+    "id": "c-005",
+    "name": "Hôtel Océanic",
+    "type": "Hôtel 3 étoiles",
+    "address": "Rue de Thann, Dakar",
+    "phone": "+221 33 821 37 39",
+    "email": "direction@oceanic-dakar.com",
+    "contactPerson": "Mme Coumba Diouf",
+    "isActive": true,
+    "createdAt": "2023-05-15T00:00:00Z"
+  },
+  {
+    "id": "c-006",
+    "name": "Restaurant Le Lagon",
+    "type": "Restaurant",
+    "address": "Les Almadies, Dakar",
+    "phone": "+221 33 820 60 61",
+    "email": "gestion@lelagon-dakar.sn",
+    "contactPerson": "M. Jean-Claude Blanc",
+    "isActive": true,
+    "createdAt": "2023-06-10T00:00:00Z"
+  }
+]

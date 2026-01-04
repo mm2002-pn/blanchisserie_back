@@ -1,0 +1,92 @@
+[
+  {
+    "id": "u-001",
+    "firstName": "Admin",
+    "lastName": "System",
+    "email": "admin@blanchisserie.com",
+    "phone": "+221 77 123 45 67",
+    "role": "Administrateur",
+    "isActive": true,
+    "lastLogin": "2025-12-30T10:30:00Z"
+  },
+  {
+    "id": "u-002",
+    "firstName": "Mamadou",
+    "lastName": "Diallo",
+    "email": "m.diallo@blanchisserie.com",
+    "phone": "+221 77 234 56 78",
+    "role": "Responsable logistique",
+    "isActive": true,
+    "lastLogin": "2025-12-28T15:20:00Z"
+  },
+  {
+    "id": "u-003",
+    "firstName": "Fatou",
+    "lastName": "Sow",
+    "email": "f.sow@blanchisserie.com",
+    "phone": "+221 77 345 67 89",
+    "role": "Responsable production",
+    "isActive": true,
+    "lastLogin": "2025-12-30T08:00:00Z"
+  },
+  {
+    "id": "u-004",
+    "firstName": "Aminata",
+    "lastName": "Ndiaye",
+    "email": "a.ndiaye@blanchisserie.com",
+    "phone": "+221 77 456 78 90",
+    "role": "Opérateur production",
+    "isActive": true,
+    "lastLogin": "2025-12-30T07:45:00Z"
+  },
+  {
+    "id": "u-005",
+    "firstName": "Ibrahima",
+    "lastName": "Fall",
+    "email": "i.fall@blanchisserie.com",
+    "phone": "+221 77 567 89 01",
+    "role": "Chauffeur",
+    "isActive": true,
+    "lastLogin": "2025-12-30T06:30:00Z"
+  },
+  {
+    "id": "u-006",
+    "firstName": "Aissatou",
+    "lastName": "Ba",
+    "email": "a.ba@blanchisserie.com",
+    "phone": "+221 77 678 90 12",
+    "role": "Comptable",
+    "isActive": true,
+    "lastLogin": "2025-12-28T16:00:00Z"
+  },
+  {
+    "id": "u-007",
+    "firstName": "Ousmane",
+    "lastName": "Cissé",
+    "email": "o.cisse@blanchisserie.com",
+    "phone": "+221 77 789 01 23",
+    "role": "Commercial",
+    "isActive": true,
+    "lastLogin": "2025-12-28T14:30:00Z"
+  },
+  {
+    "id": "u-008",
+    "firstName": "Moussa",
+    "lastName": "Diop",
+    "email": "m.diop@blanchisserie.com",
+    "phone": "+221 77 890 12 34",
+    "role": "Chauffeur",
+    "isActive": true,
+    "lastLogin": "2025-12-30T06:45:00Z"
+  },
+  {
+    "id": "u-009",
+    "firstName": "Cheikh",
+    "lastName": "Thiam",
+    "email": "c.thiam@blanchisserie.com",
+    "phone": "+221 77 901 23 45",
+    "role": "Chauffeur",
+    "isActive": true,
+    "lastLogin": "2025-12-30T07:00:00Z"
+  }
+]

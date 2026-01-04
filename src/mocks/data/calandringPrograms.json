@@ -1,0 +1,45 @@
+[
+  {
+    "id": "cal-001",
+    "code": "CAL-STANDARD",
+    "name": "Calandrage Standard",
+    "temperature": 180,
+    "speed": 12,
+    "duration": 30,
+    "energyConsumption": 22,
+    "suitable": ["Linge Plat"],
+    "description": "Programme standard pour draps et serviettes"
+  },
+  {
+    "id": "cal-002",
+    "code": "CAL-DELICAT",
+    "name": "Calandrage Délicat",
+    "temperature": 150,
+    "speed": 8,
+    "duration": 35,
+    "energyConsumption": 18,
+    "suitable": ["Linge Plat"],
+    "description": "Programme doux pour linge délicat"
+  },
+  {
+    "id": "cal-003",
+    "code": "CAL-INTENSIF",
+    "name": "Calandrage Intensif",
+    "temperature": 200,
+    "speed": 15,
+    "duration": 25,
+    "energyConsumption": 28,
+    "suitable": ["Linge Plat"],
+    "description": "Programme haute température pour nappes épaisses"
+  },
+  {
+    "id": "press-001",
+    "code": "PRESS-CHEMISE",
+    "name": "Pressage Chemise",
+    "temperature": 160,
+    "duration": 20,
+    "energyConsumption": 15,
+    "suitable": ["Linge Forme"],
+    "description": "Programme pour chemises et vêtements"
+  }
+]

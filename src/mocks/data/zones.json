@@ -1,0 +1,83 @@
+[
+  {
+    "id": "z-001",
+    "name": "Zone de réception camions",
+    "type": "sale",
+    "responsibles": ["u-002"],
+    "accessRules": "Accès réservé aux chauffeurs et responsables logistique",
+    "equipment": [],
+    "allowedTransitions": ["z-002"]
+  },
+  {
+    "id": "z-002",
+    "name": "Zone de triage",
+    "type": "sale",
+    "responsibles": ["u-003", "u-004"],
+    "accessRules": "Port de gants obligatoire",
+    "equipment": [],
+    "allowedTransitions": ["z-003"]
+  },
+  {
+    "id": "z-003",
+    "name": "Zone lavage",
+    "type": "sale",
+    "responsibles": ["u-003"],
+    "accessRules": "Zone machines - Protection auditive recommandée",
+    "equipment": ["m-001", "m-002", "m-003", "m-004", "m-005", "m-006"],
+    "allowedTransitions": ["z-004"]
+  },
+  {
+    "id": "z-004",
+    "name": "Zone séchage",
+    "type": "propre",
+    "responsibles": ["u-003"],
+    "accessRules": "Linge propre uniquement - Hygiène stricte",
+    "equipment": ["m-007", "m-008", "m-009", "m-011", "m-012"],
+    "allowedTransitions": ["z-005", "z-006"]
+  },
+  {
+    "id": "z-005",
+    "name": "Zone calandrage",
+    "type": "propre",
+    "responsibles": ["u-003"],
+    "accessRules": "Température élevée - Prudence",
+    "equipment": ["m-010"],
+    "allowedTransitions": ["z-007"]
+  },
+  {
+    "id": "z-006",
+    "name": "Zone repassage",
+    "type": "propre",
+    "responsibles": ["u-004"],
+    "accessRules": "Manipulation délicate",
+    "equipment": [],
+    "allowedTransitions": ["z-007"]
+  },
+  {
+    "id": "z-007",
+    "name": "Zone pliage et conditionnement",
+    "type": "propre",
+    "responsibles": ["u-004"],
+    "accessRules": "Propreté maximale",
+    "equipment": [],
+    "allowedTransitions": ["z-008"]
+  },
+  {
+    "id": "z-008",
+    "name": "Zone stockage propre",
+    "type": "propre",
+    "responsibles": ["u-002"],
+    "accessRules": "Linge emballé uniquement",
+    "equipment": [],
+    "allowedTransitions": ["z-009"]
+  },
+  {
+    "id": "z-009",
+    "name": "Zone expédition",
+    "type": "propre",
+    "responsibles": ["u-002"],
+    "accessRules": "Chargement camions",
+    "equipment": [],
+    "allowedTransitions": []
+  }
+]

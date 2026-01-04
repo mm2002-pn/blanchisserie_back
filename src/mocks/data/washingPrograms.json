@@ -1,0 +1,54 @@
+[
+  {
+    "id": "prog-001",
+    "code": "LP-BLANC-60",
+    "name": "Linge Plat Blanc 60°C",
+    "temperature": 60,
+    "duration": 45,
+    "spinSpeed": 1000,
+    "waterConsumption": 120,
+    "detergentType": "Standard",
+    "suitable": ["Linge Plat"],
+    "color": "Blanc",
+    "description": "Programme standard pour linge plat blanc (draps, serviettes blanches)"
+  },
+  {
+    "id": "prog-002",
+    "code": "LP-BLANC-90",
+    "name": "Linge Plat Blanc 90°C",
+    "temperature": 90,
+    "duration": 60,
+    "spinSpeed": 1000,
+    "waterConsumption": 150,
+    "detergentType": "Désinfectant",
+    "suitable": ["Linge Plat"],
+    "color": "Blanc",
+    "description": "Programme intensif avec désinfection pour linge très sale"
+  },
+  {
+    "id": "prog-003",
+    "code": "LP-COULEUR-40",
+    "name": "Linge Plat Couleur 40°C",
+    "temperature": 40,
+    "duration": 40,
+    "spinSpeed": 800,
+    "waterConsumption": 100,
+    "detergentType": "Couleur",
+    "suitable": ["Linge Plat"],
+    "color": "Couleur",
+    "description": "Programme doux pour linge de couleur"
+  },
+  {
+    "id": "prog-004",
+    "code": "LF-DELICAT-30",
+    "name": "Linge Forme Délicat 30°C",
+    "temperature": 30,
+    "duration": 35,
+    "spinSpeed": 600,
+    "waterConsumption": 80,
+    "detergentType": "Délicat",
+    "suitable": ["Linge Forme"],
+    "color": "Mixte",
+    "description": "Programme délicat pour linge forme (vêtements)"
+  }
+]

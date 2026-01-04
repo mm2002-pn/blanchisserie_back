@@ -1,0 +1,102 @@
+[
+  {
+    "id": "hol-001",
+    "name": "Jour de l'An",
+    "date": "2024-01-01",
+    "type": "Férié national",
+    "isRecurring": true,
+    "affectsProduction": true,
+    "affectsDelivery": true,
+    "description": "Jour de l'An - Férié national"
+  },
+  {
+    "id": "hol-002",
+    "name": "Fête de l'Indépendance",
+    "date": "2024-04-04",
+    "type": "Férié national",
+    "isRecurring": true,
+    "affectsProduction": true,
+    "affectsDelivery": true,
+    "description": "Fête de l'Indépendance du Sénégal"
+  },
+  {
+    "id": "hol-003",
+    "name": "Fête du Travail",
+    "date": "2024-05-01",
+    "type": "Férié national",
+    "isRecurring": true,
+    "affectsProduction": true,
+    "affectsDelivery": true,
+    "description": "Fête internationale du Travail"
+  },
+  {
+    "id": "hol-004",
+    "name": "Tabaski (Aïd el-Kebir)",
+    "date": "2024-06-16",
+    "type": "Férié religieux",
+    "isRecurring": true,
+    "affectsProduction": true,
+    "affectsDelivery": true,
+    "description": "Fête du sacrifice - Date variable (calendrier lunaire)"
+  },
+  {
+    "id": "hol-005",
+    "name": "Assomption",
+    "date": "2024-08-15",
+    "type": "Férié national",
+    "isRecurring": true,
+    "affectsProduction": false,
+    "affectsDelivery": true,
+    "description": "Assomption de Marie"
+  },
+  {
+    "id": "hol-006",
+    "name": "Korité (Aïd el-Fitr)",
+    "date": "2024-04-10",
+    "type": "Férié religieux",
+    "isRecurring": true,
+    "affectsProduction": true,
+    "affectsDelivery": true,
+    "description": "Fin du Ramadan - Date variable (calendrier lunaire)"
+  },
+  {
+    "id": "hol-007",
+    "name": "Toussaint",
+    "date": "2024-11-01",
+    "type": "Férié national",
+    "isRecurring": true,
+    "affectsProduction": false,
+    "affectsDelivery": true,
+    "description": "Fête de la Toussaint"
+  },
+  {
+    "id": "hol-008",
+    "name": "Maouloud (Mawlid)",
+    "date": "2024-09-15",
+    "type": "Férié religieux",
+    "isRecurring": true,
+    "affectsProduction": true,
+    "affectsDelivery": true,
+    "description": "Anniversaire du Prophète Muhammad - Date variable"
+  },
+  {
+    "id": "hol-009",
+    "name": "Noël",
+    "date": "2024-12-25",
+    "type": "Férié national",
+    "isRecurring": true,
+    "affectsProduction": false,
+    "affectsDelivery": true,
+    "description": "Fête de Noël"
+  },
+  {
+    "id": "hol-010",
+    "name": "Maintenance annuelle",
+    "date": "2024-08-01",
+    "type": "Fermeture technique",
+    "isRecurring": false,
+    "affectsProduction": true,
+    "affectsDelivery": true,
+    "description": "Fermeture pour maintenance annuelle des équipements (1 semaine)"
+  }
+]

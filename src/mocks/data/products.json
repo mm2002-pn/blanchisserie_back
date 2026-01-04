@@ -1,0 +1,94 @@
+[
+  {
+    "id": "p-001",
+    "reference": "LESS-001",
+    "name": "Lessive poudre blanche professionnelle",
+    "supplier": "ChemClean Pro",
+    "currentStock": 450,
+    "minimumStock": 100,
+    "unit": "kg",
+    "unitPrice": 1500,
+    "technicalSpecs": {
+      "pH": "10.5",
+      "composition": "Agents tensioactifs, azurants optiques, enzymes"
+    },
+    "storageConditions": "Endroit sec, température ambiante",
+    "deliveryDelay": 7
+  },
+  {
+    "id": "p-002",
+    "reference": "LESS-002",
+    "name": "Lessive liquide couleur",
+    "supplier": "ChemClean Pro",
+    "currentStock": 320,
+    "minimumStock": 80,
+    "unit": "litre",
+    "unitPrice": 1800,
+    "technicalSpecs": {
+      "pH": "7.5",
+      "composition": "Tensioactifs doux, agents anti-transfert"
+    },
+    "storageConditions": "Température entre 5°C et 30°C",
+    "deliveryDelay": 7
+  },
+  {
+    "id": "p-003",
+    "reference": "ADOU-001",
+    "name": "Adoucissant professionnel",
+    "supplier": "SoftLine Industries",
+    "currentStock": 280,
+    "minimumStock": 60,
+    "unit": "litre",
+    "unitPrice": 1200,
+    "technicalSpecs": {
+      "pH": "5.5",
+      "composition": "Agents cationiques, parfum hypoallergénique"
+    },
+    "storageConditions": "Endroit frais et sec",
+    "deliveryDelay": 10
+  },
+  {
+    "id": "p-004",
+    "reference": "DET-001",
+    "name": "Détachant universel",
+    "supplier": "ChemClean Pro",
+    "currentStock": 65,
+    "minimumStock": 30,
+    "unit": "litre",
+    "unitPrice": 2500,
+    "technicalSpecs": {
+      "pH": "11.0",
+      "composition": "Enzymes multiples, oxygène actif"
+    },
+    "storageConditions": "Température stable, à l'abri de la lumière",
+    "deliveryDelay": 7
+  },
+  {
+    "id": "p-005",
+    "reference": "JAVEL-001",
+    "name": "Eau de javel concentrée",
+    "supplier": "HygieneMax",
+    "currentStock": 180,
+    "minimumStock": 50,
+    "unit": "litre",
+    "unitPrice": 800,
+    "technicalSpecs": {
+      "pH": "12.5",
+      "composition": "Hypochlorite de sodium 12%"
+    },
+    "storageConditions": "Ventilation, loin des acides",
+    "deliveryDelay": 5
+  },
+  {
+    "id": "p-006",
+    "reference": "DESINF-001",
+    "name": "Désinfectant multi-surfaces",
+    "supplier": "HygieneMax",
+    "currentStock": 45,
+    "minimumStock": 20,
+    "unit": "litre",
+    "unitPrice": 1600,
+    "storageConditions": "Endroit frais",
+    "deliveryDelay": 5
+  }
+]

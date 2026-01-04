@@ -1,0 +1,197 @@
+[
+  {
+    "id": "route-001",
+    "routeNumber": "TOUR-001",
+    "date": "2024-12-29",
+    "driverId": "user-005",
+    "driverName": "Ousmane Sow",
+    "vehicleId": "veh-001",
+    "vehiclePlate": "DK-1234-AA",
+    "status": "En cours",
+    "startTime": "08:00",
+    "estimatedEndTime": "12:00",
+    "actualEndTime": null,
+    "totalStops": 5,
+    "completedStops": 2,
+    "stops": [
+      {
+        "id": "stop-001",
+        "order": 1,
+        "type": "Collecte",
+        "clientName": "Hôtel Radisson Blu Dakar",
+        "address": "Route de la Corniche Ouest",
+        "scheduledTime": "08:00",
+        "actualTime": "08:05",
+        "status": "Terminé",
+        "weight": 58000,
+        "orderReference": "CMD-2024-089"
+      },
+      {
+        "id": "stop-002",
+        "order": 2,
+        "type": "Livraison",
+        "clientName": "King Fahd Palace",
+        "address": "Almadies",
+        "scheduledTime": "09:00",
+        "actualTime": "09:15",
+        "status": "Terminé",
+        "weight": 34000,
+        "orderReference": "CMD-2024-091"
+      },
+      {
+        "id": "stop-003",
+        "order": 3,
+        "type": "Collecte",
+        "clientName": "Pullman Teranga",
+        "address": "Place de l'Indépendance",
+        "scheduledTime": "10:00",
+        "actualTime": null,
+        "status": "En cours",
+        "weight": 42000,
+        "orderReference": "CMD-2024-090"
+      },
+      {
+        "id": "stop-004",
+        "order": 4,
+        "type": "Livraison",
+        "clientName": "Hôtel Terrou-Bi",
+        "address": "Route de la Corniche Ouest",
+        "scheduledTime": "11:00",
+        "actualTime": null,
+        "status": "Planifié",
+        "weight": 30000,
+        "orderReference": "CMD-2024-092"
+      },
+      {
+        "id": "stop-005",
+        "order": 5,
+        "type": "Collecte",
+        "clientName": "Hôtel Ngor Diarama",
+        "address": "Ngor",
+        "scheduledTime": "11:30",
+        "actualTime": null,
+        "status": "Planifié",
+        "weight": 45000,
+        "orderReference": "CMD-2024-093"
+      }
+    ]
+  },
+  {
+    "id": "route-002",
+    "routeNumber": "TOUR-002",
+    "date": "2024-12-29",
+    "driverId": "user-005",
+    "driverName": "Ousmane Sow",
+    "vehicleId": "veh-002",
+    "vehiclePlate": "DK-5678-BB",
+    "status": "Planifié",
+    "startTime": "14:00",
+    "estimatedEndTime": "17:00",
+    "actualEndTime": null,
+    "totalStops": 3,
+    "completedStops": 0,
+    "stops": [
+      {
+        "id": "stop-006",
+        "order": 1,
+        "type": "Livraison",
+        "clientName": "Hôtel Radisson Blu Dakar",
+        "address": "Route de la Corniche Ouest",
+        "scheduledTime": "14:00",
+        "actualTime": null,
+        "status": "Planifié",
+        "weight": 58000,
+        "orderReference": "CMD-2024-089"
+      },
+      {
+        "id": "stop-007",
+        "order": 2,
+        "type": "Collecte",
+        "clientName": "Restaurant Le Lagon",
+        "address": "Almadies",
+        "scheduledTime": "15:30",
+        "actualTime": null,
+        "status": "Planifié",
+        "weight": 12000,
+        "orderReference": "CMD-2024-094"
+      },
+      {
+        "id": "stop-008",
+        "order": 3,
+        "type": "Livraison",
+        "clientName": "Pullman Teranga",
+        "address": "Place de l'Indépendance",
+        "scheduledTime": "16:30",
+        "actualTime": null,
+        "status": "Planifié",
+        "weight": 42000,
+        "orderReference": "CMD-2024-090"
+      }
+    ]
+  },
+  {
+    "id": "route-003",
+    "routeNumber": "TOUR-003",
+    "date": "2024-12-30",
+    "driverId": null,
+    "driverName": null,
+    "vehicleId": "veh-001",
+    "vehiclePlate": "DK-1234-AA",
+    "status": "Planifié",
+    "startTime": "08:00",
+    "estimatedEndTime": "11:30",
+    "actualEndTime": null,
+    "totalStops": 4,
+    "completedStops": 0,
+    "stops": [
+      {
+        "id": "stop-009",
+        "order": 1,
+        "type": "Collecte",
+        "clientName": "King Fahd Palace",
+        "address": "Almadies",
+        "scheduledTime": "08:00",
+        "actualTime": null,
+        "status": "Planifié",
+        "weight": 40000,
+        "orderReference": "CMD-2024-095"
+      },
+      {
+        "id": "stop-010",
+        "order": 2,
+        "type": "Collecte",
+        "clientName": "Hôtel Terrou-Bi",
+        "address": "Route de la Corniche Ouest",
+        "scheduledTime": "09:00",
+        "actualTime": null,
+        "status": "Planifié",
+        "weight": 35000,
+        "orderReference": "CMD-2024-096"
+      },
+      {
+        "id": "stop-011",
+        "order": 3,
+        "type": "Livraison",
+        "clientName": "Hôtel Ngor Diarama",
+        "address": "Ngor",
+        "scheduledTime": "10:00",
+        "actualTime": null,
+        "status": "Planifié",
+        "weight": 45000,
+        "orderReference": "CMD-2024-093"
+      },
+      {
+        "id": "stop-012",
+        "order": 4,
+        "type": "Livraison",
+        "clientName": "Restaurant Le Lagon",
+        "address": "Almadies",
+        "scheduledTime": "11:00",
+        "actualTime": null,
+        "status": "Planifié",
+        "weight": 12000,
+        "orderReference": "CMD-2024-094"
+      }
+    ]
+  }
+]

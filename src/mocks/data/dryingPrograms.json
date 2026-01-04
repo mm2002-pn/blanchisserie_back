@@ -1,0 +1,42 @@
+[
+  {
+    "id": "dry-001",
+    "code": "SEC-STANDARD",
+    "name": "Séchage Standard",
+    "temperature": 70,
+    "duration": 35,
+    "energyConsumption": 18,
+    "suitable": ["Linge Plat"],
+    "description": "Programme standard pour linge plat (draps, serviettes)"
+  },
+  {
+    "id": "dry-002",
+    "code": "SEC-INTENSIF",
+    "name": "Séchage Intensif",
+    "temperature": 85,
+    "duration": 45,
+    "energyConsumption": 25,
+    "suitable": ["Linge Plat"],
+    "description": "Programme intensif pour linge épais ou très humide"
+  },
+  {
+    "id": "dry-003",
+    "code": "SEC-DELICAT",
+    "name": "Séchage Délicat",
+    "temperature": 55,
+    "duration": 40,
+    "energyConsumption": 15,
+    "suitable": ["Linge Forme"],
+    "description": "Programme doux pour linge forme (vêtements délicats)"
+  },
+  {
+    "id": "dry-004",
+    "code": "SEC-RAPIDE",
+    "name": "Séchage Rapide",
+    "temperature": 75,
+    "duration": 25,
+    "energyConsumption": 20,
+    "suitable": ["Linge Plat", "Linge Forme"],
+    "description": "Programme rapide pour petit volume"
+  }
+]
