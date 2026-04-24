@@ -36,8 +36,8 @@ export default function WashingProgramsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-gray-900">Programmes de lavage</h2>
-          <p className="text-gray-600 mt-1">{programs.length} programmes configurés</p>
+          <h2 className="text-2xl font-serif font-bold text-ink-900">Programmes de lavage</h2>
+          <p className="text-ink-500 mt-1">{programs.length} programmes configurés</p>
         </div>
         {canEdit('settings') && (
           <Button onClick={() => setIsModalOpen(true)}>

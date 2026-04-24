@@ -99,10 +99,10 @@ export default function WorkflowTrackingPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-heading font-bold text-gray-900">
+        <h1 className="text-3xl font-serif font-bold text-ink-900">
           Suivi des Workflows
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-ink-500 mt-1">
           Suivi de l'état des commandes dans le processus de traitement
         </p>
       </div>
@@ -111,12 +111,12 @@ export default function WorkflowTrackingPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <Card
           padding="sm"
-          className={`cursor-pointer transition-colors ${statusFilter === 'all' ? 'border-accent-500 bg-accent-50' : 'hover:border-gray-300'}`}
+          className={`cursor-pointer transition-colors ${statusFilter === 'all' ? 'border-brand-800 bg-brand-50' : 'hover:border-ink-300'}`}
           onClick={() => setStatusFilter('all')}
         >
           <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
-            <p className="text-xs text-gray-600 mt-1">Toutes</p>
+            <p className="text-2xl font-bold text-ink-900">{orders.length}</p>
+            <p className="text-xs text-ink-500 mt-1">Toutes</p>
           </div>
         </Card>
 
@@ -124,12 +124,12 @@ export default function WorkflowTrackingPage() {
           <Card
             key={status}
             padding="sm"
-            className={`cursor-pointer transition-colors ${statusFilter === status ? 'border-accent-500 bg-accent-50' : 'hover:border-gray-300'}`}
+            className={`cursor-pointer transition-colors ${statusFilter === status ? 'border-brand-800 bg-brand-50' : 'hover:border-ink-300'}`}
             onClick={() => setStatusFilter(status)}
           >
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{count}</p>
-              <p className="text-xs text-gray-600 mt-1">{status}</p>
+              <p className="text-2xl font-bold text-ink-900">{count}</p>
+              <p className="text-xs text-ink-500 mt-1">{status}</p>
             </div>
           </Card>
         ))}
@@ -139,11 +139,11 @@ export default function WorkflowTrackingPage() {
       <Card>
         <CardContent className="p-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-400" />
             <input
               type="text"
               placeholder="Rechercher par numéro de commande ou client..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+              className="w-full pl-10 pr-4 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -171,15 +171,15 @@ export default function WorkflowTrackingPage() {
                       key={order.id}
                       className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                         selectedOrderId === order.id
-                          ? 'border-accent-500 bg-accent-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-brand-800 bg-brand-50'
+                          : 'border-ink-200 hover:border-ink-300'
                       }`}
                       onClick={() => setSelectedOrderId(order.id)}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="font-semibold text-gray-900">{order.clientName}</p>
-                          <p className="text-sm text-gray-600">{order.orderNumber}</p>
+                          <p className="font-semibold text-ink-900">{order.clientName}</p>
+                          <p className="text-sm text-ink-500">{order.orderNumber}</p>
                         </div>
                         <Badge variant={stateInfo?.color as any || 'default'} className="text-xs">
                           {order.status}
@@ -188,11 +188,11 @@ export default function WorkflowTrackingPage() {
 
                       {/* Progress Bar */}
                       <div className="mb-2">
-                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <div className="flex justify-between text-xs text-ink-500 mb-1">
                           <span>{stateInfo?.label}</span>
                           <span>{progress}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-ink-200 rounded-full h-2">
                           <div
                             className={`h-2 rounded-full transition-all ${
                               progress === 100 ? 'bg-success' : 'bg-accent'
@@ -202,7 +202,7 @@ export default function WorkflowTrackingPage() {
                         </div>
                       </div>
 
-                      <div className="flex gap-4 text-xs text-gray-600">
+                      <div className="flex gap-4 text-xs text-ink-500">
                         <div>
                           <span className="font-medium">Collecte:</span> {format(new Date(order.collectionDate), 'dd/MM', { locale: fr })}
                         </div>
@@ -220,8 +220,8 @@ export default function WorkflowTrackingPage() {
                 })}
 
                 {filteredOrders.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <AlertCircle className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                  <div className="text-center py-8 text-ink-500">
+                    <AlertCircle className="w-12 h-12 mx-auto mb-2 text-ink-400" />
                     <p>Aucune commande trouvée</p>
                   </div>
                 )}
@@ -237,35 +237,35 @@ export default function WorkflowTrackingPage() {
               <CardHeader>
                 <div>
                   <CardTitle>{selectedOrder.clientName}</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-ink-500 mt-1">
                     Commande {selectedOrder.orderNumber}
                   </p>
                 </div>
               </CardHeader>
               <CardContent>
                 {/* Order Info */}
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="mb-6 p-4 bg-paper-2 rounded-lg">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-gray-600">Statut actuel</p>
+                      <p className="text-ink-500">Statut actuel</p>
                       <Badge variant={WORKFLOW_STATES[selectedOrder.workflowState as WorkflowStateKey]?.color as any || 'default'}>
                         {WORKFLOW_STATES[selectedOrder.workflowState as WorkflowStateKey]?.label}
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-gray-600">Progression</p>
-                      <p className="font-bold text-gray-900">{getWorkflowProgress(selectedOrder.workflowState)}%</p>
+                      <p className="text-ink-500">Progression</p>
+                      <p className="font-bold text-ink-900">{getWorkflowProgress(selectedOrder.workflowState)}%</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Estimation</p>
-                      <p className="font-medium text-gray-900">
+                      <p className="text-ink-500">Estimation</p>
+                      <p className="font-medium text-ink-900">
                         {selectedOrder.estimatedSize} ({formatWeight(selectedOrder.estimatedWeight || 0)})
                       </p>
                     </div>
                     {selectedOrder.actualWeight && (
                       <div>
-                        <p className="text-gray-600">Poids réel</p>
-                        <p className="font-medium text-gray-900">{formatWeight(selectedOrder.actualWeight)}</p>
+                        <p className="text-ink-500">Poids réel</p>
+                        <p className="font-medium text-ink-900">{formatWeight(selectedOrder.actualWeight)}</p>
                       </div>
                     )}
                   </div>
@@ -273,7 +273,7 @@ export default function WorkflowTrackingPage() {
 
                 {/* Timeline */}
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900">Étapes du workflow</h4>
+                  <h4 className="font-semibold text-ink-900">Étapes du workflow</h4>
 
                   {workflowSteps.map((step, index) => {
                     const currentStepIndex = getCurrentStepIndex(selectedOrder.workflowState);
@@ -296,8 +296,8 @@ export default function WorkflowTrackingPage() {
                             stepStatus === 'completed'
                               ? 'bg-success text-white'
                               : stepStatus === 'current'
-                              ? 'bg-accent-100 text-accent-600'
-                              : 'bg-gray-200 text-gray-400'
+                              ? 'bg-brand-100 text-brand-800'
+                              : 'bg-ink-200 text-ink-400'
                           }`}>
                             {stepStatus === 'completed' ? (
                               <CheckCircle className="w-6 h-6" />
@@ -314,12 +314,12 @@ export default function WorkflowTrackingPage() {
                               stepStatus === 'completed'
                                 ? 'text-success'
                                 : stepStatus === 'current'
-                                ? 'text-accent-600'
-                                : 'text-gray-400'
+                                ? 'text-brand-800'
+                                : 'text-ink-400'
                             }`}>
                               {step.label}
                             </h5>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-ink-500 mt-1">
                               {stepStatus === 'completed' && 'Terminée'}
                               {stepStatus === 'current' && 'En cours...'}
                               {stepStatus === 'pending' && 'En attente'}
@@ -327,7 +327,7 @@ export default function WorkflowTrackingPage() {
 
                             {/* Show timestamp if available */}
                             {stepStatus === 'completed' && (
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-ink-500 mt-1">
                                 {/* In real app, would show actual timestamp */}
                                 Terminée le {format(new Date(selectedOrder.collectionDate), 'dd/MM/yyyy à HH:mm', { locale: fr })}
                               </p>
@@ -351,13 +351,13 @@ export default function WorkflowTrackingPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-gray-200">
+            <Card className="border-ink-200">
               <CardContent className="p-12 text-center">
-                <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <Package className="w-16 h-16 mx-auto mb-4 text-ink-400" />
+                <h3 className="text-lg font-semibold text-ink-900 mb-2">
                   Sélectionnez une commande
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-ink-500">
                   Choisissez une commande dans la liste de gauche pour voir son workflow détaillé.
                 </p>
               </CardContent>
@@ -367,15 +367,15 @@ export default function WorkflowTrackingPage() {
       </div>
 
       {/* Info Alert */}
-      <Card className="border-primary-200 bg-primary-50">
+      <Card className="border-ink-200 bg-paper-2">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-primary-700 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-ink-700 flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="font-semibold text-primary-900 mb-1">
                 Suivi en temps réel
               </h4>
-              <p className="text-sm text-primary-700">
+              <p className="text-sm text-ink-700">
                 Cette page affiche l'état actuel de chaque commande dans son workflow de traitement.
                 Chaque type de linge (LP, LF, NAE) suit un workflow spécifique défini dans les paramètres.
                 Les étapes s'enchaînent automatiquement ou manuellement selon la configuration.

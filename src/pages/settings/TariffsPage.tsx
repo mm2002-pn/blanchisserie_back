@@ -22,8 +22,8 @@ export default function TariffsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-gray-900">Grilles tarifaires</h2>
-          <p className="text-gray-600 mt-1">{tariffs.length} grilles configurées</p>
+          <h2 className="text-2xl font-serif font-bold text-ink-900">Grilles tarifaires</h2>
+          <p className="text-ink-500 mt-1">{tariffs.length} grilles configurées</p>
         </div>
         {canEdit('settings') && (
           <Button>
@@ -41,8 +41,8 @@ export default function TariffsPage() {
               key={tariff.id}
               className={`cursor-pointer transition-all ${
                 selectedTariff.id === tariff.id
-                  ? 'border-accent-500 border-2 bg-accent-50'
-                  : 'hover:border-gray-300'
+                  ? 'border-brand-800 border-2 bg-brand-50'
+                  : 'hover:border-ink-300'
               }`}
               onClick={() => setSelectedTariff(tariff)}
             >
@@ -50,20 +50,20 @@ export default function TariffsPage() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900">{tariff.name}</h3>
+                      <h3 className="font-semibold text-ink-900">{tariff.name}</h3>
                       {tariff.isDefault && (
                         <Badge variant="success" className="text-xs">Par défaut</Badge>
                       )}
                     </div>
-                    <p className="text-xs text-gray-600 mb-2">{tariff.code}</p>
+                    <p className="text-xs text-ink-500 mb-2">{tariff.code}</p>
                   </div>
                   <Badge variant={typeBadgeVariants[tariff.type]} className="text-xs">
                     {tariff.type}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{tariff.description}</p>
+                <p className="text-sm text-ink-500 mb-2">{tariff.description}</p>
                 {tariff.type === 'Forfait' && (
-                  <div className="text-sm font-medium text-accent-600">
+                  <div className="text-sm font-medium text-brand-800">
                     {formatCurrency(tariff.monthlyPrice || 0)}/mois
                   </div>
                 )}
@@ -72,7 +72,7 @@ export default function TariffsPage() {
                     {tariff.isActive ? 'Actif' : 'Inactif'}
                   </Badge>
                   {tariff.items && tariff.items.length > 0 && (
-                    <span className="text-xs text-gray-500">{tariff.items.length} tarifs</span>
+                    <span className="text-xs text-ink-500">{tariff.items.length} tarifs</span>
                   )}
                 </div>
               </CardContent>
@@ -87,7 +87,7 @@ export default function TariffsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>{selectedTariff.name}</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">{selectedTariff.description}</p>
+                  <p className="text-sm text-ink-500 mt-1">{selectedTariff.description}</p>
                 </div>
                 {canEdit('settings') && (
                   <div className="flex gap-2">
@@ -106,26 +106,26 @@ export default function TariffsPage() {
             </CardHeader>
             <CardContent>
               {/* Tariff Info */}
-              <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-paper-2 rounded-lg">
                 <div>
-                  <p className="text-sm text-gray-600">Code</p>
-                  <p className="font-medium text-gray-900">{selectedTariff.code}</p>
+                  <p className="text-sm text-ink-500">Code</p>
+                  <p className="font-medium text-ink-900">{selectedTariff.code}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Type</p>
+                  <p className="text-sm text-ink-500">Type</p>
                   <Badge variant={typeBadgeVariants[selectedTariff.type]}>
                     {selectedTariff.type}
                   </Badge>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Valide du</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-ink-500">Valide du</p>
+                  <p className="font-medium text-ink-900">
                     {new Date(selectedTariff.validFrom).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Valide jusqu'au</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-ink-500">Valide jusqu'au</p>
+                  <p className="font-medium text-ink-900">
                     {selectedTariff.validUntil
                       ? new Date(selectedTariff.validUntil).toLocaleDateString('fr-FR')
                       : 'Indéterminé'}
@@ -135,23 +135,23 @@ export default function TariffsPage() {
 
               {/* Forfait Details */}
               {selectedTariff.type === 'Forfait' && (
-                <div className="mb-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
-                  <h4 className="font-semibold text-gray-900 mb-3">Détails du forfait</h4>
+                <div className="mb-6 p-4 bg-paper-2 rounded-lg border border-ink-200">
+                  <h4 className="font-semibold text-ink-900 mb-3">Détails du forfait</h4>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600">Prix mensuel</p>
+                      <p className="text-sm text-ink-500">Prix mensuel</p>
                       <p className="text-lg font-bold text-primary-600">
                         {formatCurrency(selectedTariff.monthlyPrice || 0)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Volume inclus</p>
-                      <p className="text-lg font-bold text-gray-900">
+                      <p className="text-sm text-ink-500">Volume inclus</p>
+                      <p className="text-lg font-bold text-ink-900">
                         {selectedTariff.monthlyKgLimit} kg
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Dépassement</p>
+                      <p className="text-sm text-ink-500">Dépassement</p>
                       <p className="text-lg font-bold text-warning-600">
                         {formatCurrency(selectedTariff.overagePricePerKg || 0)}/kg
                       </p>
@@ -163,7 +163,7 @@ export default function TariffsPage() {
               {/* Applicable Clients */}
               {selectedTariff.applicableClients && selectedTariff.applicableClients.length > 0 && (
                 <div className="mb-6">
-                  <h4 className="font-semibold text-gray-900 mb-2">Clients applicables</h4>
+                  <h4 className="font-semibold text-ink-900 mb-2">Clients applicables</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedTariff.applicableClients.map((client, index) => (
                       <Badge key={index} variant="gray">
@@ -177,41 +177,41 @@ export default function TariffsPage() {
               {/* Price Items Table */}
               {selectedTariff.items && selectedTariff.items.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Détail des tarifs</h4>
+                  <h4 className="font-semibold text-ink-900 mb-3">Détail des tarifs</h4>
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-200 bg-gray-50">
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        <tr className="border-b border-ink-200 bg-paper-2">
+                          <th className="text-left py-3 px-4 text-sm font-medium text-ink-700">
                             Code
                           </th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                          <th className="text-left py-3 px-4 text-sm font-medium text-ink-700">
                             Type de linge
                           </th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">
+                          <th className="text-right py-3 px-4 text-sm font-medium text-ink-700">
                             Prix au kg
                           </th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">
+                          <th className="text-right py-3 px-4 text-sm font-medium text-ink-700">
                             Prix à la pièce
                           </th>
-                          <th className="text-center py-3 px-4 text-sm font-medium text-gray-700">
+                          <th className="text-center py-3 px-4 text-sm font-medium text-ink-700">
                             Mode facturation
                           </th>
                         </tr>
                       </thead>
                       <tbody>
                         {selectedTariff.items.map((item, index) => (
-                          <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="py-3 px-4 text-sm font-medium text-gray-900">
+                          <tr key={index} className="border-b border-ink-100 hover:bg-paper-2">
+                            <td className="py-3 px-4 text-sm font-medium text-ink-900">
                               {item.linenTypeCode}
                             </td>
-                            <td className="py-3 px-4 text-sm text-gray-900">
+                            <td className="py-3 px-4 text-sm text-ink-900">
                               {item.linenTypeName}
                             </td>
-                            <td className="py-3 px-4 text-sm text-right text-gray-900">
+                            <td className="py-3 px-4 text-sm text-right text-ink-900">
                               {formatCurrency(item.pricePerKg)}
                             </td>
-                            <td className="py-3 px-4 text-sm text-right text-gray-900">
+                            <td className="py-3 px-4 text-sm text-right text-ink-900">
                               {item.pricePerPiece ? formatCurrency(item.pricePerPiece) : '-'}
                             </td>
                             <td className="py-3 px-4 text-center">
@@ -228,7 +228,7 @@ export default function TariffsPage() {
               )}
 
               {selectedTariff.items && selectedTariff.items.length === 0 && selectedTariff.type === 'Forfait' && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-ink-500">
                   <p>Ce forfait s'applique à tous les types de linge</p>
                 </div>
               )}

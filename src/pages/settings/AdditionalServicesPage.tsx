@@ -27,8 +27,8 @@ export default function AdditionalServicesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-gray-900">Services additionnels</h2>
-          <p className="text-gray-600 mt-1">{services.length} services disponibles</p>
+          <h2 className="text-2xl font-serif font-bold text-ink-900">Services additionnels</h2>
+          <p className="text-ink-500 mt-1">{services.length} services disponibles</p>
         </div>
         {canEdit('settings') && (
           <Button onClick={() => setIsModalOpen(true)}>

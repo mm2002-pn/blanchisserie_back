@@ -5,8 +5,8 @@ export default function DiagnosticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-heading font-bold text-gray-900">Diagnostic système</h2>
-        <p className="text-gray-600 mt-1">État de santé de l'application</p>
+        <h2 className="text-2xl font-serif font-bold text-ink-900">Diagnostic système</h2>
+        <p className="text-ink-500 mt-1">État de santé de l'application</p>
       </div>
 
       <div className="grid grid-cols-2 gap-6">
@@ -14,7 +14,7 @@ export default function DiagnosticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold">Base de données</h3>
-              <p className="text-sm text-gray-600 mt-1">Connectivité</p>
+              <p className="text-sm text-ink-500 mt-1">Connectivité</p>
             </div>
             <Badge variant="success">
               <CheckCircle className="w-4 h-4 mr-1" />
@@ -27,7 +27,7 @@ export default function DiagnosticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold">Serveur API</h3>
-              <p className="text-sm text-gray-600 mt-1">Temps de réponse</p>
+              <p className="text-sm text-ink-500 mt-1">Temps de réponse</p>
             </div>
             <Badge variant="success">
               <CheckCircle className="w-4 h-4 mr-1" />

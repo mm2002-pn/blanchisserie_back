@@ -59,11 +59,11 @@ export default function LinenTypesPage() {
                 setSelectedType(row);
                 setIsModalOpen(true);
               }}
-              className="text-gray-600 hover:text-accent-600"
+              className="text-ink-500 hover:text-brand-800"
             >
               <Pencil className="w-4 h-4" />
             </button>
-            <button className="text-gray-600 hover:text-error">
+            <button className="text-ink-500 hover:text-error">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
@@ -76,8 +76,8 @@ export default function LinenTypesPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-gray-900">Types de linge</h2>
-          <p className="text-gray-600 mt-1">{linenTypes.length} types configurés</p>
+          <h2 className="text-2xl font-serif font-bold text-ink-900">Types de linge</h2>
+          <p className="text-ink-500 mt-1">{linenTypes.length} types configurés</p>
         </div>
         {canEdit('settings') && (
           <Button onClick={() => setIsModalOpen(true)}>

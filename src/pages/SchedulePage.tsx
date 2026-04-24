@@ -146,13 +146,13 @@ export default function SchedulePage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-gray-900">Planning des Livraisons</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-serif font-bold text-ink-900">Planning des Livraisons</h1>
+          <p className="text-ink-500 mt-1">
             Affectation des chauffeurs aux commandes prêtes pour livraison
           </p>
         </div>
         <div className="text-right">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-ink-500">
             {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
           </div>
         </div>
@@ -163,11 +163,11 @@ export default function SchedulePage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Commandes prêtes</p>
-              <p className="text-2xl font-bold text-gray-900">{totalReadyOrders}</p>
+              <p className="text-sm text-ink-500 mb-1">Commandes prêtes</p>
+              <p className="text-2xl font-bold text-ink-900">{totalReadyOrders}</p>
             </div>
-            <div className="p-3 bg-accent-50 rounded-lg">
-              <Package className="w-6 h-6 text-accent-600" />
+            <div className="p-3 bg-brand-50 rounded-lg">
+              <Package className="w-6 h-6 text-brand-800" />
             </div>
           </div>
         </Card>
@@ -175,7 +175,7 @@ export default function SchedulePage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Livraisons planifiées</p>
+              <p className="text-sm text-ink-500 mb-1">Livraisons planifiées</p>
               <p className="text-2xl font-bold text-success">{totalAssigned}</p>
             </div>
             <div className="p-3 bg-success-50 rounded-lg">
@@ -187,7 +187,7 @@ export default function SchedulePage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">En attente</p>
+              <p className="text-sm text-ink-500 mb-1">En attente</p>
               <p className="text-2xl font-bold text-warning">{totalUnassigned}</p>
             </div>
             <div className="p-3 bg-warning-50 rounded-lg">
@@ -199,10 +199,10 @@ export default function SchedulePage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Poids total</p>
-              <p className="text-2xl font-bold text-gray-900">{formatWeight(totalWeight || 0)}</p>
+              <p className="text-sm text-ink-500 mb-1">Poids total</p>
+              <p className="text-2xl font-bold text-ink-900">{formatWeight(totalWeight || 0)}</p>
             </div>
-            <div className="p-3 bg-primary-100 rounded-lg">
+            <div className="p-3 bg-paper-3 rounded-lg">
               <Package className="w-6 h-6 text-primary-600" />
             </div>
           </div>
@@ -220,8 +220,8 @@ export default function SchedulePage() {
             <CardContent>
               {readyOrders.length === 0 ? (
                 <div className="text-center py-12">
-                  <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600">Aucune commande prête pour le moment</p>
+                  <Package className="w-12 h-12 text-ink-400 mx-auto mb-3" />
+                  <p className="text-ink-500">Aucune commande prête pour le moment</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -234,7 +234,7 @@ export default function SchedulePage() {
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <h4 className="font-semibold text-gray-900">
+                              <h4 className="font-semibold text-ink-900">
                                 {order.orderNumber}
                               </h4>
                               <Badge variant={isAssigned ? 'success' : 'warning'}>
@@ -244,7 +244,7 @@ export default function SchedulePage() {
                                 {order.status}
                               </Badge>
                             </div>
-                            <div className="text-sm text-gray-600 space-y-1">
+                            <div className="text-sm text-ink-500 space-y-1">
                               <div className="flex items-center gap-4">
                                 <span className="font-medium">{order.clientName}</span>
                                 <span>•</span>
@@ -323,21 +323,21 @@ export default function SchedulePage() {
                     <div
                       key={driver.id}
                       onClick={() => assignedCount > 0 && handleDriverClick(driver.id)}
-                      className={`flex items-center justify-between p-2 bg-gray-50 rounded-lg transition-all ${
+                      className={`flex items-center justify-between p-2 bg-paper-2 rounded-lg transition-all ${
                         assignedCount > 0
-                          ? 'cursor-pointer hover:bg-gray-100 hover:shadow-md'
+                          ? 'cursor-pointer hover:bg-ink-100 hover:shadow-md'
                           : 'opacity-60'
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-paper-3 rounded-full flex items-center justify-center">
                           <User className="w-4 h-4 text-primary-600" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-ink-900">
                             {driver.firstName} {driver.lastName}
                           </p>
-                          <p className="text-xs text-gray-600">{driver.phone}</p>
+                          <p className="text-xs text-ink-500">{driver.phone}</p>
                         </div>
                       </div>
                       {assignedCount > 0 && (
@@ -362,15 +362,15 @@ export default function SchedulePage() {
                 {vehicles.map((vehicle) => (
                   <div
                     key={vehicle.id}
-                    className="p-2 bg-gray-50 rounded-lg"
+                    className="p-2 bg-paper-2 rounded-lg"
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <Truck className="w-4 h-4 text-gray-600" />
-                      <p className="text-sm font-medium text-gray-900">
+                      <Truck className="w-4 h-4 text-ink-500" />
+                      <p className="text-sm font-medium text-ink-900">
                         {vehicle.marque} {vehicle.modele}
                       </p>
                     </div>
-                    <div className="text-xs text-gray-600 ml-6">
+                    <div className="text-xs text-ink-500 ml-6">
                       <p>{vehicle.matricule}</p>
                       <p>{vehicle.tonnage}kg • {vehicle.volumeM3}m³</p>
                       <Badge
@@ -392,11 +392,11 @@ export default function SchedulePage() {
       {showDriverCircuit && selectedDriverId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-            <CardHeader className="border-b border-gray-200">
+            <CardHeader className="border-b border-ink-200">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-xl">Circuit de Livraison</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-ink-500 mt-1">
                     Chauffeur: <span className="font-medium">{getDriverName(selectedDriverId)}</span>
                   </p>
                 </div>
@@ -425,28 +425,28 @@ export default function SchedulePage() {
                 return (
                   <div className="space-y-6">
                     {/* Circuit Summary */}
-                    <div className="grid grid-cols-3 gap-4 p-4 bg-accent-50 rounded-lg">
+                    <div className="grid grid-cols-3 gap-4 p-4 bg-brand-50 rounded-lg">
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">Nombre d'arrêts</p>
-                        <p className="text-2xl font-bold text-gray-900">{circuit.length}</p>
+                        <p className="text-sm text-ink-500 mb-1">Nombre d'arrêts</p>
+                        <p className="text-2xl font-bold text-ink-900">{circuit.length}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">Poids total</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatWeight(totalCircuitWeight)}</p>
+                        <p className="text-sm text-ink-500 mb-1">Poids total</p>
+                        <p className="text-2xl font-bold text-ink-900">{formatWeight(totalCircuitWeight)}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">Véhicule</p>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm text-ink-500 mb-1">Véhicule</p>
+                        <p className="text-sm font-medium text-ink-900">
                           {vehicle ? `${vehicle.marque} ${vehicle.modele}` : 'N/A'}
                         </p>
-                        <p className="text-xs text-gray-600">{vehicle?.matricule}</p>
+                        <p className="text-xs text-ink-500">{vehicle?.matricule}</p>
                       </div>
                     </div>
 
                     {/* Timeline Circuit */}
                     <div className="space-y-4">
-                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                        <Truck className="w-5 h-5 text-accent-600" />
+                      <h3 className="font-semibold text-ink-900 flex items-center gap-2">
+                        <Truck className="w-5 h-5 text-brand-800" />
                         Itinéraire du jour
                       </h3>
                       <div className="relative">
@@ -465,10 +465,10 @@ export default function SchedulePage() {
                               <div className="flex items-start gap-4">
                                 {/* Stop number badge */}
                                 <div className="flex flex-col items-center">
-                                  <div className="w-12 h-12 rounded-full bg-accent-600 text-white flex items-center justify-center font-bold text-lg shadow-lg z-10">
+                                  <div className="w-12 h-12 rounded-full bg-brand-700 text-white flex items-center justify-center font-bold text-lg shadow-lg z-10">
                                     {index + 1}
                                   </div>
-                                  <div className="text-xs text-gray-600 mt-2 font-medium">
+                                  <div className="text-xs text-ink-500 mt-2 font-medium">
                                     {assignment.scheduledTime}
                                   </div>
                                 </div>
@@ -479,14 +479,14 @@ export default function SchedulePage() {
                                     <div className="flex items-start justify-between mb-3">
                                       <div>
                                         <div className="flex items-center gap-2 mb-1">
-                                          <h4 className="font-semibold text-gray-900">
+                                          <h4 className="font-semibold text-ink-900">
                                             {order.clientName}
                                           </h4>
                                           <Badge variant="success" className="text-xs">
                                             Livraison
                                           </Badge>
                                         </div>
-                                        <p className="text-sm text-gray-600">
+                                        <p className="text-sm text-ink-500">
                                           Commande: {order.orderNumber}
                                         </p>
                                       </div>
@@ -499,22 +499,22 @@ export default function SchedulePage() {
 
                                     <div className="grid grid-cols-3 gap-4 text-sm">
                                       <div>
-                                        <p className="text-gray-600 mb-1">Poids</p>
-                                        <p className="font-medium text-gray-900">
+                                        <p className="text-ink-500 mb-1">Poids</p>
+                                        <p className="font-medium text-ink-900">
                                           {formatWeight(order.actualWeight || order.estimatedWeight || 0)}
                                         </p>
                                       </div>
                                       {order.triage && (
                                         <div>
-                                          <p className="text-gray-600 mb-1">Pièces</p>
-                                          <p className="font-medium text-gray-900">
+                                          <p className="text-ink-500 mb-1">Pièces</p>
+                                          <p className="font-medium text-ink-900">
                                             {order.triage.totalPieces} pièces
                                           </p>
                                         </div>
                                       )}
                                       {order.triage && (
                                         <div>
-                                          <p className="text-gray-600 mb-1">Montant</p>
+                                          <p className="text-ink-500 mb-1">Montant</p>
                                           <p className="font-medium text-success">
                                             {order.triage.totalAmount.toLocaleString()} FCFA
                                           </p>
@@ -523,8 +523,8 @@ export default function SchedulePage() {
                                     </div>
 
                                     {/* Additional info */}
-                                    <div className="mt-3 pt-3 border-t border-gray-100">
-                                      <div className="flex items-center gap-4 text-xs text-gray-600">
+                                    <div className="mt-3 pt-3 border-t border-ink-100">
+                                      <div className="flex items-center gap-4 text-xs text-ink-500">
                                         <div className="flex items-center gap-1">
                                           <Clock className="w-3 h-3" />
                                           <span>Heure prévue: {assignment.scheduledTime}</span>
@@ -551,14 +551,14 @@ export default function SchedulePage() {
                           <CheckCircle className="w-6 h-6" />
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-900">Fin du circuit</p>
-                          <p className="text-sm text-gray-600">Retour à la blanchisserie</p>
+                          <p className="font-semibold text-ink-900">Fin du circuit</p>
+                          <p className="text-sm text-ink-500">Retour à la blanchisserie</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex gap-3 pt-4 border-t border-gray-200">
+                    <div className="flex gap-3 pt-4 border-t border-ink-200">
                       <Button variant="outline" className="flex-1">
                         <ArrowRight className="w-4 h-4 mr-2" />
                         Imprimer feuille de route
@@ -582,7 +582,7 @@ export default function SchedulePage() {
           <Card className="w-full max-w-md mx-4">
             <CardHeader>
               <CardTitle>Planifier la Livraison</CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-ink-500 mt-1">
                 Commande: {readyOrders.find(o => o.id === selectedOrder)?.orderNumber}
               </p>
             </CardHeader>
@@ -590,11 +590,11 @@ export default function SchedulePage() {
               <div className="space-y-4">
                 {/* Driver Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-ink-700 mb-2">
                     Chauffeur *
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                    className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                     value={assignmentForm.driverId}
                     onChange={(e) => setAssignmentForm({ ...assignmentForm, driverId: e.target.value })}
                   >
@@ -609,11 +609,11 @@ export default function SchedulePage() {
 
                 {/* Vehicle Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-ink-700 mb-2">
                     Véhicule *
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                    className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                     value={assignmentForm.vehicleId}
                     onChange={(e) => setAssignmentForm({ ...assignmentForm, vehicleId: e.target.value })}
                   >
@@ -628,12 +628,12 @@ export default function SchedulePage() {
 
                 {/* Date Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-ink-700 mb-2">
                     Date de livraison *
                   </label>
                   <input
                     type="date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                    className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                     value={assignmentForm.scheduledDate}
                     onChange={(e) => setAssignmentForm({ ...assignmentForm, scheduledDate: e.target.value })}
                   />
@@ -641,12 +641,12 @@ export default function SchedulePage() {
 
                 {/* Time Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-ink-700 mb-2">
                     Heure de livraison *
                   </label>
                   <input
                     type="time"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                    className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                     value={assignmentForm.scheduledTime}
                     onChange={(e) => setAssignmentForm({ ...assignmentForm, scheduledTime: e.target.value })}
                   />

@@ -96,10 +96,10 @@ export default function ReceptionPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-heading font-bold text-gray-900">
+        <h1 className="text-3xl font-serif font-bold text-ink-900">
           Réception et Pesée
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-ink-500 mt-1">
           Gestion des arrivées et pesée officielle
         </p>
       </div>
@@ -109,10 +109,10 @@ export default function ReceptionPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Arrivées aujourd'hui</p>
+              <p className="text-sm text-ink-500 mb-1">Arrivées aujourd'hui</p>
               <p className="text-2xl font-bold text-primary">{todayReceptions.length}</p>
             </div>
-            <div className="p-3 bg-primary-100 rounded-lg">
+            <div className="p-3 bg-paper-3 rounded-lg">
               <Calendar className="w-6 h-6 text-primary-600" />
             </div>
           </div>
@@ -121,7 +121,7 @@ export default function ReceptionPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">À peser</p>
+              <p className="text-sm text-ink-500 mb-1">À peser</p>
               <p className="text-2xl font-bold text-warning">{ordersToWeigh.length}</p>
             </div>
             <div className="p-3 bg-warning-50 rounded-lg">
@@ -133,11 +133,11 @@ export default function ReceptionPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Camions en déchargement</p>
+              <p className="text-sm text-ink-500 mb-1">Camions en déchargement</p>
               <p className="text-2xl font-bold text-accent">{Object.keys(ordersByVehicle).length}</p>
             </div>
-            <div className="p-3 bg-accent-50 rounded-lg">
-              <Truck className="w-6 h-6 text-accent-600" />
+            <div className="p-3 bg-brand-50 rounded-lg">
+              <Truck className="w-6 h-6 text-brand-800" />
             </div>
           </div>
         </Card>
@@ -145,7 +145,7 @@ export default function ReceptionPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Pesées terminées</p>
+              <p className="text-sm text-ink-500 mb-1">Pesées terminées</p>
               <p className="text-2xl font-bold text-success">
                 {todayReceptions.filter(o => o.actualWeight).length}
               </p>
@@ -163,19 +163,19 @@ export default function ReceptionPage() {
           <Card className="max-w-2xl w-full">
             <CardHeader>
               <CardTitle>Pesée Officielle - {currentOrder.clientName}</CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-ink-500 mt-1">
                 Commande {currentOrder.orderNumber} • Estimation: {currentOrder.estimatedSize}
               </p>
             </CardHeader>
             <CardContent>
               {/* Estimation Info */}
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-2">Estimation client:</p>
-                <p className="text-lg font-semibold text-gray-900">
+              <div className="mb-6 p-4 bg-paper-2 rounded-lg">
+                <p className="text-sm text-ink-500 mb-2">Estimation client:</p>
+                <p className="text-lg font-semibold text-ink-900">
                   {formatWeight(currentOrder.estimatedWeight || 0)} ({currentOrder.estimatedSize})
                 </p>
                 {currentOrder.visualEstimation && (
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-ink-500 mt-1">
                     Visuel chauffeur: {currentOrder.visualEstimation}
                   </p>
                 )}
@@ -183,8 +183,8 @@ export default function ReceptionPage() {
 
               {/* Weight Display */}
               <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-2">LIRE LE POIDS SUR LA BALANCE:</p>
-                <div className="text-center p-6 bg-primary-50 rounded-lg border-2 border-primary-200">
+                <p className="text-sm text-ink-500 mb-2">LIRE LE POIDS SUR LA BALANCE:</p>
+                <div className="text-center p-6 bg-paper-2 rounded-lg border-2 border-ink-200">
                   <p className="text-5xl font-bold text-primary-900 font-mono">
                     {weighingState.weight || '0'} <span className="text-2xl">kg</span>
                   </p>
@@ -211,21 +211,21 @@ export default function ReceptionPage() {
               {/* Comparison (if weight entered) */}
               {weighingState.weight && parseFloat(weighingState.weight) > 0 && (
                 <div className="mb-6 p-4 bg-warning-50 rounded-lg border border-warning-200">
-                  <h4 className="font-semibold text-gray-900 mb-3">COMPARAISON:</h4>
+                  <h4 className="font-semibold text-ink-900 mb-3">COMPARAISON:</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Estimation client:</span>
+                      <span className="text-ink-500">Estimation client:</span>
                       <span className="font-medium">{formatWeight(currentOrder.estimatedWeight || 0)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Poids réel:</span>
+                      <span className="text-ink-500">Poids réel:</span>
                       <span className="font-bold text-primary-600">
                         {formatWeight(parseFloat(weighingState.weight) * 1000)}
                       </span>
                     </div>
                     {currentOrder.estimatedWeight && (
                       <div className="flex justify-between items-center pt-2 border-t border-warning-300">
-                        <span className="text-gray-600">Écart:</span>
+                        <span className="text-ink-500">Écart:</span>
                         <div className="flex items-center gap-2">
                           {calculateDeviation(
                             currentOrder.estimatedWeight,
@@ -290,19 +290,19 @@ export default function ReceptionPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-3 bg-accent-100 rounded-lg">
-                      <Truck className="w-6 h-6 text-accent-600" />
+                    <div className="p-3 bg-brand-100 rounded-lg">
+                      <Truck className="w-6 h-6 text-brand-800" />
                     </div>
                     <div>
                       <CardTitle>{vehicle.matricule} - {vehicle.marque} {vehicle.modele}</CardTitle>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-ink-500 mt-1">
                         Arrivé à {format(new Date(), 'HH:mm', { locale: fr })} • {vehicleOrders.length} commande(s)
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-600">Total estimé</p>
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-sm text-ink-500">Total estimé</p>
+                    <p className="text-xl font-bold text-ink-900">
                       ~{formatWeight(estimatedTotal)}
                     </p>
                   </div>
@@ -310,47 +310,47 @@ export default function ReceptionPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <h4 className="font-semibold text-gray-900">CLIENTS À DÉCHARGER:</h4>
+                  <h4 className="font-semibold text-ink-900">CLIENTS À DÉCHARGER:</h4>
                   {vehicleOrders.map((order, index) => (
                     <div
                       key={order.id}
-                      className="p-4 border-2 border-gray-200 rounded-lg hover:border-accent-300 transition-colors"
+                      className="p-4 border-2 border-ink-200 rounded-lg hover:border-accent-300 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-lg font-bold text-gray-900">{index + 1}.</span>
-                            <span className="font-semibold text-gray-900">{order.clientName}</span>
+                            <span className="text-lg font-bold text-ink-900">{index + 1}.</span>
+                            <span className="font-semibold text-ink-900">{order.clientName}</span>
                             <Badge variant="warning" className="text-xs">
                               estimé {order.estimatedSize}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-ink-500">
                             Commande {order.orderNumber}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm text-gray-600">Estimation</p>
-                          <p className="text-lg font-bold text-gray-900">
+                          <p className="text-sm text-ink-500">Estimation</p>
+                          <p className="text-lg font-bold text-ink-900">
                             {formatWeight(order.estimatedWeight || 0)}
                           </p>
                         </div>
                       </div>
 
                       {order.visualEstimation && (
-                        <div className="mb-3 p-2 bg-gray-50 rounded">
-                          <p className="text-xs text-gray-600">Évaluation visuelle du chauffeur:</p>
-                          <p className="text-sm font-medium text-gray-900">{order.visualEstimation}</p>
+                        <div className="mb-3 p-2 bg-paper-2 rounded">
+                          <p className="text-xs text-ink-500">Évaluation visuelle du chauffeur:</p>
+                          <p className="text-sm font-medium text-ink-900">{order.visualEstimation}</p>
                         </div>
                       )}
 
                       {order.collectionPhotos && order.collectionPhotos.length > 0 && (
                         <div className="mb-3">
-                          <p className="text-xs text-gray-600 mb-1">Photos de collecte:</p>
+                          <p className="text-xs text-ink-500 mb-1">Photos de collecte:</p>
                           <div className="flex gap-2">
                             {order.collectionPhotos.map((_photo, idx) => (
-                              <div key={idx} className="w-16 h-16 bg-gray-200 rounded border border-gray-300 flex items-center justify-center">
-                                <span className="text-xs text-gray-500">Photo {idx + 1}</span>
+                              <div key={idx} className="w-16 h-16 bg-ink-200 rounded border border-ink-300 flex items-center justify-center">
+                                <span className="text-xs text-ink-500">Photo {idx + 1}</span>
                               </div>
                             ))}
                           </div>
@@ -387,15 +387,15 @@ export default function ReceptionPage() {
       </div>
 
       {/* Info Alert */}
-      <Card className="border-primary-200 bg-primary-50">
+      <Card className="border-ink-200 bg-paper-2">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-primary-700 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-ink-700 flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="font-semibold text-primary-900 mb-1">
                 Processus de réception
               </h4>
-              <p className="text-sm text-primary-700">
+              <p className="text-sm text-ink-700">
                 Les commandes sont créées par les clients via l'application mobile avec une estimation (S, M, L, XL).
                 Le chauffeur valide visuellement et prend des photos lors de la collecte.
                 La pesée officielle en réception détermine le poids exact qui servira à la facturation.

@@ -34,7 +34,7 @@ export default function ProductionPage() {
       header: 'N° Lot',
       accessorKey: 'batchNumber',
       cell: (row: typeof batches[0]) => (
-        <span className="font-medium text-gray-900">{row.batchNumber}</span>
+        <span className="font-medium text-ink-900">{row.batchNumber}</span>
       ),
     },
     {
@@ -42,8 +42,8 @@ export default function ProductionPage() {
       accessorKey: 'clientName',
       cell: (row: typeof batches[0]) => (
         <div>
-          <p className="font-medium text-gray-900">{row.clientName}</p>
-          <p className="text-sm text-gray-500">{row.orderReference}</p>
+          <p className="font-medium text-ink-900">{row.clientName}</p>
+          <p className="text-sm text-ink-500">{row.orderReference}</p>
         </div>
       ),
     },
@@ -51,28 +51,28 @@ export default function ProductionPage() {
       header: 'Machine',
       accessorKey: 'machineReference',
       cell: (row: typeof batches[0]) => (
-        <span className="text-sm text-gray-600">{row.machineReference}</span>
+        <span className="text-sm text-ink-500">{row.machineReference}</span>
       ),
     },
     {
       header: 'Programme',
       accessorKey: 'programName',
       cell: (row: typeof batches[0]) => (
-        <span className="text-sm text-gray-600">{row.programName}</span>
+        <span className="text-sm text-ink-500">{row.programName}</span>
       ),
     },
     {
       header: 'Poids',
       accessorKey: 'weight',
       cell: (row: typeof batches[0]) => (
-        <span className="text-sm text-gray-600">{formatWeight(row.weight)}</span>
+        <span className="text-sm text-ink-500">{formatWeight(row.weight)}</span>
       ),
     },
     {
       header: 'Opérateur',
       accessorKey: 'operator',
       cell: (row: typeof batches[0]) => (
-        <span className="text-sm text-gray-600">{row.operator || '-'}</span>
+        <span className="text-sm text-ink-500">{row.operator || '-'}</span>
       ),
     },
     {
@@ -84,9 +84,9 @@ export default function ProductionPage() {
             {row.status}
           </Badge>
           {row.status === 'En cours' && row.progress && (
-            <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div className="w-full bg-ink-200 rounded-full h-1.5">
               <div
-                className="bg-accent-600 h-1.5 rounded-full transition-all"
+                className="bg-brand-700 h-1.5 rounded-full transition-all"
                 style={{ width: `${row.progress}%` }}
               />
             </div>
@@ -98,12 +98,12 @@ export default function ProductionPage() {
       header: 'Heure',
       accessorKey: 'startTime',
       cell: (row: typeof batches[0]) => (
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-ink-500">
           {row.startTime ? (
             <>
               <p>{format(new Date(row.startTime), 'HH:mm', { locale: fr })}</p>
               {row.estimatedEndTime && row.status === 'En cours' && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-ink-500">
                   Fin: {format(new Date(row.estimatedEndTime), 'HH:mm', { locale: fr })}
                 </p>
               )}
@@ -125,8 +125,8 @@ export default function ProductionPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-heading font-bold text-gray-900">Production</h1>
-        <p className="text-gray-600 mt-1">Suivi des lots et machines</p>
+        <h1 className="text-3xl font-serif font-bold text-ink-900">Production</h1>
+        <p className="text-ink-500 mt-1">Suivi des lots et machines</p>
       </div>
 
       {/* Stats Cards */}
@@ -134,8 +134,8 @@ export default function ProductionPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Machines actives</p>
-              <p className="text-2xl font-bold text-gray-900">{activeMachines}</p>
+              <p className="text-sm text-ink-500 mb-1">Machines actives</p>
+              <p className="text-2xl font-bold text-ink-900">{activeMachines}</p>
             </div>
             <div className="p-3 bg-warning-50 rounded-lg">
               <Play className="w-6 h-6 text-warning-600" />
@@ -146,8 +146,8 @@ export default function ProductionPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Lots terminés</p>
-              <p className="text-2xl font-bold text-gray-900">{completedToday}</p>
+              <p className="text-sm text-ink-500 mb-1">Lots terminés</p>
+              <p className="text-2xl font-bold text-ink-900">{completedToday}</p>
             </div>
             <div className="p-3 bg-success-50 rounded-lg">
               <CheckCircle className="w-6 h-6 text-success-600" />
@@ -158,11 +158,11 @@ export default function ProductionPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">En attente</p>
-              <p className="text-2xl font-bold text-gray-900">{pendingBatches}</p>
+              <p className="text-sm text-ink-500 mb-1">En attente</p>
+              <p className="text-2xl font-bold text-ink-900">{pendingBatches}</p>
             </div>
-            <div className="p-3 bg-gray-100 rounded-lg">
-              <Clock className="w-6 h-6 text-gray-600" />
+            <div className="p-3 bg-ink-100 rounded-lg">
+              <Clock className="w-6 h-6 text-ink-500" />
             </div>
           </div>
         </Card>
@@ -170,11 +170,11 @@ export default function ProductionPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Total lots</p>
-              <p className="text-2xl font-bold text-gray-900">{batches.length}</p>
+              <p className="text-sm text-ink-500 mb-1">Total lots</p>
+              <p className="text-2xl font-bold text-ink-900">{batches.length}</p>
             </div>
-            <div className="p-3 bg-accent-50 rounded-lg">
-              <AlertCircle className="w-6 h-6 text-accent-600" />
+            <div className="p-3 bg-brand-50 rounded-lg">
+              <AlertCircle className="w-6 h-6 text-brand-800" />
             </div>
           </div>
         </Card>
@@ -196,13 +196,13 @@ export default function ProductionPage() {
                   className={`p-4 rounded-lg border-2 ${
                     isActive
                       ? 'border-warning-300 bg-warning-50'
-                      : 'border-gray-200 bg-gray-50'
+                      : 'border-ink-200 bg-paper-2'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900 text-sm">{machine.reference}</p>
-                      <p className="text-xs text-gray-600">{machine.brand} {machine.model}</p>
+                      <p className="font-medium text-ink-900 text-sm">{machine.reference}</p>
+                      <p className="text-xs text-ink-500">{machine.brand} {machine.model}</p>
                     </div>
                     <Badge
                       variant={isActive ? 'warning' : 'success'}
@@ -211,7 +211,7 @@ export default function ProductionPage() {
                       {status}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-500">{machine.capacity} kg</p>
+                  <p className="text-xs text-ink-500">{machine.capacity} kg</p>
                 </div>
               );
             })}

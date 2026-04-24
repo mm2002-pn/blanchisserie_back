@@ -36,8 +36,8 @@ export default function ProductsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-gray-900">Produits lessiviels</h2>
-          <p className="text-gray-600 mt-1">{products.length} produits en stock</p>
+          <h2 className="text-2xl font-serif font-bold text-ink-900">Produits lessiviels</h2>
+          <p className="text-ink-500 mt-1">{products.length} produits en stock</p>
         </div>
         {canEdit('settings') && (
           <Button onClick={() => setIsModalOpen(true)}>

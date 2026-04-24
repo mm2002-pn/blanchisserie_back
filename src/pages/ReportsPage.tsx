@@ -57,8 +57,8 @@ export default function ReportsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-gray-900">Rapports</h1>
-          <p className="text-gray-600 mt-1">Analyses et statistiques</p>
+          <h1 className="text-3xl font-serif font-bold text-ink-900">Rapports</h1>
+          <p className="text-ink-500 mt-1">Analyses et statistiques</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
@@ -75,8 +75,8 @@ export default function ReportsPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">CA 6 mois</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
+              <p className="text-sm text-ink-500 mb-1">CA 6 mois</p>
+              <p className="text-2xl font-bold text-ink-900">{formatCurrency(totalRevenue)}</p>
               <div className="flex items-center gap-1 mt-1">
                 <TrendingUp className="w-4 h-4 text-success" />
                 <span className="text-sm text-success font-medium">+{revenueGrowth}%</span>
@@ -91,14 +91,14 @@ export default function ReportsPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Commandes</p>
-              <p className="text-2xl font-bold text-gray-900">{totalOrders}</p>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-ink-500 mb-1">Commandes</p>
+              <p className="text-2xl font-bold text-ink-900">{totalOrders}</p>
+              <p className="text-sm text-ink-500 mt-1">
                 Moy: {formatCurrency(avgOrderValue)}
               </p>
             </div>
-            <div className="p-3 bg-accent-50 rounded-lg">
-              <Package className="w-6 h-6 text-accent-600" />
+            <div className="p-3 bg-brand-50 rounded-lg">
+              <Package className="w-6 h-6 text-brand-800" />
             </div>
           </div>
         </Card>
@@ -106,9 +106,9 @@ export default function ReportsPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Poids traité</p>
-              <p className="text-2xl font-bold text-gray-900">{formatWeight(totalWeight)}</p>
-              <p className="text-sm text-gray-600 mt-1">6 mois</p>
+              <p className="text-sm text-ink-500 mb-1">Poids traité</p>
+              <p className="text-2xl font-bold text-ink-900">{formatWeight(totalWeight)}</p>
+              <p className="text-sm text-ink-500 mt-1">6 mois</p>
             </div>
             <div className="p-3 bg-warning-50 rounded-lg">
               <Weight className="w-6 h-6 text-warning-600" />
@@ -119,11 +119,11 @@ export default function ReportsPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Clients actifs</p>
-              <p className="text-2xl font-bold text-gray-900">101</p>
-              <p className="text-sm text-gray-600 mt-1">+12 ce mois</p>
+              <p className="text-sm text-ink-500 mb-1">Clients actifs</p>
+              <p className="text-2xl font-bold text-ink-900">101</p>
+              <p className="text-sm text-ink-500 mt-1">+12 ce mois</p>
             </div>
-            <div className="p-3 bg-primary-100 rounded-lg">
+            <div className="p-3 bg-paper-3 rounded-lg">
               <Users className="w-6 h-6 text-primary-600" />
             </div>
           </div>
@@ -251,33 +251,33 @@ export default function ReportsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Client</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Commandes</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Chiffre d'affaires</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Poids traité</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">CA moyen/cmd</th>
+                <tr className="border-b border-ink-200">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-ink-700">Client</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-ink-700">Commandes</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-ink-700">Chiffre d'affaires</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-ink-700">Poids traité</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-ink-700">CA moyen/cmd</th>
                 </tr>
               </thead>
               <tbody>
                 {topClients.map((client, index) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={index} className="border-b border-ink-100 hover:bg-paper-2">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-accent-100 flex items-center justify-center">
-                          <span className="text-sm font-medium text-accent-600">{index + 1}</span>
+                        <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center">
+                          <span className="text-sm font-medium text-brand-800">{index + 1}</span>
                         </div>
-                        <span className="font-medium text-gray-900">{client.name}</span>
+                        <span className="font-medium text-ink-900">{client.name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-right text-gray-900">{client.orders}</td>
-                    <td className="py-3 px-4 text-right font-medium text-gray-900">
+                    <td className="py-3 px-4 text-right text-ink-900">{client.orders}</td>
+                    <td className="py-3 px-4 text-right font-medium text-ink-900">
                       {formatCurrency(client.revenue)}
                     </td>
-                    <td className="py-3 px-4 text-right text-gray-600">
+                    <td className="py-3 px-4 text-right text-ink-500">
                       {formatWeight(client.weight)}
                     </td>
-                    <td className="py-3 px-4 text-right text-gray-600">
+                    <td className="py-3 px-4 text-right text-ink-500">
                       {formatCurrency(client.revenue / client.orders)}
                     </td>
                   </tr>

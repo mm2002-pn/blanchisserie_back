@@ -36,8 +36,8 @@ export default function InventoryPage() {
       accessorKey: 'productName',
       cell: (row: typeof inventory[0]) => (
         <div>
-          <p className="font-medium text-gray-900">{row.productName}</p>
-          <p className="text-sm text-gray-500">{row.category}</p>
+          <p className="font-medium text-ink-900">{row.productName}</p>
+          <p className="text-sm text-ink-500">{row.category}</p>
         </div>
       ),
     },
@@ -50,14 +50,14 @@ export default function InventoryPage() {
         return (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-900">
+              <span className="font-medium text-ink-900">
                 {row.currentStock} {row.unit}
               </span>
               <Badge variant={badge.variant} className="text-xs">
                 {badge.label}
               </Badge>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-ink-200 rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all ${
                   percentage <= 20 ? 'bg-danger' :
@@ -75,7 +75,7 @@ export default function InventoryPage() {
       header: 'Min / Max',
       accessorKey: 'minStock',
       cell: (row: typeof inventory[0]) => (
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-ink-500">
           <p>Min: {row.minStock} {row.unit}</p>
           <p>Max: {row.maxStock} {row.unit}</p>
         </div>
@@ -85,7 +85,7 @@ export default function InventoryPage() {
       header: 'Point de commande',
       accessorKey: 'reorderPoint',
       cell: (row: typeof inventory[0]) => (
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-ink-500">
           {row.reorderPoint} {row.unit}
         </span>
       ),
@@ -94,7 +94,7 @@ export default function InventoryPage() {
       header: 'Prix unitaire',
       accessorKey: 'unitPrice',
       cell: (row: typeof inventory[0]) => (
-        <span className="text-sm text-gray-900 font-medium">
+        <span className="text-sm text-ink-900 font-medium">
           {formatCurrency(row.unitPrice)}
         </span>
       ),
@@ -103,7 +103,7 @@ export default function InventoryPage() {
       header: 'Valeur stock',
       accessorKey: 'value',
       cell: (row: typeof inventory[0]) => (
-        <span className="text-sm text-gray-900 font-medium">
+        <span className="text-sm text-ink-900 font-medium">
           {formatCurrency(row.currentStock * row.unitPrice)}
         </span>
       ),
@@ -112,14 +112,14 @@ export default function InventoryPage() {
       header: 'Fournisseur',
       accessorKey: 'supplier',
       cell: (row: typeof inventory[0]) => (
-        <span className="text-sm text-gray-600">{row.supplier}</span>
+        <span className="text-sm text-ink-500">{row.supplier}</span>
       ),
     },
     {
       header: 'Dernier réappro',
       accessorKey: 'lastRestockDate',
       cell: (row: typeof inventory[0]) => (
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-ink-500">
           {format(new Date(row.lastRestockDate), 'dd/MM/yyyy', { locale: fr })}
         </span>
       ),
@@ -139,8 +139,8 @@ export default function InventoryPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-heading font-bold text-gray-900">Inventaire</h1>
-        <p className="text-gray-600 mt-1">Gestion des stocks</p>
+        <h1 className="text-3xl font-serif font-bold text-ink-900">Inventaire</h1>
+        <p className="text-ink-500 mt-1">Gestion des stocks</p>
       </div>
 
       {/* Stats Cards */}
@@ -148,11 +148,11 @@ export default function InventoryPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Total articles</p>
-              <p className="text-2xl font-bold text-gray-900">{totalItems}</p>
+              <p className="text-sm text-ink-500 mb-1">Total articles</p>
+              <p className="text-2xl font-bold text-ink-900">{totalItems}</p>
             </div>
-            <div className="p-3 bg-accent-50 rounded-lg">
-              <Package className="w-6 h-6 text-accent-600" />
+            <div className="p-3 bg-brand-50 rounded-lg">
+              <Package className="w-6 h-6 text-brand-800" />
             </div>
           </div>
         </Card>
@@ -160,7 +160,7 @@ export default function InventoryPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Stock critique</p>
+              <p className="text-sm text-ink-500 mb-1">Stock critique</p>
               <p className="text-2xl font-bold text-danger">{criticalItems}</p>
             </div>
             <div className="p-3 bg-danger-50 rounded-lg">
@@ -172,7 +172,7 @@ export default function InventoryPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Stock bas</p>
+              <p className="text-sm text-ink-500 mb-1">Stock bas</p>
               <p className="text-2xl font-bold text-warning">{lowStockItems}</p>
             </div>
             <div className="p-3 bg-warning-50 rounded-lg">
@@ -184,8 +184,8 @@ export default function InventoryPage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Valeur totale</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalValue)}</p>
+              <p className="text-sm text-ink-500 mb-1">Valeur totale</p>
+              <p className="text-2xl font-bold text-ink-900">{formatCurrency(totalValue)}</p>
             </div>
             <div className="p-3 bg-success-50 rounded-lg">
               <ShoppingCart className="w-6 h-6 text-success-600" />

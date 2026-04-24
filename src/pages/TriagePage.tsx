@@ -106,10 +106,10 @@ export default function TriagePage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-heading font-bold text-gray-900">
+        <h1 className="text-3xl font-serif font-bold text-ink-900">
           Triage et Ventilation
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-ink-500 mt-1">
           Ventilation du poids par catégorie de linge
         </p>
       </div>
@@ -119,7 +119,7 @@ export default function TriagePage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">En attente de triage</p>
+              <p className="text-sm text-ink-500 mb-1">En attente de triage</p>
               <p className="text-2xl font-bold text-warning">{ordersToTriage.length}</p>
             </div>
             <div className="p-3 bg-warning-50 rounded-lg">
@@ -131,7 +131,7 @@ export default function TriagePage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Triés aujourd'hui</p>
+              <p className="text-sm text-ink-500 mb-1">Triés aujourd'hui</p>
               <p className="text-2xl font-bold text-success">
                 {orders.filter(o =>
                   o.triage?.completedAt &&
@@ -148,7 +148,7 @@ export default function TriagePage() {
         <Card padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Poids total trié</p>
+              <p className="text-sm text-ink-500 mb-1">Poids total trié</p>
               <p className="text-2xl font-bold text-primary">
                 {formatWeight(
                   orders
@@ -159,7 +159,7 @@ export default function TriagePage() {
                 )}
               </p>
             </div>
-            <div className="p-3 bg-primary-100 rounded-lg">
+            <div className="p-3 bg-paper-3 rounded-lg">
               <FileText className="w-6 h-6 text-primary-600" />
             </div>
           </div>
@@ -180,15 +180,15 @@ export default function TriagePage() {
                     key={order.id}
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                       selectedOrderId === order.id
-                        ? 'border-accent-500 bg-accent-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-brand-800 bg-brand-50'
+                        : 'border-ink-200 hover:border-ink-300'
                     }`}
                     onClick={() => selectOrder(order.id)}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="font-semibold text-gray-900">{order.clientName}</p>
-                        <p className="text-sm text-gray-600">{order.orderNumber}</p>
+                        <p className="font-semibold text-ink-900">{order.clientName}</p>
+                        <p className="text-sm text-ink-500">{order.orderNumber}</p>
                       </div>
                       <Badge variant="warning" className="text-xs">
                         À trier
@@ -196,19 +196,19 @@ export default function TriagePage() {
                     </div>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Pesé le:</span>
+                        <span className="text-ink-500">Pesé le:</span>
                         <span className="font-medium">
                           {order.weighingDateTime && format(new Date(order.weighingDateTime), 'dd/MM HH:mm', { locale: fr })}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Poids officiel:</span>
+                        <span className="text-ink-500">Poids officiel:</span>
                         <span className="font-bold text-primary-600">
                           {formatWeight(order.actualWeight || 0)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Estimation:</span>
+                        <span className="text-ink-500">Estimation:</span>
                         <span className="font-medium">
                           {formatWeight(order.estimatedWeight || 0)}
                         </span>
@@ -218,7 +218,7 @@ export default function TriagePage() {
                 ))}
 
                 {ordersToTriage.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-ink-500">
                     <CheckCircle className="w-12 h-12 mx-auto mb-2 text-success" />
                     <p>Toutes les commandes sont triées</p>
                   </div>
@@ -236,12 +236,12 @@ export default function TriagePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Triage - {selectedOrder.clientName}</CardTitle>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-ink-500 mt-1">
                       Commande {selectedOrder.orderNumber}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-600">Poids total officiel</p>
+                    <p className="text-sm text-ink-500">Poids total officiel</p>
                     <p className="text-2xl font-bold text-primary-600">
                       {formatWeight(selectedOrder.actualWeight || 0)}
                     </p>
@@ -250,9 +250,9 @@ export default function TriagePage() {
               </CardHeader>
               <CardContent>
                 {/* Progress Bar */}
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="mb-6 p-4 bg-paper-2 rounded-lg">
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">TOTAL SAISI:</span>
+                    <span className="text-ink-500">TOTAL SAISI:</span>
                     <span className={`font-bold ${
                       getTotalWeight() === selectedOrder.actualWeight
                         ? 'text-success'
@@ -263,7 +263,7 @@ export default function TriagePage() {
                       {formatWeight(getTotalWeight())} / {formatWeight(selectedOrder.actualWeight || 0)}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="w-full bg-ink-200 rounded-full h-3">
                     <div
                       className={`h-3 rounded-full transition-all ${
                         getTotalWeight() > (selectedOrder.actualWeight || 0)
@@ -278,7 +278,7 @@ export default function TriagePage() {
                     />
                   </div>
                   {getTotalWeight() > 0 && (
-                    <p className="text-xs text-gray-600 mt-2 text-center">
+                    <p className="text-xs text-ink-500 mt-2 text-center">
                       Écart: {Math.abs(getWeightDeviation())}%
                       {Math.abs(getWeightDeviation()) <= 5 && ' ✓ (acceptable)'}
                     </p>
@@ -288,7 +288,7 @@ export default function TriagePage() {
                 {/* Triage Items */}
                 <div className="space-y-3 mb-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-gray-900">VENTILER PAR CATÉGORIE:</h4>
+                    <h4 className="font-semibold text-ink-900">VENTILER PAR CATÉGORIE:</h4>
                     <Button variant="outline" size="sm" onClick={addTriageItem}>
                       <Plus className="w-4 h-4 mr-2" />
                       Ajouter une ligne
@@ -299,13 +299,13 @@ export default function TriagePage() {
                     const selectedLinenType = linenTypes.find(lt => lt.id === item.linenTypeId);
 
                     return (
-                      <div key={index} className="p-4 border border-gray-200 rounded-lg bg-white">
+                      <div key={index} className="p-4 border border-ink-200 rounded-lg bg-paper">
                         <div className="grid grid-cols-12 gap-3 items-end">
                           {/* Linen Type Select */}
                           <div className="col-span-5">
-                            <label className="block text-xs text-gray-600 mb-1">Type de linge</label>
+                            <label className="block text-xs text-ink-500 mb-1">Type de linge</label>
                             <select
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                              className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                               value={item.linenTypeId}
                               onChange={(e) => updateTriageItem(index, 'linenTypeId', e.target.value)}
                             >
@@ -321,23 +321,23 @@ export default function TriagePage() {
                           {/* Weight or Pieces based on billing mode */}
                           {selectedLinenType?.billingMode === 'Poids' ? (
                             <div className="col-span-3">
-                              <label className="block text-xs text-gray-600 mb-1">Poids (kg)</label>
+                              <label className="block text-xs text-ink-500 mb-1">Poids (kg)</label>
                               <input
                                 type="number"
                                 min="0"
                                 step="0.1"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                                className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                                 value={item.weight / 1000 || ''}
                                 onChange={(e) => updateTriageItem(index, 'weight', parseFloat(e.target.value || '0') * 1000)}
                               />
                             </div>
                           ) : selectedLinenType?.billingMode === 'Pièce' ? (
                             <div className="col-span-3">
-                              <label className="block text-xs text-gray-600 mb-1">Pièces</label>
+                              <label className="block text-xs text-ink-500 mb-1">Pièces</label>
                               <input
                                 type="number"
                                 min="0"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                                className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                                 value={item.pieces || ''}
                                 onChange={(e) => updateTriageItem(index, 'pieces', parseInt(e.target.value || '0'))}
                               />
@@ -348,8 +348,8 @@ export default function TriagePage() {
 
                           {/* Price */}
                           <div className="col-span-3">
-                            <label className="block text-xs text-gray-600 mb-1">Montant</label>
-                            <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-medium text-gray-900">
+                            <label className="block text-xs text-ink-500 mb-1">Montant</label>
+                            <div className="px-3 py-2 bg-paper-2 border border-ink-200 rounded-lg font-medium text-ink-900">
                               {selectedLinenType ? (
                                 formatCurrency(
                                   selectedLinenType.billingMode === 'Poids'
@@ -374,7 +374,7 @@ export default function TriagePage() {
                         </div>
 
                         {selectedLinenType && (
-                          <div className="mt-2 flex items-center gap-4 text-xs text-gray-600">
+                          <div className="mt-2 flex items-center gap-4 text-xs text-ink-500">
                             <Badge variant="gray" className="text-xs">
                               {selectedLinenType.billingMode}
                             </Badge>
@@ -389,7 +389,7 @@ export default function TriagePage() {
                   })}
 
                   {triageItems.length === 0 && (
-                    <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+                    <div className="text-center py-8 text-ink-500 border-2 border-dashed border-ink-300 rounded-lg">
                       <p className="mb-2">Aucune catégorie ajoutée</p>
                       <Button variant="outline" size="sm" onClick={addTriageItem}>
                         <Plus className="w-4 h-4 mr-2" />
@@ -401,36 +401,36 @@ export default function TriagePage() {
 
                 {/* Summary */}
                 {triageItems.length > 0 && (
-                  <div className="p-4 bg-primary-50 rounded-lg border border-primary-200 mb-4">
-                    <h4 className="font-semibold text-gray-900 mb-3">RÉSUMÉ DU TRIAGE:</h4>
+                  <div className="p-4 bg-paper-2 rounded-lg border border-ink-200 mb-4">
+                    <h4 className="font-semibold text-ink-900 mb-3">RÉSUMÉ DU TRIAGE:</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-600 mb-1">Poids total saisi:</p>
+                        <p className="text-ink-500 mb-1">Poids total saisi:</p>
                         <p className="text-lg font-bold text-primary-600">{formatWeight(getTotalWeight())}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600 mb-1">Montant total facturé:</p>
+                        <p className="text-ink-500 mb-1">Montant total facturé:</p>
                         <p className="text-lg font-bold text-success">{formatCurrency(getTotalAmount())}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600 mb-1">Poids officiel:</p>
-                        <p className="font-medium text-gray-900">{formatWeight(selectedOrder.actualWeight || 0)}</p>
+                        <p className="text-ink-500 mb-1">Poids officiel:</p>
+                        <p className="font-medium text-ink-900">{formatWeight(selectedOrder.actualWeight || 0)}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600 mb-1">Nombre de catégories:</p>
-                        <p className="font-medium text-gray-900">{triageItems.length}</p>
+                        <p className="text-ink-500 mb-1">Nombre de catégories:</p>
+                        <p className="font-medium text-ink-900">{triageItems.length}</p>
                       </div>
                     </div>
 
                     {selectedOrder.estimatedInvoiceAmount && (
                       <div className="mt-3 pt-3 border-t border-primary-300">
-                        <p className="text-xs text-gray-600 mb-1">Comparaison avec estimation:</p>
+                        <p className="text-xs text-ink-500 mb-1">Comparaison avec estimation:</p>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Montant estimé:</span>
+                          <span className="text-sm text-ink-500">Montant estimé:</span>
                           <span className="font-medium">{formatCurrency(selectedOrder.estimatedInvoiceAmount)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Écart:</span>
+                          <span className="text-sm text-ink-500">Écart:</span>
                           <span className={`font-bold ${
                             getTotalAmount() > selectedOrder.estimatedInvoiceAmount ? 'text-danger' : 'text-success'
                           }`}>
@@ -487,13 +487,13 @@ export default function TriagePage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-gray-200">
+            <Card className="border-ink-200">
               <CardContent className="p-12 text-center">
-                <Scale className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <Scale className="w-16 h-16 mx-auto mb-4 text-ink-400" />
+                <h3 className="text-lg font-semibold text-ink-900 mb-2">
                   Sélectionnez une commande
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-ink-500">
                   Choisissez une commande pesée dans la liste de gauche pour commencer le triage.
                 </p>
               </CardContent>
@@ -503,15 +503,15 @@ export default function TriagePage() {
       </div>
 
       {/* Info Alert */}
-      <Card className="border-primary-200 bg-primary-50">
+      <Card className="border-ink-200 bg-paper-2">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-primary-700 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-ink-700 flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="font-semibold text-primary-900 mb-1">
                 Processus de triage
               </h4>
-              <p className="text-sm text-primary-700">
+              <p className="text-sm text-ink-700">
                 Le triage consiste à ventiler le poids total pesé par catégorie de linge (draps, serviettes, nappes, uniformes).
                 Certains articles sont facturés au poids (draps, serviettes), d'autres à la pièce (nappes, chemises).
                 Le total saisi doit correspondre au poids officiel (écart maximum 5%).

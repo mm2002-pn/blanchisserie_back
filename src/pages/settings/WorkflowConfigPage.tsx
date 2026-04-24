@@ -28,8 +28,8 @@ export default function WorkflowConfigPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-gray-900">Configuration des workflows</h2>
-          <p className="text-gray-600 mt-1">{workflows.length} workflows configurés</p>
+          <h2 className="text-2xl font-serif font-bold text-ink-900">Configuration des workflows</h2>
+          <p className="text-ink-500 mt-1">{workflows.length} workflows configurés</p>
         </div>
         {canEdit('settings') && (
           <Button>
@@ -46,8 +46,8 @@ export default function WorkflowConfigPage() {
             key={workflow.id}
             className={`cursor-pointer transition-all ${
               selectedWorkflow.id === workflow.id
-                ? 'border-accent-500 border-2 bg-accent-50'
-                : 'hover:border-gray-300'
+                ? 'border-brand-800 border-2 bg-brand-50'
+                : 'hover:border-ink-300'
             }`}
             onClick={() => setSelectedWorkflow(workflow)}
           >
@@ -60,9 +60,9 @@ export default function WorkflowConfigPage() {
                   {workflow.isActive ? 'Actif' : 'Inactif'}
                 </Badge>
               </div>
-              <h3 className="font-semibold text-gray-900 text-sm mb-1">{workflow.name}</h3>
-              <p className="text-xs text-gray-600 mb-3">{workflow.description}</p>
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <h3 className="font-semibold text-ink-900 text-sm mb-1">{workflow.name}</h3>
+              <p className="text-xs text-ink-500 mb-3">{workflow.description}</p>
+              <div className="flex items-center justify-between text-xs text-ink-500">
                 <span>{workflow.steps.length} étapes</span>
                 <span>{workflow.estimatedDuration} min</span>
               </div>
@@ -77,7 +77,7 @@ export default function WorkflowConfigPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>{selectedWorkflow.name}</CardTitle>
-              <p className="text-sm text-gray-600 mt-1">{selectedWorkflow.description}</p>
+              <p className="text-sm text-ink-500 mt-1">{selectedWorkflow.description}</p>
             </div>
             {canEdit('settings') && (
               <div className="flex gap-2">
@@ -94,30 +94,30 @@ export default function WorkflowConfigPage() {
         </CardHeader>
         <CardContent>
           {/* Workflow Info */}
-          <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-paper-2 rounded-lg">
             <div>
-              <p className="text-sm text-gray-600">Code</p>
-              <p className="font-medium text-gray-900">{selectedWorkflow.code}</p>
+              <p className="text-sm text-ink-500">Code</p>
+              <p className="font-medium text-ink-900">{selectedWorkflow.code}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Catégorie</p>
+              <p className="text-sm text-ink-500">Catégorie</p>
               <Badge variant={categoryBadgeVariants[selectedWorkflow.linenCategory]}>
                 {selectedWorkflow.linenCategory}
               </Badge>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Nombre d'étapes</p>
-              <p className="font-medium text-gray-900">{selectedWorkflow.steps.length}</p>
+              <p className="text-sm text-ink-500">Nombre d'étapes</p>
+              <p className="font-medium text-ink-900">{selectedWorkflow.steps.length}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Durée totale</p>
-              <p className="font-medium text-gray-900">{selectedWorkflow.estimatedDuration} min</p>
+              <p className="text-sm text-ink-500">Durée totale</p>
+              <p className="font-medium text-ink-900">{selectedWorkflow.estimatedDuration} min</p>
             </div>
           </div>
 
           {/* Workflow Steps Timeline */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900">Étapes du workflow</h3>
+            <h3 className="font-semibold text-ink-900">Étapes du workflow</h3>
 
             {selectedWorkflow.steps.map((step, index) => (
               <div key={step.code} className="relative">
@@ -130,19 +130,19 @@ export default function WorkflowConfigPage() {
                 <div className="flex gap-4">
                   {/* Step Number */}
                   <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0">
-                      <span className="text-accent-600 font-bold">{step.order}</span>
+                    <div className="w-12 h-12 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
+                      <span className="text-brand-800 font-bold">{step.order}</span>
                     </div>
                   </div>
 
                   {/* Step Content */}
                   <div className="flex-1 pb-4">
-                    <Card className="border-l-4 border-accent-500">
+                    <Card className="border-l-4 border-brand-800">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900 mb-1">{step.name}</h4>
-                            <p className="text-sm text-gray-600 mb-2">{step.description}</p>
+                            <h4 className="font-semibold text-ink-900 mb-1">{step.name}</h4>
+                            <p className="text-sm text-ink-500 mb-2">{step.description}</p>
                           </div>
                           <Badge variant={zoneBadgeVariants[step.zone]} className="text-xs ml-2">
                             {step.zone}
@@ -152,23 +152,23 @@ export default function WorkflowConfigPage() {
                         {/* Step Details Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 text-sm">
                           <div>
-                            <p className="text-xs text-gray-500">Acteur</p>
-                            <p className="font-medium text-gray-900">{step.actor}</p>
+                            <p className="text-xs text-ink-500">Acteur</p>
+                            <p className="font-medium text-ink-900">{step.actor}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">Lieu</p>
-                            <p className="font-medium text-gray-900">{step.location}</p>
+                            <p className="text-xs text-ink-500">Lieu</p>
+                            <p className="font-medium text-ink-900">{step.location}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">Durée estimée</p>
+                            <p className="text-xs text-ink-500">Durée estimée</p>
                             <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-gray-600" />
-                              <span className="font-medium text-gray-900">{step.duration} min</span>
+                              <Clock className="w-3 h-3 text-ink-500" />
+                              <span className="font-medium text-ink-900">{step.duration} min</span>
                             </div>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">Transition</p>
-                            <p className="font-medium text-gray-900">
+                            <p className="text-xs text-ink-500">Transition</p>
+                            <p className="font-medium text-ink-900">
                               {step.nextStepAuto ? 'Auto' : 'Manuelle'}
                             </p>
                           </div>
@@ -177,7 +177,7 @@ export default function WorkflowConfigPage() {
                         {/* Required Fields */}
                         {step.requiredFields && step.requiredFields.length > 0 && (
                           <div className="mb-3">
-                            <p className="text-xs text-gray-500 mb-1">Champs requis:</p>
+                            <p className="text-xs text-ink-500 mb-1">Champs requis:</p>
                             <div className="flex flex-wrap gap-1">
                               {step.requiredFields.map((field, idx) => (
                                 <Badge key={idx} variant="gray" className="text-xs">
@@ -218,23 +218,23 @@ export default function WorkflowConfigPage() {
           </div>
 
           {/* Workflow Summary */}
-          <div className="mt-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
-            <h4 className="font-semibold text-gray-900 mb-3">Résumé du workflow</h4>
+          <div className="mt-6 p-4 bg-paper-2 rounded-lg border border-ink-200">
+            <h4 className="font-semibold text-ink-900 mb-3">Résumé du workflow</h4>
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <p className="text-gray-600 mb-1">Points de contrôle qualité</p>
+                <p className="text-ink-500 mb-1">Points de contrôle qualité</p>
                 <p className="text-lg font-bold text-primary-600">
                   {selectedWorkflow.steps.filter(s => (s as any).qualityCheck ?? false).length}
                 </p>
               </div>
               <div>
-                <p className="text-gray-600 mb-1">Machines utilisées</p>
+                <p className="text-ink-500 mb-1">Machines utilisées</p>
                 <p className="text-lg font-bold text-primary-600">
                   {selectedWorkflow.steps.filter(s => (s as any).machineRequired ?? false).length}
                 </p>
               </div>
               <div>
-                <p className="text-gray-600 mb-1">Transitions automatiques</p>
+                <p className="text-ink-500 mb-1">Transitions automatiques</p>
                 <p className="text-lg font-bold text-primary-600">
                   {selectedWorkflow.steps.filter(s => s.nextStepAuto).length}
                 </p>

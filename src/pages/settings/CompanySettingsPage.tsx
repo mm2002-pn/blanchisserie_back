@@ -11,8 +11,8 @@ export default function CompanySettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-heading font-bold text-gray-900">Paramètres de l'entreprise</h2>
-        <p className="text-gray-600 mt-1">Informations générales et configuration système</p>
+        <h2 className="text-2xl font-serif font-bold text-ink-900">Paramètres de l'entreprise</h2>
+        <p className="text-ink-500 mt-1">Informations générales et configuration système</p>
       </div>
 
       <Card>
