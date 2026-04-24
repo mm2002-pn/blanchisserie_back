@@ -126,7 +126,7 @@ export default function EstimationAnalyticsPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-serif font-bold text-ink-900">
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
           Analyse des Écarts
         </h1>
         <p className="text-ink-500 mt-1">
@@ -139,7 +139,7 @@ export default function EstimationAnalyticsPage() {
         <Card padding="md">
           <div className="text-center">
             <Calendar className="w-8 h-8 mx-auto mb-2 text-primary-600" />
-            <p className="text-2xl font-bold text-ink-900">{globalStats.totalOrders}</p>
+            <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{globalStats.totalOrders}</p>
             <p className="text-sm text-ink-500 mt-1">Commandes pesées</p>
           </div>
         </Card>
@@ -171,7 +171,7 @@ export default function EstimationAnalyticsPage() {
         <Card padding="md">
           <div className="text-center">
             <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-ink-500" />
-            <p className="text-2xl font-bold text-ink-900">{globalStats.avgDeviation.toFixed(1)}%</p>
+            <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{globalStats.avgDeviation.toFixed(1)}%</p>
             <p className="text-sm text-ink-500 mt-1">Écart moyen</p>
           </div>
         </Card>
@@ -211,11 +211,11 @@ export default function EstimationAnalyticsPage() {
           <CardContent>
             <div className="space-y-3">
               {topUnderestimations.map((order, index) => (
-                <div key={order.id} className="p-4 border border-danger-200 bg-danger-50 rounded-lg">
+                <div key={order.id} className="p-4 border border-danger-200 bg-danger-50 rounded-input">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-ink-900">{index + 1}.</span>
+                        <span className="font-serif text-lg font-medium tracking-tight text-ink-900">{index + 1}.</span>
                         <span className="font-semibold text-ink-900">{order.clientName}</span>
                       </div>
                       <p className="text-sm text-ink-500">{order.orderNumber}</p>
@@ -256,11 +256,11 @@ export default function EstimationAnalyticsPage() {
           <CardContent>
             <div className="space-y-3">
               {topOverestimations.map((order, index) => (
-                <div key={order.id} className="p-4 border border-warning-200 bg-warning-50 rounded-lg">
+                <div key={order.id} className="p-4 border border-warning-200 bg-warning-50 rounded-input">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-ink-900">{index + 1}.</span>
+                        <span className="font-serif text-lg font-medium tracking-tight text-ink-900">{index + 1}.</span>
                         <span className="font-semibold text-ink-900">{order.clientName}</span>
                       </div>
                       <p className="text-sm text-ink-500">{order.orderNumber}</p>
@@ -302,7 +302,7 @@ export default function EstimationAnalyticsPage() {
                 {clientStats.map((client) => (
                   <div
                     key={client.clientId}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    className={`p-4 border-2 rounded-input cursor-pointer transition-colors ${
                       selectedClientId === client.clientId
                         ? 'border-brand-800 bg-brand-50'
                         : 'border-ink-200 hover:border-ink-300'
@@ -339,7 +339,7 @@ export default function EstimationAnalyticsPage() {
             <div>
               {selectedClient ? (
                 <div className="space-y-4">
-                  <div className="p-4 bg-paper-2 rounded-lg border border-ink-200">
+                  <div className="p-4 bg-paper-2 rounded-input border border-ink-200">
                     <h4 className="font-semibold text-ink-900 mb-3">{selectedClient.clientName}</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
@@ -361,7 +361,7 @@ export default function EstimationAnalyticsPage() {
                     <h5 className="font-semibold text-ink-900 mb-3">Historique des 6 dernières commandes:</h5>
                     <div className="space-y-2">
                       {selectedClient.orders.slice(0, 6).map((order) => (
-                        <div key={order.id} className="p-3 border border-ink-200 rounded-lg bg-paper">
+                        <div key={order.id} className="p-3 border border-ink-200 rounded-input bg-paper">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-sm font-medium text-ink-900">{order.orderNumber}</span>
                             <Badge variant={getDeviationBadge(order.deviation || 0)} className="text-xs">

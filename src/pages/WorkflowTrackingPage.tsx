@@ -99,7 +99,7 @@ export default function WorkflowTrackingPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-serif font-bold text-ink-900">
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
           Suivi des Workflows
         </h1>
         <p className="text-ink-500 mt-1">
@@ -115,7 +115,7 @@ export default function WorkflowTrackingPage() {
           onClick={() => setStatusFilter('all')}
         >
           <div className="text-center">
-            <p className="text-2xl font-bold text-ink-900">{orders.length}</p>
+            <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{orders.length}</p>
             <p className="text-xs text-ink-500 mt-1">Toutes</p>
           </div>
         </Card>
@@ -128,7 +128,7 @@ export default function WorkflowTrackingPage() {
             onClick={() => setStatusFilter(status)}
           >
             <div className="text-center">
-              <p className="text-2xl font-bold text-ink-900">{count}</p>
+              <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{count}</p>
               <p className="text-xs text-ink-500 mt-1">{status}</p>
             </div>
           </Card>
@@ -143,7 +143,7 @@ export default function WorkflowTrackingPage() {
             <input
               type="text"
               placeholder="Rechercher par numéro de commande ou client..."
-              className="w-full pl-10 pr-4 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
+              className="w-full pl-10 pr-4 py-2 border border-ink-300 rounded-input focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -169,7 +169,7 @@ export default function WorkflowTrackingPage() {
                   return (
                     <div
                       key={order.id}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                      className={`p-4 border-2 rounded-input cursor-pointer transition-colors ${
                         selectedOrderId === order.id
                           ? 'border-brand-800 bg-brand-50'
                           : 'border-ink-200 hover:border-ink-300'
@@ -244,7 +244,7 @@ export default function WorkflowTrackingPage() {
               </CardHeader>
               <CardContent>
                 {/* Order Info */}
-                <div className="mb-6 p-4 bg-paper-2 rounded-lg">
+                <div className="mb-6 p-4 bg-paper-2 rounded-input">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-ink-500">Statut actuel</p>

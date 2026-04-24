@@ -106,7 +106,7 @@ export default function TriagePage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-serif font-bold text-ink-900">
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
           Triage et Ventilation
         </h1>
         <p className="text-ink-500 mt-1">
@@ -122,7 +122,7 @@ export default function TriagePage() {
               <p className="text-sm text-ink-500 mb-1">En attente de triage</p>
               <p className="text-2xl font-bold text-warning">{ordersToTriage.length}</p>
             </div>
-            <div className="p-3 bg-warning-50 rounded-lg">
+            <div className="p-3 bg-warning-50 rounded-input">
               <Scale className="w-6 h-6 text-warning-600" />
             </div>
           </div>
@@ -139,7 +139,7 @@ export default function TriagePage() {
                 ).length}
               </p>
             </div>
-            <div className="p-3 bg-success-50 rounded-lg">
+            <div className="p-3 bg-success-50 rounded-input">
               <CheckCircle className="w-6 h-6 text-success-600" />
             </div>
           </div>
@@ -159,7 +159,7 @@ export default function TriagePage() {
                 )}
               </p>
             </div>
-            <div className="p-3 bg-paper-3 rounded-lg">
+            <div className="p-3 bg-paper-3 rounded-input">
               <FileText className="w-6 h-6 text-primary-600" />
             </div>
           </div>
@@ -178,7 +178,7 @@ export default function TriagePage() {
                 {ordersToTriage.map((order) => (
                   <div
                     key={order.id}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    className={`p-4 border-2 rounded-input cursor-pointer transition-colors ${
                       selectedOrderId === order.id
                         ? 'border-brand-800 bg-brand-50'
                         : 'border-ink-200 hover:border-ink-300'
@@ -250,7 +250,7 @@ export default function TriagePage() {
               </CardHeader>
               <CardContent>
                 {/* Progress Bar */}
-                <div className="mb-6 p-4 bg-paper-2 rounded-lg">
+                <div className="mb-6 p-4 bg-paper-2 rounded-input">
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-ink-500">TOTAL SAISI:</span>
                     <span className={`font-bold ${
@@ -299,13 +299,13 @@ export default function TriagePage() {
                     const selectedLinenType = linenTypes.find(lt => lt.id === item.linenTypeId);
 
                     return (
-                      <div key={index} className="p-4 border border-ink-200 rounded-lg bg-paper">
+                      <div key={index} className="p-4 border border-ink-200 rounded-input bg-paper">
                         <div className="grid grid-cols-12 gap-3 items-end">
                           {/* Linen Type Select */}
                           <div className="col-span-5">
                             <label className="block text-xs text-ink-500 mb-1">Type de linge</label>
                             <select
-                              className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
+                              className="w-full px-3 py-2 border border-ink-300 rounded-input focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                               value={item.linenTypeId}
                               onChange={(e) => updateTriageItem(index, 'linenTypeId', e.target.value)}
                             >
@@ -326,7 +326,7 @@ export default function TriagePage() {
                                 type="number"
                                 min="0"
                                 step="0.1"
-                                className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
+                                className="w-full px-3 py-2 border border-ink-300 rounded-input focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                                 value={item.weight / 1000 || ''}
                                 onChange={(e) => updateTriageItem(index, 'weight', parseFloat(e.target.value || '0') * 1000)}
                               />
@@ -337,7 +337,7 @@ export default function TriagePage() {
                               <input
                                 type="number"
                                 min="0"
-                                className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
+                                className="w-full px-3 py-2 border border-ink-300 rounded-input focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                                 value={item.pieces || ''}
                                 onChange={(e) => updateTriageItem(index, 'pieces', parseInt(e.target.value || '0'))}
                               />
@@ -349,7 +349,7 @@ export default function TriagePage() {
                           {/* Price */}
                           <div className="col-span-3">
                             <label className="block text-xs text-ink-500 mb-1">Montant</label>
-                            <div className="px-3 py-2 bg-paper-2 border border-ink-200 rounded-lg font-medium text-ink-900">
+                            <div className="px-3 py-2 bg-paper-2 border border-ink-200 rounded-input font-medium text-ink-900">
                               {selectedLinenType ? (
                                 formatCurrency(
                                   selectedLinenType.billingMode === 'Poids'
@@ -389,7 +389,7 @@ export default function TriagePage() {
                   })}
 
                   {triageItems.length === 0 && (
-                    <div className="text-center py-8 text-ink-500 border-2 border-dashed border-ink-300 rounded-lg">
+                    <div className="text-center py-8 text-ink-500 border-2 border-dashed border-ink-300 rounded-input">
                       <p className="mb-2">Aucune catégorie ajoutée</p>
                       <Button variant="outline" size="sm" onClick={addTriageItem}>
                         <Plus className="w-4 h-4 mr-2" />
@@ -401,7 +401,7 @@ export default function TriagePage() {
 
                 {/* Summary */}
                 {triageItems.length > 0 && (
-                  <div className="p-4 bg-paper-2 rounded-lg border border-ink-200 mb-4">
+                  <div className="p-4 bg-paper-2 rounded-input border border-ink-200 mb-4">
                     <h4 className="font-semibold text-ink-900 mb-3">RÉSUMÉ DU TRIAGE:</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>

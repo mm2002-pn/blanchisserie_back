@@ -96,7 +96,7 @@ export default function ReceptionPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-serif font-bold text-ink-900">
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
           Réception et Pesée
         </h1>
         <p className="text-ink-500 mt-1">
@@ -112,7 +112,7 @@ export default function ReceptionPage() {
               <p className="text-sm text-ink-500 mb-1">Arrivées aujourd'hui</p>
               <p className="text-2xl font-bold text-primary">{todayReceptions.length}</p>
             </div>
-            <div className="p-3 bg-paper-3 rounded-lg">
+            <div className="p-3 bg-paper-3 rounded-input">
               <Calendar className="w-6 h-6 text-primary-600" />
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function ReceptionPage() {
               <p className="text-sm text-ink-500 mb-1">À peser</p>
               <p className="text-2xl font-bold text-warning">{ordersToWeigh.length}</p>
             </div>
-            <div className="p-3 bg-warning-50 rounded-lg">
+            <div className="p-3 bg-warning-50 rounded-input">
               <Scale className="w-6 h-6 text-warning-600" />
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function ReceptionPage() {
               <p className="text-sm text-ink-500 mb-1">Camions en déchargement</p>
               <p className="text-2xl font-bold text-accent">{Object.keys(ordersByVehicle).length}</p>
             </div>
-            <div className="p-3 bg-brand-50 rounded-lg">
+            <div className="p-3 bg-brand-50 rounded-input">
               <Truck className="w-6 h-6 text-brand-800" />
             </div>
           </div>
@@ -150,7 +150,7 @@ export default function ReceptionPage() {
                 {todayReceptions.filter(o => o.actualWeight).length}
               </p>
             </div>
-            <div className="p-3 bg-success-50 rounded-lg">
+            <div className="p-3 bg-success-50 rounded-input">
               <CheckCircle className="w-6 h-6 text-success-600" />
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function ReceptionPage() {
             </CardHeader>
             <CardContent>
               {/* Estimation Info */}
-              <div className="mb-6 p-4 bg-paper-2 rounded-lg">
+              <div className="mb-6 p-4 bg-paper-2 rounded-input">
                 <p className="text-sm text-ink-500 mb-2">Estimation client:</p>
                 <p className="text-lg font-semibold text-ink-900">
                   {formatWeight(currentOrder.estimatedWeight || 0)} ({currentOrder.estimatedSize})
@@ -184,7 +184,7 @@ export default function ReceptionPage() {
               {/* Weight Display */}
               <div className="mb-6">
                 <p className="text-sm text-ink-500 mb-2">LIRE LE POIDS SUR LA BALANCE:</p>
-                <div className="text-center p-6 bg-paper-2 rounded-lg border-2 border-ink-200">
+                <div className="text-center p-6 bg-paper-2 rounded-input border-2 border-ink-200">
                   <p className="text-5xl font-bold text-primary-900 font-mono">
                     {weighingState.weight || '0'} <span className="text-2xl">kg</span>
                   </p>
@@ -210,7 +210,7 @@ export default function ReceptionPage() {
 
               {/* Comparison (if weight entered) */}
               {weighingState.weight && parseFloat(weighingState.weight) > 0 && (
-                <div className="mb-6 p-4 bg-warning-50 rounded-lg border border-warning-200">
+                <div className="mb-6 p-4 bg-warning-50 rounded-input border border-warning-200">
                   <h4 className="font-semibold text-ink-900 mb-3">COMPARAISON:</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
@@ -290,7 +290,7 @@ export default function ReceptionPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-3 bg-brand-100 rounded-lg">
+                    <div className="p-3 bg-brand-100 rounded-input">
                       <Truck className="w-6 h-6 text-brand-800" />
                     </div>
                     <div>
@@ -302,7 +302,7 @@ export default function ReceptionPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-ink-500">Total estimé</p>
-                    <p className="text-xl font-bold text-ink-900">
+                    <p className="font-serif text-xl font-medium tracking-tight text-ink-900">
                       ~{formatWeight(estimatedTotal)}
                     </p>
                   </div>
@@ -314,12 +314,12 @@ export default function ReceptionPage() {
                   {vehicleOrders.map((order, index) => (
                     <div
                       key={order.id}
-                      className="p-4 border-2 border-ink-200 rounded-lg hover:border-accent-300 transition-colors"
+                      className="p-4 border-2 border-ink-200 rounded-input hover:border-accent-300 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-lg font-bold text-ink-900">{index + 1}.</span>
+                            <span className="font-serif text-lg font-medium tracking-tight text-ink-900">{index + 1}.</span>
                             <span className="font-semibold text-ink-900">{order.clientName}</span>
                             <Badge variant="warning" className="text-xs">
                               estimé {order.estimatedSize}
@@ -331,7 +331,7 @@ export default function ReceptionPage() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-ink-500">Estimation</p>
-                          <p className="text-lg font-bold text-ink-900">
+                          <p className="font-serif text-lg font-medium tracking-tight text-ink-900">
                             {formatWeight(order.estimatedWeight || 0)}
                           </p>
                         </div>

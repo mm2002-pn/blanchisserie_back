@@ -146,7 +146,7 @@ export default function SchedulePage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-ink-900">Planning des Livraisons</h1>
+          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">Planning des Livraisons</h1>
           <p className="text-ink-500 mt-1">
             Affectation des chauffeurs aux commandes prêtes pour livraison
           </p>
@@ -164,9 +164,9 @@ export default function SchedulePage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-ink-500 mb-1">Commandes prêtes</p>
-              <p className="text-2xl font-bold text-ink-900">{totalReadyOrders}</p>
+              <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{totalReadyOrders}</p>
             </div>
-            <div className="p-3 bg-brand-50 rounded-lg">
+            <div className="p-3 bg-brand-50 rounded-input">
               <Package className="w-6 h-6 text-brand-800" />
             </div>
           </div>
@@ -178,7 +178,7 @@ export default function SchedulePage() {
               <p className="text-sm text-ink-500 mb-1">Livraisons planifiées</p>
               <p className="text-2xl font-bold text-success">{totalAssigned}</p>
             </div>
-            <div className="p-3 bg-success-50 rounded-lg">
+            <div className="p-3 bg-success-50 rounded-input">
               <CheckCircle className="w-6 h-6 text-success-600" />
             </div>
           </div>
@@ -190,7 +190,7 @@ export default function SchedulePage() {
               <p className="text-sm text-ink-500 mb-1">En attente</p>
               <p className="text-2xl font-bold text-warning">{totalUnassigned}</p>
             </div>
-            <div className="p-3 bg-warning-50 rounded-lg">
+            <div className="p-3 bg-warning-50 rounded-input">
               <Clock className="w-6 h-6 text-warning-600" />
             </div>
           </div>
@@ -200,9 +200,9 @@ export default function SchedulePage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-ink-500 mb-1">Poids total</p>
-              <p className="text-2xl font-bold text-ink-900">{formatWeight(totalWeight || 0)}</p>
+              <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{formatWeight(totalWeight || 0)}</p>
             </div>
-            <div className="p-3 bg-paper-3 rounded-lg">
+            <div className="p-3 bg-paper-3 rounded-input">
               <Package className="w-6 h-6 text-primary-600" />
             </div>
           </div>
@@ -323,7 +323,7 @@ export default function SchedulePage() {
                     <div
                       key={driver.id}
                       onClick={() => assignedCount > 0 && handleDriverClick(driver.id)}
-                      className={`flex items-center justify-between p-2 bg-paper-2 rounded-lg transition-all ${
+                      className={`flex items-center justify-between p-2 bg-paper-2 rounded-input transition-all ${
                         assignedCount > 0
                           ? 'cursor-pointer hover:bg-ink-100 hover:shadow-md'
                           : 'opacity-60'
@@ -362,7 +362,7 @@ export default function SchedulePage() {
                 {vehicles.map((vehicle) => (
                   <div
                     key={vehicle.id}
-                    className="p-2 bg-paper-2 rounded-lg"
+                    className="p-2 bg-paper-2 rounded-input"
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Truck className="w-4 h-4 text-ink-500" />
@@ -425,14 +425,14 @@ export default function SchedulePage() {
                 return (
                   <div className="space-y-6">
                     {/* Circuit Summary */}
-                    <div className="grid grid-cols-3 gap-4 p-4 bg-brand-50 rounded-lg">
+                    <div className="grid grid-cols-3 gap-4 p-4 bg-brand-50 rounded-input">
                       <div>
                         <p className="text-sm text-ink-500 mb-1">Nombre d'arrêts</p>
-                        <p className="text-2xl font-bold text-ink-900">{circuit.length}</p>
+                        <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{circuit.length}</p>
                       </div>
                       <div>
                         <p className="text-sm text-ink-500 mb-1">Poids total</p>
-                        <p className="text-2xl font-bold text-ink-900">{formatWeight(totalCircuitWeight)}</p>
+                        <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{formatWeight(totalCircuitWeight)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-ink-500 mb-1">Véhicule</p>
@@ -594,7 +594,7 @@ export default function SchedulePage() {
                     Chauffeur *
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
+                    className="w-full px-3 py-2 border border-ink-300 rounded-input focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                     value={assignmentForm.driverId}
                     onChange={(e) => setAssignmentForm({ ...assignmentForm, driverId: e.target.value })}
                   >
@@ -613,7 +613,7 @@ export default function SchedulePage() {
                     Véhicule *
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
+                    className="w-full px-3 py-2 border border-ink-300 rounded-input focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                     value={assignmentForm.vehicleId}
                     onChange={(e) => setAssignmentForm({ ...assignmentForm, vehicleId: e.target.value })}
                   >
@@ -633,7 +633,7 @@ export default function SchedulePage() {
                   </label>
                   <input
                     type="date"
-                    className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
+                    className="w-full px-3 py-2 border border-ink-300 rounded-input focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                     value={assignmentForm.scheduledDate}
                     onChange={(e) => setAssignmentForm({ ...assignmentForm, scheduledDate: e.target.value })}
                   />
@@ -646,7 +646,7 @@ export default function SchedulePage() {
                   </label>
                   <input
                     type="time"
-                    className="w-full px-3 py-2 border border-ink-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
+                    className="w-full px-3 py-2 border border-ink-300 rounded-input focus:ring-2 focus:ring-brand-500 focus:border-brand-800"
                     value={assignmentForm.scheduledTime}
                     onChange={(e) => setAssignmentForm({ ...assignmentForm, scheduledTime: e.target.value })}
                   />

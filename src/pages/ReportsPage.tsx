@@ -57,7 +57,7 @@ export default function ReportsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold text-ink-900">Rapports</h1>
+          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">Rapports</h1>
           <p className="text-ink-500 mt-1">Analyses et statistiques</p>
         </div>
         <div className="flex gap-2">
@@ -76,13 +76,13 @@ export default function ReportsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-ink-500 mb-1">CA 6 mois</p>
-              <p className="text-2xl font-bold text-ink-900">{formatCurrency(totalRevenue)}</p>
+              <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{formatCurrency(totalRevenue)}</p>
               <div className="flex items-center gap-1 mt-1">
                 <TrendingUp className="w-4 h-4 text-success" />
                 <span className="text-sm text-success font-medium">+{revenueGrowth}%</span>
               </div>
             </div>
-            <div className="p-3 bg-success-50 rounded-lg">
+            <div className="p-3 bg-success-50 rounded-input">
               <DollarSign className="w-6 h-6 text-success-600" />
             </div>
           </div>
@@ -92,12 +92,12 @@ export default function ReportsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-ink-500 mb-1">Commandes</p>
-              <p className="text-2xl font-bold text-ink-900">{totalOrders}</p>
+              <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{totalOrders}</p>
               <p className="text-sm text-ink-500 mt-1">
                 Moy: {formatCurrency(avgOrderValue)}
               </p>
             </div>
-            <div className="p-3 bg-brand-50 rounded-lg">
+            <div className="p-3 bg-brand-50 rounded-input">
               <Package className="w-6 h-6 text-brand-800" />
             </div>
           </div>
@@ -107,10 +107,10 @@ export default function ReportsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-ink-500 mb-1">Poids traité</p>
-              <p className="text-2xl font-bold text-ink-900">{formatWeight(totalWeight)}</p>
+              <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{formatWeight(totalWeight)}</p>
               <p className="text-sm text-ink-500 mt-1">6 mois</p>
             </div>
-            <div className="p-3 bg-warning-50 rounded-lg">
+            <div className="p-3 bg-warning-50 rounded-input">
               <Weight className="w-6 h-6 text-warning-600" />
             </div>
           </div>
@@ -120,10 +120,10 @@ export default function ReportsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-ink-500 mb-1">Clients actifs</p>
-              <p className="text-2xl font-bold text-ink-900">101</p>
+              <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">101</p>
               <p className="text-sm text-ink-500 mt-1">+12 ce mois</p>
             </div>
-            <div className="p-3 bg-paper-3 rounded-lg">
+            <div className="p-3 bg-paper-3 rounded-input">
               <Users className="w-6 h-6 text-primary-600" />
             </div>
           </div>
