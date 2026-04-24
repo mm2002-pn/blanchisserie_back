@@ -5,6 +5,7 @@ import { formatWeight, formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { cn } from '@/lib/utils';
 
 // Import mock data
 import ordersData from '@/mocks/data/orders.json';
@@ -110,9 +111,9 @@ export default function EstimationAnalyticsPage() {
 
   const getDeviationColor = (deviation: number): string => {
     const abs = Math.abs(deviation);
-    if (abs <= 10) return 'text-success';
-    if (abs <= 30) return 'text-warning';
-    return 'text-danger';
+    if (abs <= 10) return 'text-ok-700';
+    if (abs <= 30) return 'text-warn-700';
+    return 'text-danger-600';
   };
 
   const getDeviationBadge = (deviation: number): 'success' | 'warning' | 'error' => {
@@ -123,58 +124,27 @@ export default function EstimationAnalyticsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page Header */}
-      <div>
-        <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
-          Analyse des Écarts
-        </h1>
-        <p className="text-ink-500 mt-1">
-          Comparaison estimations vs poids réels
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="caps mb-2">Analyses · estimations</div>
+          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
+            Écart estimation vs poids réel
+          </h1>
+          <p className="text-sm text-ink-500 mt-1">
+            Mesure la précision des estimations mobile pour calibrer la facturation.
+          </p>
+        </div>
       </div>
 
-      {/* Global Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card padding="md">
-          <div className="text-center">
-            <Calendar className="w-8 h-8 mx-auto mb-2 text-primary-600" />
-            <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{globalStats.totalOrders}</p>
-            <p className="text-sm text-ink-500 mt-1">Commandes pesées</p>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="text-center">
-            <Award className="w-8 h-8 mx-auto mb-2 text-success" />
-            <p className="text-2xl font-bold text-success">{globalStats.accurate}</p>
-            <p className="text-sm text-ink-500 mt-1">Précises (±10%)</p>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="text-center">
-            <TrendingUp className="w-8 h-8 mx-auto mb-2 text-danger" />
-            <p className="text-2xl font-bold text-danger">{globalStats.underestimations}</p>
-            <p className="text-sm text-ink-500 mt-1">Sous-estimées</p>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="text-center">
-            <TrendingDown className="w-8 h-8 mx-auto mb-2 text-warning" />
-            <p className="text-2xl font-bold text-warning">{globalStats.overestimations}</p>
-            <p className="text-sm text-ink-500 mt-1">Surestimées</p>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="text-center">
-            <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-ink-500" />
-            <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{globalStats.avgDeviation.toFixed(1)}%</p>
-            <p className="text-sm text-ink-500 mt-1">Écart moyen</p>
-          </div>
-        </Card>
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <EKpi label="Commandes pesées" value={`${globalStats.totalOrders}`} tint="brand" icon={Calendar} />
+        <EKpi label="Précises ±10%" value={`${globalStats.accurate}`} tint="ok" icon={Award} />
+        <EKpi label="Sous-estimées" value={`${globalStats.underestimations}`} tint="danger" icon={TrendingUp} />
+        <EKpi label="Surestimées" value={`${globalStats.overestimations}`} tint="warn" icon={TrendingDown} />
+        <EKpi label="Écart moyen" value={`${globalStats.avgDeviation.toFixed(1)} %`} tint="neutral" icon={AlertTriangle} mono />
       </div>
 
       {/* Deviation Distribution Chart */}
@@ -204,14 +174,14 @@ export default function EstimationAnalyticsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-danger" />
+              <TrendingUp className="w-5 h-5 text-danger-600" />
               <CardTitle>Top des sous-estimations</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {topUnderestimations.map((order, index) => (
-                <div key={order.id} className="p-4 border border-danger-200 bg-danger-50 rounded-input">
+                <div key={order.id} className="p-4 border border-danger-600 bg-danger-100 rounded-input">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="flex items-center gap-2">
@@ -231,12 +201,12 @@ export default function EstimationAnalyticsPage() {
                     </div>
                     <div>
                       <p className="text-ink-500">Réel</p>
-                      <p className="font-bold text-danger">{formatWeight(order.actualWeight || 0)}</p>
+                      <p className="font-bold text-danger-600">{formatWeight(order.actualWeight || 0)}</p>
                     </div>
                   </div>
                   {order.invoiceDeviation && (
                     <div className="mt-2 pt-2 border-t border-danger-300">
-                      <p className="text-xs text-ink-500">Impact facturation: <span className="font-bold text-danger">+{formatCurrency(order.invoiceDeviation)}</span></p>
+                      <p className="text-xs text-ink-500">Impact facturation: <span className="font-bold text-danger-600">+{formatCurrency(order.invoiceDeviation)}</span></p>
                     </div>
                   )}
                 </div>
@@ -249,14 +219,14 @@ export default function EstimationAnalyticsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <TrendingDown className="w-5 h-5 text-warning" />
+              <TrendingDown className="w-5 h-5 text-warn-700" />
               <CardTitle>Top des surestimations</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {topOverestimations.map((order, index) => (
-                <div key={order.id} className="p-4 border border-warning-200 bg-warning-50 rounded-input">
+                <div key={order.id} className="p-4 border border-warn-600 bg-warn-100 rounded-input">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="flex items-center gap-2">
@@ -276,7 +246,7 @@ export default function EstimationAnalyticsPage() {
                     </div>
                     <div>
                       <p className="text-ink-500">Réel</p>
-                      <p className="font-bold text-warning-700">{formatWeight(order.actualWeight || 0)}</p>
+                      <p className="font-bold text-warn-700">{formatWeight(order.actualWeight || 0)}</p>
                     </div>
                   </div>
                 </div>
@@ -290,7 +260,7 @@ export default function EstimationAnalyticsPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary-600" />
+            <Users className="w-5 h-5 text-brand-800" />
             <CardTitle>Analyse par client</CardTitle>
           </div>
         </CardHeader>
@@ -396,7 +366,7 @@ export default function EstimationAnalyticsPage() {
                           </>
                         )}
                         {Math.abs(selectedClient.orders.reduce((sum, o) => sum + (o.deviation || 0), 0) / selectedClient.orders.length) <= 10 && (
-                          <li className="text-success">✓ Les estimations de ce client sont précises, maintenir le système actuel</li>
+                          <li className="text-ok-700">✓ Les estimations de ce client sont précises, maintenir le système actuel</li>
                         )}
                       </ul>
                     </CardContent>
@@ -419,7 +389,7 @@ export default function EstimationAnalyticsPage() {
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-ink-700 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-primary-900 mb-1">
+              <h4 className="font-semibold text-ink-900 mb-1">
                 Analyse prédictive
               </h4>
               <p className="text-sm text-ink-700">
@@ -432,6 +402,68 @@ export default function EstimationAnalyticsPage() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function EKpi({
+  label,
+  value,
+  tint,
+  icon: Icon,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  tint: 'ok' | 'warn' | 'danger' | 'brand' | 'terra' | 'neutral';
+  icon: typeof Calendar;
+  mono?: boolean;
+}) {
+  const bg =
+    tint === 'ok'
+      ? 'bg-ok-100'
+      : tint === 'warn'
+        ? 'bg-warn-100'
+        : tint === 'danger'
+          ? 'bg-danger-100'
+          : tint === 'terra'
+            ? 'bg-terra-100'
+            : tint === 'neutral'
+              ? 'bg-ink-100'
+              : 'bg-brand-100';
+  const fg =
+    tint === 'ok'
+      ? 'text-ok-700'
+      : tint === 'warn'
+        ? 'text-warn-700'
+        : tint === 'danger'
+          ? 'text-danger-600'
+          : tint === 'terra'
+            ? 'text-terra-700'
+            : tint === 'neutral'
+              ? 'text-ink-700'
+              : 'text-brand-800';
+
+  return (
+    <div className="card-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-tiny font-medium text-ink-500">{label}</p>
+          <p
+            className={cn(
+              'mt-1.5 leading-none tracking-tight text-ink-900',
+              mono
+                ? 'font-mono text-lg font-semibold tnum'
+                : 'font-serif text-3xl font-medium tnum',
+            )}
+          >
+            {value}
+          </p>
+        </div>
+        <div className={cn('w-9 h-9 rounded-input flex items-center justify-center shrink-0', bg)}>
+          <Icon className={cn('w-4 h-4', fg)} strokeWidth={1.75} />
+        </div>
+      </div>
     </div>
   );
 }

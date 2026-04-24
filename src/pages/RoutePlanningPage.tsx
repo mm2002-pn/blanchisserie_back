@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@/components/ui';
-import { Truck, User, MapPin, Package, Calendar, CheckCircle, Clock, ArrowRight } from 'lucide-react';
+import { Truck, User, MapPin, Package, Calendar, CheckCircle, Clock, ArrowRight, Weight } from 'lucide-react';
 import { formatWeight } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 // Import mock data
 import ordersData from '@/mocks/data/orders.json';
@@ -140,71 +141,26 @@ export default function RoutePlanningPage() {
   const totalWeight = pendingOrders.reduce((sum, order) => sum + (order.estimatedWeight || 0), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">Tournées de Collecte</h1>
-          <p className="text-ink-500 mt-1">
-            Affectation des chauffeurs aux nouvelles commandes pour collecte
+          <div className="caps mb-2">Tournées · collecte</div>
+          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
+            Affectation chauffeurs aux collectes
+          </h1>
+          <p className="text-sm text-ink-500 mt-1 capitalize">
+            {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })} · commandes entrantes depuis l'app mobile
           </p>
-        </div>
-        <div className="text-right">
-          <div className="text-sm text-ink-500">
-            {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
-          </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-ink-500 mb-1">Nouvelles commandes</p>
-              <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{totalPendingOrders}</p>
-            </div>
-            <div className="p-3 bg-brand-50 rounded-input">
-              <Package className="w-6 h-6 text-brand-800" />
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-ink-500 mb-1">Collectes planifiées</p>
-              <p className="text-2xl font-bold text-success">{totalAssigned}</p>
-            </div>
-            <div className="p-3 bg-success-50 rounded-input">
-              <CheckCircle className="w-6 h-6 text-success-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-ink-500 mb-1">En attente</p>
-              <p className="text-2xl font-bold text-warning">{totalUnassigned}</p>
-            </div>
-            <div className="p-3 bg-warning-50 rounded-input">
-              <Clock className="w-6 h-6 text-warning-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-ink-500 mb-1">Poids estimé total</p>
-              <p className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">{formatWeight(totalWeight || 0)}</p>
-            </div>
-            <div className="p-3 bg-paper-3 rounded-input">
-              <Package className="w-6 h-6 text-primary-600" />
-            </div>
-          </div>
-        </Card>
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <RPKpi label="Nouvelles commandes" value={`${totalPendingOrders}`} tint="brand" icon={Package} />
+        <RPKpi label="Collectes planifiées" value={`${totalAssigned}`} tint="ok" icon={CheckCircle} />
+        <RPKpi label="En attente" value={`${totalUnassigned}`} tint="warn" icon={Clock} />
+        <RPKpi label="Poids estimé" value={formatWeight(totalWeight || 0)} tint="terra" icon={Weight} mono />
       </div>
 
       {/* Main Content - 2 Columns */}
@@ -258,7 +214,7 @@ export default function RoutePlanningPage() {
                                 </div>
                               )}
                               {isAssigned && assignment && (
-                                <div className="flex items-center gap-2 mt-2 text-success">
+                                <div className="flex items-center gap-2 mt-2 text-ok-700">
                                   <Truck className="w-4 h-4" />
                                   <span className="font-medium">{getDriverName(assignment.driverId)}</span>
                                   <span>•</span>
@@ -332,7 +288,7 @@ export default function RoutePlanningPage() {
                     >
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-paper-3 rounded-full flex items-center justify-center">
-                          <User className="w-4 h-4 text-primary-600" />
+                          <User className="w-4 h-4 text-brand-800" />
                         </div>
                         <div>
                           <p className="text-sm font-medium text-ink-900">
@@ -395,7 +351,7 @@ export default function RoutePlanningPage() {
           <div className="flex items-start gap-3">
             <MapPin className="w-5 h-5 text-ink-700 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-primary-900 mb-1">
+              <h4 className="font-semibold text-ink-900 mb-1">
                 Commandes depuis l'app mobile
               </h4>
               <p className="text-sm text-ink-700">
@@ -685,6 +641,64 @@ export default function RoutePlanningPage() {
           </Card>
         </div>
       )}
+    </div>
+  );
+}
+
+function RPKpi({
+  label,
+  value,
+  tint,
+  icon: Icon,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  tint: 'ok' | 'warn' | 'danger' | 'brand' | 'terra';
+  icon: typeof Package;
+  mono?: boolean;
+}) {
+  const bg =
+    tint === 'ok'
+      ? 'bg-ok-100'
+      : tint === 'warn'
+        ? 'bg-warn-100'
+        : tint === 'danger'
+          ? 'bg-danger-100'
+          : tint === 'terra'
+            ? 'bg-terra-100'
+            : 'bg-brand-100';
+  const fg =
+    tint === 'ok'
+      ? 'text-ok-700'
+      : tint === 'warn'
+        ? 'text-warn-700'
+        : tint === 'danger'
+          ? 'text-danger-600'
+          : tint === 'terra'
+            ? 'text-terra-700'
+            : 'text-brand-800';
+
+  return (
+    <div className="card-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-tiny font-medium text-ink-500">{label}</p>
+          <p
+            className={cn(
+              'mt-1.5 leading-none tracking-tight text-ink-900',
+              mono
+                ? 'font-mono text-lg font-semibold tnum'
+                : 'font-serif text-3xl font-medium tnum',
+            )}
+          >
+            {value}
+          </p>
+        </div>
+        <div className={cn('w-9 h-9 rounded-input flex items-center justify-center shrink-0', bg)}>
+          <Icon className={cn('w-4 h-4', fg)} strokeWidth={1.75} />
+        </div>
+      </div>
     </div>
   );
 }
