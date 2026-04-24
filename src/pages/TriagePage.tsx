@@ -4,6 +4,7 @@ import { Scale, Plus, Trash2, CheckCircle, AlertTriangle, FileText } from 'lucid
 import { formatWeight, formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 // Import mock data
 import ordersData from '@/mocks/data/orders.json';
@@ -102,68 +103,40 @@ export default function TriagePage() {
     setTriageItems([]);
   };
 
+  const triagedCount = orders.filter(
+    (o) =>
+      o.triage?.completedAt &&
+      new Date(o.triage.completedAt).toDateString() === new Date().toDateString(),
+  ).length;
+
+  const triagedWeight = orders
+    .filter(
+      (o) =>
+        o.triage?.completedAt &&
+        new Date(o.triage.completedAt).toDateString() === new Date().toDateString(),
+    )
+    .reduce((sum, o) => sum + (o.actualWeight || 0), 0);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page Header */}
-      <div>
-        <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
-          Triage et Ventilation
-        </h1>
-        <p className="text-ink-500 mt-1">
-          Ventilation du poids par catégorie de linge
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="caps mb-2">Triage</div>
+          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
+            Ventilation du poids par catégorie
+          </h1>
+          <p className="text-sm text-ink-500 mt-1">
+            Ventilation précise du poids par type de linge pour la facturation · tolérance 5 %.
+          </p>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-ink-500 mb-1">En attente de triage</p>
-              <p className="text-2xl font-bold text-warning">{ordersToTriage.length}</p>
-            </div>
-            <div className="p-3 bg-warning-50 rounded-input">
-              <Scale className="w-6 h-6 text-warning-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-ink-500 mb-1">Triés aujourd'hui</p>
-              <p className="text-2xl font-bold text-success">
-                {orders.filter(o =>
-                  o.triage?.completedAt &&
-                  new Date(o.triage.completedAt).toDateString() === new Date().toDateString()
-                ).length}
-              </p>
-            </div>
-            <div className="p-3 bg-success-50 rounded-input">
-              <CheckCircle className="w-6 h-6 text-success-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-ink-500 mb-1">Poids total trié</p>
-              <p className="text-2xl font-bold text-primary">
-                {formatWeight(
-                  orders
-                    .filter(o => o.triage?.completedAt &&
-                      new Date(o.triage.completedAt).toDateString() === new Date().toDateString()
-                    )
-                    .reduce((sum, o) => sum + (o.actualWeight || 0), 0)
-                )}
-              </p>
-            </div>
-            <div className="p-3 bg-paper-3 rounded-input">
-              <FileText className="w-6 h-6 text-primary-600" />
-            </div>
-          </div>
-        </Card>
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <TKpi label="En attente de triage" value={`${ordersToTriage.length}`} tint="warn" icon={Scale} />
+        <TKpi label="Triés aujourd'hui" value={`${triagedCount}`} tint="ok" icon={CheckCircle} />
+        <TKpi label="Poids total trié" value={formatWeight(triagedWeight)} tint="brand" icon={FileText} mono />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -203,7 +176,7 @@ export default function TriagePage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-ink-500">Poids officiel:</span>
-                        <span className="font-bold text-primary-600">
+                        <span className="font-bold text-brand-800">
                           {formatWeight(order.actualWeight || 0)}
                         </span>
                       </div>
@@ -219,7 +192,7 @@ export default function TriagePage() {
 
                 {ordersToTriage.length === 0 && (
                   <div className="text-center py-8 text-ink-500">
-                    <CheckCircle className="w-12 h-12 mx-auto mb-2 text-success" />
+                    <CheckCircle className="w-12 h-12 mx-auto mb-2 text-ok-700" />
                     <p>Toutes les commandes sont triées</p>
                   </div>
                 )}
@@ -242,7 +215,7 @@ export default function TriagePage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-ink-500">Poids total officiel</p>
-                    <p className="text-2xl font-bold text-primary-600">
+                    <p className="text-2xl font-bold text-brand-800">
                       {formatWeight(selectedOrder.actualWeight || 0)}
                     </p>
                   </div>
@@ -255,10 +228,10 @@ export default function TriagePage() {
                     <span className="text-ink-500">TOTAL SAISI:</span>
                     <span className={`font-bold ${
                       getTotalWeight() === selectedOrder.actualWeight
-                        ? 'text-success'
+                        ? 'text-ok-700'
                         : getTotalWeight() > (selectedOrder.actualWeight || 0)
-                        ? 'text-danger'
-                        : 'text-warning'
+                        ? 'text-danger-600'
+                        : 'text-warn-700'
                     }`}>
                       {formatWeight(getTotalWeight())} / {formatWeight(selectedOrder.actualWeight || 0)}
                     </span>
@@ -406,11 +379,11 @@ export default function TriagePage() {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-ink-500 mb-1">Poids total saisi:</p>
-                        <p className="text-lg font-bold text-primary-600">{formatWeight(getTotalWeight())}</p>
+                        <p className="text-lg font-bold text-brand-800">{formatWeight(getTotalWeight())}</p>
                       </div>
                       <div>
                         <p className="text-ink-500 mb-1">Montant total facturé:</p>
-                        <p className="text-lg font-bold text-success">{formatCurrency(getTotalAmount())}</p>
+                        <p className="text-lg font-bold text-ok-700">{formatCurrency(getTotalAmount())}</p>
                       </div>
                       <div>
                         <p className="text-ink-500 mb-1">Poids officiel:</p>
@@ -432,7 +405,7 @@ export default function TriagePage() {
                         <div className="flex justify-between">
                           <span className="text-sm text-ink-500">Écart:</span>
                           <span className={`font-bold ${
-                            getTotalAmount() > selectedOrder.estimatedInvoiceAmount ? 'text-danger' : 'text-success'
+                            getTotalAmount() > selectedOrder.estimatedInvoiceAmount ? 'text-danger-600' : 'text-ok-700'
                           }`}>
                             {getTotalAmount() > selectedOrder.estimatedInvoiceAmount ? '+' : ''}
                             {formatCurrency(getTotalAmount() - selectedOrder.estimatedInvoiceAmount)}
@@ -445,11 +418,11 @@ export default function TriagePage() {
 
                 {/* Validation */}
                 {!isTriageComplete() && triageItems.length > 0 && (
-                  <Card className="border-warning-200 bg-warning-50 mb-4">
+                  <Card className="border-warn-600 bg-warn-100 mb-4">
                     <CardContent className="p-3">
                       <div className="flex items-start gap-2">
-                        <AlertTriangle className="w-5 h-5 text-warning-700 flex-shrink-0 mt-0.5" />
-                        <div className="text-sm text-warning-700">
+                        <AlertTriangle className="w-5 h-5 text-warn-700 flex-shrink-0 mt-0.5" />
+                        <div className="text-sm text-warn-700">
                           {Math.abs(getWeightDeviation()) > 5 && (
                             <p>L'écart de poids est trop important ({Math.abs(getWeightDeviation())}%). Maximum accepté: 5%</p>
                           )}
@@ -508,7 +481,7 @@ export default function TriagePage() {
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-ink-700 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-primary-900 mb-1">
+              <h4 className="font-semibold text-ink-900 mb-1">
                 Processus de triage
               </h4>
               <p className="text-sm text-ink-700">
@@ -521,6 +494,60 @@ export default function TriagePage() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function TKpi({
+  label,
+  value,
+  tint,
+  icon: Icon,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  tint: 'ok' | 'warn' | 'danger' | 'brand';
+  icon: typeof Scale;
+  mono?: boolean;
+}) {
+  const bg =
+    tint === 'ok'
+      ? 'bg-ok-100'
+      : tint === 'warn'
+        ? 'bg-warn-100'
+        : tint === 'danger'
+          ? 'bg-danger-100'
+          : 'bg-brand-100';
+  const fg =
+    tint === 'ok'
+      ? 'text-ok-700'
+      : tint === 'warn'
+        ? 'text-warn-700'
+        : tint === 'danger'
+          ? 'text-danger-600'
+          : 'text-brand-800';
+
+  return (
+    <div className="card-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-tiny font-medium text-ink-500">{label}</p>
+          <p
+            className={cn(
+              'mt-1.5 leading-none tracking-tight text-ink-900',
+              mono
+                ? 'font-mono text-lg font-semibold tnum'
+                : 'font-serif text-3xl font-medium tnum',
+            )}
+          >
+            {value}
+          </p>
+        </div>
+        <div className={cn('w-9 h-9 rounded-input flex items-center justify-center shrink-0', bg)}>
+          <Icon className={cn('w-4 h-4', fg)} strokeWidth={1.75} />
+        </div>
+      </div>
     </div>
   );
 }

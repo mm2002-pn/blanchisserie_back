@@ -1,9 +1,18 @@
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@/components/ui';
-import { Truck, Scale, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Calendar } from 'lucide-react';
+import {
+  Truck,
+  Scale,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  CheckCircle,
+  Calendar,
+} from 'lucide-react';
 import { formatWeight } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 // Import mock data
 import ordersData from '@/mocks/data/orders.json';
@@ -83,9 +92,9 @@ export default function ReceptionPage() {
   };
 
   const getDeviationColor = (deviation: number): string => {
-    if (Math.abs(deviation) <= 10) return 'text-success';
-    if (Math.abs(deviation) <= 30) return 'text-warning';
-    return 'text-danger';
+    if (Math.abs(deviation) <= 10) return 'text-ok-700';
+    if (Math.abs(deviation) <= 30) return 'text-warn-700';
+    return 'text-danger-600';
   };
 
   const currentOrder = weighingState
@@ -93,68 +102,26 @@ export default function ReceptionPage() {
     : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page Header */}
-      <div>
-        <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
-          Réception et Pesée
-        </h1>
-        <p className="text-ink-500 mt-1">
-          Gestion des arrivées et pesée officielle
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="caps mb-2">Réception</div>
+          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
+            Arrivées & pesée officielle
+          </h1>
+          <p className="text-sm text-ink-500 mt-1">
+            Contrôle des camions, déchargement et pesée qui servira de base à la facturation.
+          </p>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-ink-500 mb-1">Arrivées aujourd'hui</p>
-              <p className="text-2xl font-bold text-primary">{todayReceptions.length}</p>
-            </div>
-            <div className="p-3 bg-paper-3 rounded-input">
-              <Calendar className="w-6 h-6 text-primary-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-ink-500 mb-1">À peser</p>
-              <p className="text-2xl font-bold text-warning">{ordersToWeigh.length}</p>
-            </div>
-            <div className="p-3 bg-warning-50 rounded-input">
-              <Scale className="w-6 h-6 text-warning-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-ink-500 mb-1">Camions en déchargement</p>
-              <p className="text-2xl font-bold text-accent">{Object.keys(ordersByVehicle).length}</p>
-            </div>
-            <div className="p-3 bg-brand-50 rounded-input">
-              <Truck className="w-6 h-6 text-brand-800" />
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-ink-500 mb-1">Pesées terminées</p>
-              <p className="text-2xl font-bold text-success">
-                {todayReceptions.filter(o => o.actualWeight).length}
-              </p>
-            </div>
-            <div className="p-3 bg-success-50 rounded-input">
-              <CheckCircle className="w-6 h-6 text-success-600" />
-            </div>
-          </div>
-        </Card>
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <RKpi label="Arrivées aujourd'hui" value={`${todayReceptions.length}`} tint="brand" icon={Calendar} />
+        <RKpi label="À peser" value={`${ordersToWeigh.length}`} tint="warn" icon={Scale} />
+        <RKpi label="Camions" value={`${Object.keys(ordersByVehicle).length}`} tint="terra" icon={Truck} />
+        <RKpi label="Pesées terminées" value={`${todayReceptions.filter(o => o.actualWeight).length}`} tint="ok" icon={CheckCircle} />
       </div>
 
       {/* Weighing Modal */}
@@ -185,7 +152,7 @@ export default function ReceptionPage() {
               <div className="mb-6">
                 <p className="text-sm text-ink-500 mb-2">LIRE LE POIDS SUR LA BALANCE:</p>
                 <div className="text-center p-6 bg-paper-2 rounded-input border-2 border-ink-200">
-                  <p className="text-5xl font-bold text-primary-900 font-mono">
+                  <p className="text-5xl font-bold text-ink-900 font-mono">
                     {weighingState.weight || '0'} <span className="text-2xl">kg</span>
                   </p>
                 </div>
@@ -210,7 +177,7 @@ export default function ReceptionPage() {
 
               {/* Comparison (if weight entered) */}
               {weighingState.weight && parseFloat(weighingState.weight) > 0 && (
-                <div className="mb-6 p-4 bg-warning-50 rounded-input border border-warning-200">
+                <div className="mb-6 p-4 bg-warn-100 rounded-input border border-warn-600">
                   <h4 className="font-semibold text-ink-900 mb-3">COMPARAISON:</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
@@ -219,21 +186,21 @@ export default function ReceptionPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-ink-500">Poids réel:</span>
-                      <span className="font-bold text-primary-600">
+                      <span className="font-bold text-brand-800">
                         {formatWeight(parseFloat(weighingState.weight) * 1000)}
                       </span>
                     </div>
                     {currentOrder.estimatedWeight && (
-                      <div className="flex justify-between items-center pt-2 border-t border-warning-300">
+                      <div className="flex justify-between items-center pt-2 border-t border-warn-600">
                         <span className="text-ink-500">Écart:</span>
                         <div className="flex items-center gap-2">
                           {calculateDeviation(
                             currentOrder.estimatedWeight,
                             parseFloat(weighingState.weight) * 1000
                           ) > 0 ? (
-                            <TrendingUp className="w-4 h-4 text-danger" />
+                            <TrendingUp className="w-4 h-4 text-danger-600" />
                           ) : (
-                            <TrendingDown className="w-4 h-4 text-success" />
+                            <TrendingDown className="w-4 h-4 text-ok-700" />
                           )}
                           <span className={`font-bold ${getDeviationColor(
                             calculateDeviation(
@@ -314,7 +281,7 @@ export default function ReceptionPage() {
                   {vehicleOrders.map((order, index) => (
                     <div
                       key={order.id}
-                      className="p-4 border-2 border-ink-200 rounded-input hover:border-accent-300 transition-colors"
+                      className="p-4 border-2 border-ink-200 rounded-input hover:border-terra-600 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div>
@@ -374,11 +341,11 @@ export default function ReceptionPage() {
         })}
 
         {Object.keys(ordersByVehicle).length === 0 && (
-          <Card className="border-success-200 bg-success-50">
+          <Card className="border-ok-600 bg-ok-100">
             <CardContent className="p-8 text-center">
-              <CheckCircle className="w-12 h-12 mx-auto mb-3 text-success-600" />
-              <h3 className="font-semibold text-success-900 mb-1">Aucune commande en attente de pesée</h3>
-              <p className="text-sm text-success-700">
+              <CheckCircle className="w-12 h-12 mx-auto mb-3 text-ok-700" />
+              <h3 className="font-semibold text-ok-700 mb-1">Aucune commande en attente de pesée</h3>
+              <p className="text-sm text-ok-700">
                 Toutes les commandes collectées ont été pesées et sont en cours de traitement.
               </p>
             </CardContent>
@@ -387,24 +354,69 @@ export default function ReceptionPage() {
       </div>
 
       {/* Info Alert */}
-      <Card className="border-ink-200 bg-paper-2">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-ink-700 flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-semibold text-primary-900 mb-1">
-                Processus de réception
-              </h4>
-              <p className="text-sm text-ink-700">
-                Les commandes sont créées par les clients via l'application mobile avec une estimation (S, M, L, XL).
-                Le chauffeur valide visuellement et prend des photos lors de la collecte.
-                La pesée officielle en réception détermine le poids exact qui servira à la facturation.
-                Les écarts importants ({">"} 30%) doivent être signalés au responsable.
-              </p>
-            </div>
+      <div className="card-surface bg-paper-2 p-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-4 h-4 text-ink-700 shrink-0 mt-0.5" strokeWidth={1.75} />
+          <div>
+            <p className="caps">Processus de réception</p>
+            <p className="text-tiny text-ink-700 mt-1 leading-relaxed max-w-3xl">
+              Les commandes sont créées par les clients via l'application mobile avec une estimation (S, M, L, XL).
+              Le chauffeur valide visuellement et prend des photos lors de la collecte.
+              La pesée officielle en réception détermine le poids exact qui servira à la facturation.
+              Les écarts importants ({'>'} 30 %) doivent être signalés au responsable.
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RKpi({
+  label,
+  value,
+  tint,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  tint: 'ok' | 'warn' | 'danger' | 'brand' | 'terra';
+  icon: typeof Calendar;
+}) {
+  const bg =
+    tint === 'ok'
+      ? 'bg-ok-100'
+      : tint === 'warn'
+        ? 'bg-warn-100'
+        : tint === 'danger'
+          ? 'bg-danger-100'
+          : tint === 'terra'
+            ? 'bg-terra-100'
+            : 'bg-brand-100';
+  const fg =
+    tint === 'ok'
+      ? 'text-ok-700'
+      : tint === 'warn'
+        ? 'text-warn-700'
+        : tint === 'danger'
+          ? 'text-danger-600'
+          : tint === 'terra'
+            ? 'text-terra-700'
+            : 'text-brand-800';
+
+  return (
+    <div className="card-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-tiny font-medium text-ink-500">{label}</p>
+          <p className="font-serif text-3xl font-medium tnum tracking-tight text-ink-900 mt-2 leading-none">
+            {value}
+          </p>
+        </div>
+        <div className={cn('w-9 h-9 rounded-input flex items-center justify-center shrink-0', bg)}>
+          <Icon className={cn('w-4 h-4', fg)} strokeWidth={1.75} />
+        </div>
+      </div>
     </div>
   );
 }
