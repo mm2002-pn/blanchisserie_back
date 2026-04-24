@@ -38,15 +38,23 @@ export default function HolidaysPage() {
     .slice(0, 5);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-5">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-serif text-2xl font-medium tracking-tight text-ink-900">Jours fériés et fermetures</h2>
-          <p className="text-ink-500 mt-1">{holidays.length} jours configurés pour 2024</p>
+          <div className="caps mb-2">Jours fériés & fermetures</div>
+          <h2 className="font-serif text-2xl font-medium tracking-tight text-ink-900">
+            {holidays.length}
+            <span className="text-ink-500 text-lg ml-2 font-normal">
+              jours configurés
+            </span>
+          </h2>
+          <p className="text-sm text-ink-500 mt-1">
+            Calendrier de fermeture · les tournées et planifications en tiennent compte.
+          </p>
         </div>
         {canEdit('settings') && (
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
+          <Button size="sm" className="gap-1.5 shrink-0">
+            <Plus className="w-3.5 h-3.5" strokeWidth={2} />
             Ajouter un jour férié
           </Button>
         )}
