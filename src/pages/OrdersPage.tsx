@@ -1,15 +1,12 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { Button, Badge } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import { DataTable } from '@/components/table/DataTable';
-import { usePermissions } from '@/hooks';
 import { formatDate, formatWeight } from '@/lib/utils';
 import ordersData from '@/mocks/data/orders.json';
 import clientsData from '@/mocks/data/clients.json';
 import type { Order } from '@/types';
 
 export default function OrdersPage() {
-  const { canCreate } = usePermissions();
   const [orders] = useState<Order[]>(ordersData as any);
 
   const getClientName = (clientId: string) => {
@@ -57,17 +54,9 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-heading font-bold text-gray-900">Commandes</h1>
-          <p className="text-gray-600 mt-1">{orders.length} commandes</p>
-        </div>
-        {canCreate('orders') && (
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Nouvelle commande
-          </Button>
-        )}
+      <div>
+        <h1 className="text-3xl font-heading font-bold text-gray-900">Commandes</h1>
+        <p className="text-gray-600 mt-1">{orders.length} commandes</p>
       </div>
 
       <DataTable data={orders} columns={columns} />

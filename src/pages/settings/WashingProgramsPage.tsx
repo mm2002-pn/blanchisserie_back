@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Button, Modal, Input, Select } from '@/components/ui';
 import { DataTable } from '@/components/table/DataTable';
 import { usePermissions } from '@/hooks';
 import programsData from '@/mocks/data/washingPrograms.json';
@@ -9,6 +9,7 @@ import type { WashingProgram } from '@/types';
 export default function WashingProgramsPage() {
   const { canEdit } = usePermissions();
   const [programs] = useState<WashingProgram[]>(programsData as any);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const columns = [
     { header: 'Code', accessorKey: 'code' as keyof WashingProgram },
@@ -39,7 +40,7 @@ export default function WashingProgramsPage() {
           <p className="text-gray-600 mt-1">{programs.length} programmes configurés</p>
         </div>
         {canEdit('settings') && (
-          <Button>
+          <Button onClick={() => setIsModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Créer un programme
           </Button>
@@ -47,6 +48,50 @@ export default function WashingProgramsPage() {
       </div>
 
       <DataTable data={programs} columns={columns} />
+
+      {/* Modal d'ajout */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Nouveau programme de lavage"
+        size="lg"
+      >
+        <form className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Code" placeholder="PROG-001" required />
+            <Input label="Nom" placeholder="Coton blanc 60°C" required />
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <Input label="Température (°C)" type="number" placeholder="60" required />
+            <Input label="Durée (min)" type="number" placeholder="90" required />
+            <Input label="Vitesse essorage (rpm)" type="number" placeholder="1200" required />
+          </div>
+
+          <Input label="Consommation d'eau (L)" type="number" placeholder="150" required />
+
+          <Select
+            label="Type de détergent"
+            options={[
+              { label: 'Standard', value: 'standard' },
+              { label: 'Hypoallergénique', value: 'hypoallergénique' },
+              { label: 'Écologique', value: 'écologique' },
+            ]}
+            required
+          />
+
+          <Input label="Description" placeholder="Programme pour linge blanc en coton..." />
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Annuler
+            </Button>
+            <Button type="submit">
+              Créer
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

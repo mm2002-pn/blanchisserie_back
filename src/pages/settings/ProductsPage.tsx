@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Button, Badge } from '@/components/ui';
+import { Button, Badge, Modal, Input, Select } from '@/components/ui';
 import { DataTable } from '@/components/table/DataTable';
 import { usePermissions } from '@/hooks';
 import { formatCurrency } from '@/lib/utils';
@@ -10,6 +10,7 @@ import type { Product } from '@/types';
 export default function ProductsPage() {
   const { canEdit } = usePermissions();
   const [products] = useState<Product[]>(productsData as any);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const columns = [
     { header: 'Référence', accessorKey: 'reference' as keyof Product },
@@ -39,7 +40,7 @@ export default function ProductsPage() {
           <p className="text-gray-600 mt-1">{products.length} produits en stock</p>
         </div>
         {canEdit('settings') && (
-          <Button>
+          <Button onClick={() => setIsModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Ajouter un produit
           </Button>
@@ -47,6 +48,48 @@ export default function ProductsPage() {
       </div>
 
       <DataTable data={products} columns={columns} />
+
+      {/* Modal d'ajout */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Nouveau produit"
+        size="lg"
+      >
+        <form className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Référence" placeholder="DET-001" required />
+            <Input label="Nom" placeholder="Détergent liquide" required />
+          </div>
+
+          <Input label="Fournisseur" placeholder="ChimieClean" required />
+
+          <div className="grid grid-cols-3 gap-4">
+            <Input label="Stock actuel" type="number" placeholder="100" required />
+            <Input label="Stock minimum" type="number" placeholder="20" required />
+            <Select
+              label="Unité"
+              options={[
+                { label: 'Litre', value: 'litre' },
+                { label: 'Kg', value: 'kg' },
+                { label: 'Bidon', value: 'bidon' },
+              ]}
+              required
+            />
+          </div>
+
+          <Input label="Prix unitaire (XOF)" type="number" placeholder="5000" required />
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Annuler
+            </Button>
+            <Button type="submit">
+              Ajouter
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
