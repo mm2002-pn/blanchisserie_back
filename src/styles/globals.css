@@ -1,110 +1,94 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply border-gray-200;
+  html,
+  body,
+  #root {
+    height: 100%;
   }
 
   body {
-    @apply bg-primary-50 text-gray-900 antialiased;
+    @apply bg-paper-2 text-ink-900 font-sans antialiased;
     margin: 0;
-    min-height: 100vh;
+    font-feature-settings: 'ss01', 'cv11';
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif tracking-tight;
+  }
+
+  .tnum,
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ink-200 rounded-pill;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink-300;
+  }
+
+  :focus-visible {
+    outline: 2px solid theme('colors.brand.500');
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 }
 
 @layer components {
-  /* Card styles */
-  .card {
-    @apply bg-white rounded-card shadow-soft p-6;
+  /* Uppercase caps label — labels de section 10px tracking large */
+  .caps {
+    @apply text-micro font-sans font-semibold uppercase tracking-caps text-ink-500;
   }
 
-  /* Button styles */
-  .btn-primary {
-    @apply bg-accent-500 hover:bg-accent-600 text-white font-medium px-4 py-2 rounded-input transition-colors duration-200;
+  /* Titre éditorial Bricolage */
+  .display {
+    @apply font-serif font-medium tracking-tight;
   }
 
-  .btn-secondary {
-    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-input transition-colors duration-200;
+  /* Carte de base (hairline border, radius 14) */
+  .card-surface {
+    @apply bg-paper rounded-card border-hairline border-ink-200;
   }
 
-  .btn-outline {
-    @apply border-2 border-gray-300 hover:border-accent-500 hover:text-accent-500 bg-transparent font-medium px-4 py-2 rounded-input transition-colors duration-200;
-  }
-
-  .btn-danger {
-    @apply bg-error hover:bg-error-dark text-white font-medium px-4 py-2 rounded-input transition-colors duration-200;
-  }
-
-  .btn-success {
-    @apply bg-success hover:bg-success-dark text-white font-medium px-4 py-2 rounded-input transition-colors duration-200;
-  }
-
-  /* Input styles */
-  .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-input focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-all duration-200;
-  }
-
-  .input-error {
-    @apply border-error focus:ring-error;
-  }
-
-  /* Select styles */
-  .select {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-input focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent bg-white cursor-pointer;
-  }
-
-  /* Table styles */
+  /* Table Blanchisserie SN — utilisée par DataTable */
   .table {
     @apply w-full border-collapse;
   }
 
   .table th {
-    @apply bg-gray-50 text-left px-4 py-3 text-sm font-semibold text-gray-700 border-b-2 border-gray-200;
+    @apply bg-paper-2 text-left px-4 py-3 text-micro font-semibold uppercase tracking-caps text-ink-500 border-b border-hairline border-ink-200;
   }
 
   .table td {
-    @apply px-4 py-3 text-sm text-gray-900 border-b border-gray-100;
+    @apply px-4 py-3 text-sm text-ink-900 border-b border-hairline border-ink-200;
   }
 
   .table tbody tr {
-    @apply transition-colors duration-150;
+    @apply transition-colors;
   }
 
   .table tbody tr:hover {
-    @apply bg-primary-50 cursor-pointer;
+    @apply bg-paper-2;
   }
 
-  /* Badge styles */
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  }
-
-  .badge-success {
-    @apply bg-green-100 text-green-800;
-  }
-
-  .badge-warning {
-    @apply bg-yellow-100 text-yellow-800;
-  }
-
-  .badge-error {
-    @apply bg-red-100 text-red-800;
-  }
-
-  .badge-info {
-    @apply bg-blue-100 text-blue-800;
-  }
-
-  .badge-gray {
-    @apply bg-gray-100 text-gray-800;
+  .table tbody tr:last-child td {
+    border-bottom: 0;
   }
 }
 
@@ -120,22 +104,5 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
-  }
-
-  .scrollbar-thin {
-    scrollbar-width: thin;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-track {
-    @apply bg-gray-100 rounded;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded hover:bg-gray-400;
   }
 }

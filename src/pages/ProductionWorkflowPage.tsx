@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@/components/ui';
 import { CheckCircle, Scale, Scissors, FileText, Truck, AlertTriangle, Printer, Droplets, Wind, Sparkles } from 'lucide-react';
 import { formatWeight, formatCurrency } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -706,73 +707,115 @@ export default function ProductionWorkflowPage() {
     return typeMap[type] || type;
   };
 
+  const STEPS = [
+    { step: 1 as WorkflowStep, label: 'Commandes', icon: Truck },
+    { step: 2 as WorkflowStep, label: 'Pesée', icon: Scale },
+    { step: 3 as WorkflowStep, label: 'Vérification', icon: Scissors },
+    { step: 4 as WorkflowStep, label: 'Lavage', icon: Droplets },
+    { step: 5 as WorkflowStep, label: 'Séchage', icon: Wind },
+    { step: 6 as WorkflowStep, label: 'Calandrage', icon: Sparkles },
+    { step: 7 as WorkflowStep, label: 'Préparation', icon: FileText },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-heading font-bold text-gray-900">
-          Workflow Production Quotidien
-        </h1>
-        <p className="text-gray-600 mt-1">
-          {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="caps mb-2">Production</div>
+          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
+            Workflow quotidien
+          </h1>
+          <p className="text-sm text-ink-500 mt-1 capitalize">
+            {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })} · Atelier Dakar Nord
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-baseline gap-1.5 px-3 py-1.5 bg-paper border-hairline border-ink-200 rounded-pill">
+            <span className="caps">Étape</span>
+            <span className="font-mono text-sm font-semibold text-brand-800 tnum">
+              {currentStep.toString().padStart(2, '0')}
+            </span>
+            <span className="text-tiny text-ink-500">/ 07</span>
+          </div>
+        </div>
       </div>
 
-      {/* Progress Bar */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            {[
-              { step: 1, label: 'COMMANDES', icon: Truck },
-              { step: 2, label: 'PESÉE', icon: Scale },
-              { step: 3, label: 'VÉRIFICATION', icon: Scissors },
-              { step: 4, label: 'LAVAGE', icon: Droplets },
-              { step: 5, label: 'SÉCHAGE', icon: Wind },
-              { step: 6, label: 'CALANDRAGE', icon: Sparkles },
-              { step: 7, label: 'PRÉPARATION', icon: FileText },
-            ].map((item, index) => {
-              const Icon = item.icon;
-              const isActive = currentStep === item.step;
-              const isCompleted = currentStep > item.step;
+      {/* Stepper */}
+      <div className="card-surface p-4">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          {STEPS.map((item, index) => {
+            const Icon = item.icon;
+            const isActive = currentStep === item.step;
+            const isCompleted = currentStep > item.step;
+            const isLocked = item.step > currentStep;
 
-              return (
-                <div key={item.step} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${
-                      isCompleted ? 'bg-success text-white' :
-                      isActive ? 'bg-accent-500 text-white' :
-                      'bg-gray-200 text-gray-400'
-                    }`}>
-                      {isCompleted ? (
-                        <CheckCircle className="w-6 h-6" />
-                      ) : (
-                        <Icon className="w-6 h-6" />
-                      )}
-                    </div>
-                    <p className={`text-sm font-semibold ${
-                      isActive ? 'text-accent-600' : 'text-gray-600'
-                    }`}>
-                      {item.step}. {item.label}
-                    </p>
-                  </div>
-                  {index < 3 && (
-                    <div className={`h-1 flex-1 mx-2 ${
-                      currentStep > item.step ? 'bg-success' : 'bg-gray-200'
-                    }`} />
+            return (
+              <div key={item.step} className="flex items-center flex-1 min-w-[84px]">
+                <button
+                  onClick={() => !isLocked && setCurrentStep(item.step)}
+                  disabled={isLocked}
+                  className={cn(
+                    'flex flex-col items-center gap-2 flex-1 py-2 px-1 rounded-input transition-colors',
+                    !isLocked && !isActive && 'hover:bg-paper-2',
+                    isLocked && 'opacity-40 cursor-not-allowed',
                   )}
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                >
+                  <div
+                    className={cn(
+                      'w-10 h-10 rounded-full flex items-center justify-center transition-colors',
+                      isCompleted && 'bg-ok-600 text-paper',
+                      isActive && 'bg-brand-800 text-paper ring-2 ring-brand-100',
+                      !isCompleted && !isActive && 'bg-ink-100 text-ink-500',
+                    )}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle className="w-5 h-5" strokeWidth={2} />
+                    ) : (
+                      <Icon className="w-4 h-4" strokeWidth={1.75} />
+                    )}
+                  </div>
+                  <div className="text-center">
+                    <div
+                      className={cn(
+                        'font-mono text-micro font-medium tnum',
+                        isActive ? 'text-brand-800' : 'text-ink-400',
+                      )}
+                    >
+                      {item.step.toString().padStart(2, '0')}
+                    </div>
+                    <div
+                      className={cn(
+                        'text-tiny font-semibold leading-tight',
+                        isActive && 'text-brand-800',
+                        isCompleted && 'text-ok-700',
+                        !isActive && !isCompleted && 'text-ink-600',
+                      )}
+                    >
+                      {item.label}
+                    </div>
+                  </div>
+                </button>
+                {index < STEPS.length - 1 && (
+                  <div
+                    className={cn(
+                      'h-0.5 flex-none w-6 -mx-1',
+                      isCompleted ? 'bg-ok-600' : 'bg-ink-200',
+                    )}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* STEP 1: COMMANDES */}
       {currentStep === 1 && (
         <Card>
           <CardHeader>
             <CardTitle>Commandes à traiter aujourd'hui</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-ink-500 mt-1">
               Vérifiez les commandes collectées ce matin avec les détails saisis par les chauffeurs.
             </p>
           </CardHeader>
@@ -784,13 +827,13 @@ export default function ProductionWorkflowPage() {
 
                 return (
                   <div key={vehicleId} className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-accent-50 rounded-lg">
-                      <Truck className="w-5 h-5 text-accent-600" />
+                    <div className="flex items-center gap-3 p-3 bg-brand-50 rounded-lg">
+                      <Truck className="w-5 h-5 text-brand-800" />
                       <div>
-                        <p className="font-bold text-gray-900">
+                        <p className="font-bold text-ink-900">
                           {vehicle.matricule} - CHAUFFEUR {vehicle.assignedDriverName?.toUpperCase() || 'N/A'}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-ink-500">
                           Arrivé à {format(new Date(), 'HH:mm', { locale: fr })}
                         </p>
                       </div>
@@ -817,16 +860,16 @@ export default function ProductionWorkflowPage() {
                           key={order.id}
                           className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                             selectedOrders.includes(order.id)
-                              ? 'border-accent-500 bg-accent-50'
-                              : 'border-gray-200 hover:border-gray-300'
+                              ? 'border-brand-800 bg-brand-50'
+                              : 'border-ink-200 hover:border-ink-300'
                           }`}
                           onClick={() => toggleOrderSelection(order.id)}
                         >
                           <div className="flex items-start gap-3">
                             <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
                               selectedOrders.includes(order.id)
-                                ? 'bg-accent-500 border-accent-500'
-                                : 'border-gray-300'
+                                ? 'bg-brand-800 border-brand-800'
+                                : 'border-ink-300'
                             }`}>
                               {selectedOrders.includes(order.id) && (
                                 <CheckCircle className="w-4 h-4 text-white" />
@@ -834,20 +877,20 @@ export default function ProductionWorkflowPage() {
                             </div>
 
                             <div className="flex-1">
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-ink-900">
                                 {order.clientName} - Commande #{order.orderNumber}
                               </p>
 
                               {/* Afficher les types et quantités collectés */}
-                              <div className="mt-2 p-3 bg-white rounded border border-gray-200">
-                                <p className="text-xs font-semibold text-gray-700 mb-2">
+                              <div className="mt-2 p-3 bg-white rounded border border-ink-200">
+                                <p className="text-xs font-semibold text-ink-700 mb-2">
                                   Articles collectés ({totalItems} pièces) :
                                 </p>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                   {orderServices.map((item: any, idx: number) => (
                                     <div key={idx} className="flex items-center gap-2">
-                                      <span className="text-gray-600">•</span>
-                                      <span className="text-gray-900">
+                                      <span className="text-ink-500">•</span>
+                                      <span className="text-ink-900">
                                         {getLinenTypeName(item.type)}: <strong>{item.quantity}</strong>
                                       </span>
                                     </div>
@@ -856,7 +899,7 @@ export default function ProductionWorkflowPage() {
                               </div>
 
                               {order.collectionPhotos && order.collectionPhotos.length > 0 && (
-                                <p className="text-sm text-gray-600 mt-2">
+                                <p className="text-sm text-ink-500 mt-2">
                                   📸 Photos: {order.collectionPhotos.length}
                                 </p>
                               )}
@@ -870,9 +913,9 @@ export default function ProductionWorkflowPage() {
               })}
             </div>
 
-            <div className="mt-6 flex items-center justify-between p-4 bg-primary-50 rounded-lg">
+            <div className="mt-6 flex items-center justify-between p-4 bg-paper-2 rounded-lg">
               <div>
-                <p className="text-sm text-gray-600">Commandes sélectionnées</p>
+                <p className="text-sm text-ink-500">Commandes sélectionnées</p>
                 <p className="text-2xl font-bold text-primary-600">{selectedOrders.length} / {todayOrders.length}</p>
               </div>
               <Button
@@ -894,21 +937,21 @@ export default function ProductionWorkflowPage() {
         <Card>
           <CardHeader>
             <CardTitle>Pesée par type de linge</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-ink-500 mt-1">
               Pesez chaque type de linge individuellement. Le poids global sera calculé automatiquement.
             </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {/* Progress */}
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="p-4 bg-paper-2 rounded-lg">
                 <div className="flex justify-between text-sm mb-2">
                   <span>Progression</span>
                   <span className="font-bold">{weighedOrders.length} / {selectedOrders.length} commandes</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-ink-200 rounded-full h-3">
                   <div
-                    className="bg-accent-500 h-3 rounded-full transition-all"
+                    className="bg-brand-800 h-3 rounded-full transition-all"
                     style={{ width: `${(weighedOrders.length / selectedOrders.length) * 100}%` }}
                   />
                 </div>
@@ -916,11 +959,11 @@ export default function ProductionWorkflowPage() {
 
               {currentWeighingOrder && currentWeighingItems.length > 0 ? (
                 <div className="space-y-4">
-                  <div className="p-4 bg-accent-50 border-2 border-accent-500 rounded-lg">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  <div className="p-4 bg-brand-50 border-2 border-brand-800 rounded-lg">
+                    <h3 className="text-lg font-bold text-ink-900 mb-2">
                       {currentWeighingOrder.clientName} - #{currentWeighingOrder.orderNumber}
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-ink-500">
                       {currentWeighingItems.length} types de linge à peser
                     </p>
                   </div>
@@ -931,16 +974,16 @@ export default function ProductionWorkflowPage() {
                       <div key={index} className="p-4 border-2 border-primary-200 rounded-lg bg-white">
                         <div className="grid grid-cols-3 gap-4 items-center">
                           <div className="col-span-2">
-                            <p className="text-sm text-gray-600 mb-1">Type de linge</p>
+                            <p className="text-sm text-ink-500 mb-1">Type de linge</p>
                             <h4 className="text-lg font-bold text-primary-900">
                               {getLinenTypeName(item.linenType)}
                             </h4>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-ink-500 mt-1">
                               Quantité: <strong>{item.quantity} pièces</strong>
                             </p>
                           </div>
                           <div>
-                            <label className="block text-sm text-gray-600 mb-1">
+                            <label className="block text-sm text-ink-500 mb-1">
                               Poids (kg)
                             </label>
                             <input
@@ -948,7 +991,7 @@ export default function ProductionWorkflowPage() {
                               min="0"
                               step="0.1"
                               placeholder="0.0"
-                              className="w-full px-3 py-3 border-2 border-gray-300 rounded-lg text-lg font-bold text-center focus:border-primary-500 focus:outline-none"
+                              className="w-full px-3 py-3 border-2 border-ink-300 rounded-lg text-lg font-bold text-center focus:border-primary-500 focus:outline-none"
                               value={item.weight > 0 ? item.weight / 1000 : ''}
                               onChange={(e) => updateItemWeight(index, parseFloat(e.target.value || '0'))}
                             />
@@ -959,9 +1002,9 @@ export default function ProductionWorkflowPage() {
                   </div>
 
                   {/* Poids total */}
-                  <div className="p-4 bg-primary-50 border-2 border-primary-300 rounded-lg">
+                  <div className="p-4 bg-paper-2 border-2 border-primary-300 rounded-lg">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-semibold text-gray-700">Poids total:</span>
+                      <span className="text-lg font-semibold text-ink-700">Poids total:</span>
                       <span className="text-3xl font-bold text-primary-900">
                         {(currentWeighingItems.reduce((sum, item) => sum + item.weight, 0) / 1000).toFixed(2)} kg
                       </span>
@@ -981,10 +1024,10 @@ export default function ProductionWorkflowPage() {
               ) : (
                 <div className="text-center py-8">
                   <CheckCircle className="w-16 h-16 mx-auto mb-4 text-success" />
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-ink-900 mb-2">
                     Toutes les commandes ont été pesées !
                   </h3>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-ink-500 mb-6">
                     {weighedOrders.length} commandes • Total: {formatWeight(weighedOrders.reduce((sum, w) => sum + w.totalWeight, 0))}
                   </p>
                   <Button variant="primary" size="lg" onClick={goToTriage}>
@@ -1003,21 +1046,21 @@ export default function ProductionWorkflowPage() {
         <Card>
           <CardHeader>
             <CardTitle>Vérification du triage</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-ink-500 mt-1">
               Vérifiez et confirmez le tri effectué par l'hôtel. Ajustez si nécessaire.
             </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {/* Progress */}
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="p-4 bg-paper-2 rounded-lg">
                 <div className="flex justify-between text-sm mb-2">
                   <span>Progression</span>
                   <span className="font-bold">{triagedOrders.length} / {selectedOrders.length}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-ink-200 rounded-full h-3">
                   <div
-                    className="bg-accent-500 h-3 rounded-full transition-all"
+                    className="bg-brand-800 h-3 rounded-full transition-all"
                     style={{ width: `${(triagedOrders.length / selectedOrders.length) * 100}%` }}
                   />
                 </div>
@@ -1025,11 +1068,11 @@ export default function ProductionWorkflowPage() {
 
               {currentTriageOrder ? (
                 <div className="space-y-4">
-                  <div className="p-4 bg-accent-50 border-2 border-accent-500 rounded-lg">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  <div className="p-4 bg-brand-50 border-2 border-brand-800 rounded-lg">
+                    <h3 className="text-lg font-bold text-ink-900 mb-2">
                       {currentTriageOrder.clientName} - #{currentTriageOrder.orderNumber}
                     </h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-ink-500">
                       Poids total pesé: <strong>{formatWeight(currentTriageWeight)}</strong>
                     </p>
                   </div>
@@ -1047,19 +1090,19 @@ export default function ProductionWorkflowPage() {
 
                   {/* Triage Items */}
                   <div className="space-y-3">
-                    <p className="text-sm font-semibold text-gray-700">
+                    <p className="text-sm font-semibold text-ink-700">
                       Vérification et ajustements (quantités du client) :
                     </p>
                     {currentTriageItems.map((item, index) => {
                       const selectedLinenType = linenTypes.find(lt => lt.id === item.linenTypeId);
 
                       return (
-                        <div key={index} className="p-4 border-2 border-primary-200 rounded-lg bg-primary-50">
+                        <div key={index} className="p-4 border-2 border-primary-200 rounded-lg bg-paper-2">
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
                                 <select
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+                                  className="w-full px-3 py-2 border border-ink-300 rounded-lg bg-white"
                                   value={item.linenTypeId}
                                   onChange={(e) => updateTriageItem(index, 'linenTypeId', e.target.value)}
                                 >
@@ -1076,13 +1119,13 @@ export default function ProductionWorkflowPage() {
                             {selectedLinenType && (
                               <div className="grid grid-cols-3 gap-3">
                                 <div className="col-span-2">
-                                  <label className="block text-sm text-gray-600 mb-1">
+                                  <label className="block text-sm text-ink-500 mb-1">
                                     Quantité (pièces)
                                   </label>
                                   <input
                                     type="number"
                                     min="0"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-lg font-semibold"
+                                    className="w-full px-3 py-2 border border-ink-300 rounded-lg bg-white text-lg font-semibold"
                                     value={item.pieces || ''}
                                     onChange={(e) => updateTriageItem(index, 'pieces', parseInt(e.target.value || '0'))}
                                     placeholder="Quantité"
@@ -1122,10 +1165,10 @@ export default function ProductionWorkflowPage() {
               ) : (
                 <div className="text-center py-8">
                   <CheckCircle className="w-16 h-16 mx-auto mb-4 text-success" />
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-ink-900 mb-2">
                     Toutes les vérifications sont terminées !
                   </h3>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-ink-500 mb-6">
                     {triagedOrders.length} commandes vérifiées
                   </p>
                   <Button variant="primary" size="lg" onClick={goToWashing}>
@@ -1144,7 +1187,7 @@ export default function ProductionWorkflowPage() {
         <Card>
           <CardHeader>
             <CardTitle>Dispatching intelligent - Lavage</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-ink-500 mt-1">
               Optimisation automatique du chargement des machines pour économiser les ressources
             </p>
           </CardHeader>
@@ -1152,18 +1195,18 @@ export default function ProductionWorkflowPage() {
             <div className="space-y-6">
               {/* Statistiques globales */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 bg-primary-50 rounded-lg border-2 border-primary-200">
-                  <p className="text-sm text-gray-600 mb-1">Cycles programmés</p>
+                <div className="p-4 bg-paper-2 rounded-lg border-2 border-primary-200">
+                  <p className="text-sm text-ink-500 mb-1">Cycles programmés</p>
                   <p className="text-3xl font-bold text-primary-900">{washingBatches.length}</p>
                 </div>
-                <div className="p-4 bg-accent-50 rounded-lg border-2 border-accent-200">
-                  <p className="text-sm text-gray-600 mb-1">Poids total</p>
+                <div className="p-4 bg-brand-50 rounded-lg border-2 border-accent-200">
+                  <p className="text-sm text-ink-500 mb-1">Poids total</p>
                   <p className="text-3xl font-bold text-accent-900">
                     {formatWeight(washingBatches.reduce((sum, b) => sum + b.totalWeight, 0))}
                   </p>
                 </div>
                 <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                  <p className="text-sm text-gray-600 mb-1">Taux d'utilisation moyen</p>
+                  <p className="text-sm text-ink-500 mb-1">Taux d'utilisation moyen</p>
                   <p className="text-3xl font-bold text-blue-900">
                     {(washingBatches.reduce((sum, b) => sum + b.utilizationRate, 0) / washingBatches.length).toFixed(0)}%
                   </p>
@@ -1172,15 +1215,15 @@ export default function ProductionWorkflowPage() {
 
               {/* Liste des batches */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Plan de lavage optimisé</h3>
+                <h3 className="text-lg font-semibold text-ink-900">Plan de lavage optimisé</h3>
                 {washingBatches.map((batch, index) => (
-                  <div key={batch.id} className="p-4 border-2 border-gray-200 rounded-lg bg-white">
+                  <div key={batch.id} className="p-4 border-2 border-ink-200 rounded-lg bg-white">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="text-lg font-bold text-gray-900">
+                        <h4 className="text-lg font-bold text-ink-900">
                           Cycle {index + 1} - {batch.machineName}
                         </h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-ink-500">
                           {batch.programName} • {batch.estimatedDuration} min
                         </p>
                       </div>
@@ -1192,29 +1235,29 @@ export default function ProductionWorkflowPage() {
                     {/* Types de linge dans ce batch */}
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       {batch.items.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <span className="text-sm text-gray-700">{item.linenTypeName}</span>
+                        <div key={idx} className="flex items-center justify-between p-2 bg-paper-2 rounded">
+                          <span className="text-sm text-ink-700">{item.linenTypeName}</span>
                           <div className="text-right">
                             <span className="text-sm font-semibold">{item.quantity} pcs</span>
-                            <span className="text-xs text-gray-500 ml-2">{formatWeight(item.weight)}</span>
+                            <span className="text-xs text-ink-500 ml-2">{formatWeight(item.weight)}</span>
                           </div>
                         </div>
                       ))}
                     </div>
 
                     {/* Métriques du batch */}
-                    <div className="grid grid-cols-3 gap-3 p-3 bg-gray-50 rounded">
+                    <div className="grid grid-cols-3 gap-3 p-3 bg-paper-2 rounded">
                       <div>
-                        <p className="text-xs text-gray-600">Poids total</p>
-                        <p className="text-sm font-bold text-gray-900">{formatWeight(batch.totalWeight)}</p>
+                        <p className="text-xs text-ink-500">Poids total</p>
+                        <p className="text-sm font-bold text-ink-900">{formatWeight(batch.totalWeight)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600">Capacité machine</p>
-                        <p className="text-sm font-bold text-gray-900">{formatWeight(batch.capacity)}</p>
+                        <p className="text-xs text-ink-500">Capacité machine</p>
+                        <p className="text-sm font-bold text-ink-900">{formatWeight(batch.capacity)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600">Eau consommée</p>
-                        <p className="text-sm font-bold text-gray-900">{batch.waterConsumption}L</p>
+                        <p className="text-xs text-ink-500">Eau consommée</p>
+                        <p className="text-sm font-bold text-ink-900">{batch.waterConsumption}L</p>
                       </div>
                     </div>
                   </div>
@@ -1238,7 +1281,7 @@ export default function ProductionWorkflowPage() {
         <Card>
           <CardHeader>
             <CardTitle>Dispatching intelligent - Séchage</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-ink-500 mt-1">
               Optimisation automatique du chargement des sécheuses pour économiser l'énergie
             </p>
           </CardHeader>
@@ -1246,18 +1289,18 @@ export default function ProductionWorkflowPage() {
             <div className="space-y-6">
               {/* Statistiques globales */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 bg-primary-50 rounded-lg border-2 border-primary-200">
-                  <p className="text-sm text-gray-600 mb-1">Cycles programmés</p>
+                <div className="p-4 bg-paper-2 rounded-lg border-2 border-primary-200">
+                  <p className="text-sm text-ink-500 mb-1">Cycles programmés</p>
                   <p className="text-3xl font-bold text-primary-900">{dryingBatches.length}</p>
                 </div>
-                <div className="p-4 bg-accent-50 rounded-lg border-2 border-accent-200">
-                  <p className="text-sm text-gray-600 mb-1">Poids total</p>
+                <div className="p-4 bg-brand-50 rounded-lg border-2 border-accent-200">
+                  <p className="text-sm text-ink-500 mb-1">Poids total</p>
                   <p className="text-3xl font-bold text-accent-900">
                     {formatWeight(dryingBatches.reduce((sum, b) => sum + b.totalWeight, 0))}
                   </p>
                 </div>
                 <div className="p-4 bg-green-50 rounded-lg border-2 border-green-200">
-                  <p className="text-sm text-gray-600 mb-1">Taux d'utilisation moyen</p>
+                  <p className="text-sm text-ink-500 mb-1">Taux d'utilisation moyen</p>
                   <p className="text-3xl font-bold text-green-900">
                     {(dryingBatches.reduce((sum, b) => sum + b.utilizationRate, 0) / dryingBatches.length).toFixed(0)}%
                   </p>
@@ -1266,15 +1309,15 @@ export default function ProductionWorkflowPage() {
 
               {/* Liste des batches */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Plan de séchage optimisé</h3>
+                <h3 className="text-lg font-semibold text-ink-900">Plan de séchage optimisé</h3>
                 {dryingBatches.map((batch, index) => (
-                  <div key={batch.id} className="p-4 border-2 border-gray-200 rounded-lg bg-white">
+                  <div key={batch.id} className="p-4 border-2 border-ink-200 rounded-lg bg-white">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="text-lg font-bold text-gray-900">
+                        <h4 className="text-lg font-bold text-ink-900">
                           Cycle {index + 1} - {batch.machineName}
                         </h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-ink-500">
                           {batch.programName} • {batch.estimatedDuration} min
                         </p>
                       </div>
@@ -1286,29 +1329,29 @@ export default function ProductionWorkflowPage() {
                     {/* Types de linge dans ce batch */}
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       {batch.items.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <span className="text-sm text-gray-700">{item.linenTypeName}</span>
+                        <div key={idx} className="flex items-center justify-between p-2 bg-paper-2 rounded">
+                          <span className="text-sm text-ink-700">{item.linenTypeName}</span>
                           <div className="text-right">
                             <span className="text-sm font-semibold">{item.quantity} pcs</span>
-                            <span className="text-xs text-gray-500 ml-2">{formatWeight(item.weight)}</span>
+                            <span className="text-xs text-ink-500 ml-2">{formatWeight(item.weight)}</span>
                           </div>
                         </div>
                       ))}
                     </div>
 
                     {/* Métriques du batch */}
-                    <div className="grid grid-cols-3 gap-3 p-3 bg-gray-50 rounded">
+                    <div className="grid grid-cols-3 gap-3 p-3 bg-paper-2 rounded">
                       <div>
-                        <p className="text-xs text-gray-600">Poids total</p>
-                        <p className="text-sm font-bold text-gray-900">{formatWeight(batch.totalWeight)}</p>
+                        <p className="text-xs text-ink-500">Poids total</p>
+                        <p className="text-sm font-bold text-ink-900">{formatWeight(batch.totalWeight)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600">Capacité machine</p>
-                        <p className="text-sm font-bold text-gray-900">{formatWeight(batch.capacity)}</p>
+                        <p className="text-xs text-ink-500">Capacité machine</p>
+                        <p className="text-sm font-bold text-ink-900">{formatWeight(batch.capacity)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600">Énergie consommée</p>
-                        <p className="text-sm font-bold text-gray-900">{batch.energyConsumption} kWh</p>
+                        <p className="text-xs text-ink-500">Énergie consommée</p>
+                        <p className="text-sm font-bold text-ink-900">{batch.energyConsumption} kWh</p>
                       </div>
                     </div>
                   </div>
@@ -1332,7 +1375,7 @@ export default function ProductionWorkflowPage() {
         <Card>
           <CardHeader>
             <CardTitle>Dispatching intelligent - Calandrage/Pressage</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-ink-500 mt-1">
               Optimisation automatique pour le repassage et la finition du linge
             </p>
           </CardHeader>
@@ -1340,18 +1383,18 @@ export default function ProductionWorkflowPage() {
             <div className="space-y-6">
               {/* Statistiques globales */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 bg-primary-50 rounded-lg border-2 border-primary-200">
-                  <p className="text-sm text-gray-600 mb-1">Cycles programmés</p>
+                <div className="p-4 bg-paper-2 rounded-lg border-2 border-primary-200">
+                  <p className="text-sm text-ink-500 mb-1">Cycles programmés</p>
                   <p className="text-3xl font-bold text-primary-900">{calandringBatches.length}</p>
                 </div>
-                <div className="p-4 bg-accent-50 rounded-lg border-2 border-accent-200">
-                  <p className="text-sm text-gray-600 mb-1">Pièces totales</p>
+                <div className="p-4 bg-brand-50 rounded-lg border-2 border-accent-200">
+                  <p className="text-sm text-ink-500 mb-1">Pièces totales</p>
                   <p className="text-3xl font-bold text-accent-900">
                     {calandringBatches.reduce((sum, b) => sum + b.totalPieces, 0)}
                   </p>
                 </div>
                 <div className="p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
-                  <p className="text-sm text-gray-600 mb-1">Taux d'utilisation moyen</p>
+                  <p className="text-sm text-ink-500 mb-1">Taux d'utilisation moyen</p>
                   <p className="text-3xl font-bold text-purple-900">
                     {(calandringBatches.reduce((sum, b) => sum + b.utilizationRate, 0) / calandringBatches.length).toFixed(0)}%
                   </p>
@@ -1360,15 +1403,15 @@ export default function ProductionWorkflowPage() {
 
               {/* Liste des batches */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Plan de calandrage/pressage optimisé</h3>
+                <h3 className="text-lg font-semibold text-ink-900">Plan de calandrage/pressage optimisé</h3>
                 {calandringBatches.map((batch, index) => (
-                  <div key={batch.id} className="p-4 border-2 border-gray-200 rounded-lg bg-white">
+                  <div key={batch.id} className="p-4 border-2 border-ink-200 rounded-lg bg-white">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="text-lg font-bold text-gray-900">
+                        <h4 className="text-lg font-bold text-ink-900">
                           Cycle {index + 1} - {batch.machineName}
                         </h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-ink-500">
                           {batch.programName} • {batch.estimatedDuration} min
                         </p>
                       </div>
@@ -1380,8 +1423,8 @@ export default function ProductionWorkflowPage() {
                     {/* Types de linge dans ce batch */}
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       {batch.items.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <span className="text-sm text-gray-700">{item.linenTypeName}</span>
+                        <div key={idx} className="flex items-center justify-between p-2 bg-paper-2 rounded">
+                          <span className="text-sm text-ink-700">{item.linenTypeName}</span>
                           <div className="text-right">
                             <span className="text-sm font-semibold">{item.quantity} pièces</span>
                           </div>
@@ -1390,18 +1433,18 @@ export default function ProductionWorkflowPage() {
                     </div>
 
                     {/* Métriques du batch */}
-                    <div className="grid grid-cols-3 gap-3 p-3 bg-gray-50 rounded">
+                    <div className="grid grid-cols-3 gap-3 p-3 bg-paper-2 rounded">
                       <div>
-                        <p className="text-xs text-gray-600">Pièces totales</p>
-                        <p className="text-sm font-bold text-gray-900">{batch.totalPieces}</p>
+                        <p className="text-xs text-ink-500">Pièces totales</p>
+                        <p className="text-sm font-bold text-ink-900">{batch.totalPieces}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600">Capacité machine</p>
-                        <p className="text-sm font-bold text-gray-900">{batch.capacity} pcs</p>
+                        <p className="text-xs text-ink-500">Capacité machine</p>
+                        <p className="text-sm font-bold text-ink-900">{batch.capacity} pcs</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600">Énergie consommée</p>
-                        <p className="text-sm font-bold text-gray-900">{batch.energyConsumption} kWh</p>
+                        <p className="text-xs text-ink-500">Énergie consommée</p>
+                        <p className="text-sm font-bold text-ink-900">{batch.energyConsumption} kWh</p>
                       </div>
                     </div>
                   </div>
@@ -1425,7 +1468,7 @@ export default function ProductionWorkflowPage() {
         <Card>
           <CardHeader>
             <CardTitle>Récapitulatif final</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-ink-500 mt-1">
               Vérifiez le récapitulatif. Les factures seront générées selon les modes de facturation configurés.
             </p>
           </CardHeader>
@@ -1441,17 +1484,17 @@ export default function ProductionWorkflowPage() {
                 const invoiceAmount = calculateInvoiceAmount(orderId);
 
                 return (
-                  <div key={orderId} className="p-4 border-2 border-gray-200 rounded-lg bg-white">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3">
+                  <div key={orderId} className="p-4 border-2 border-ink-200 rounded-lg bg-white">
+                    <h3 className="text-lg font-bold text-ink-900 mb-3">
                       {index + 1}. {order.clientName}
                     </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Poids total:</span>
+                        <span className="text-ink-500">Poids total:</span>
                         <span className="font-bold">{formatWeight(weighed.totalWeight)}</span>
                       </div>
-                      <div className="mt-2 p-3 bg-gray-50 rounded">
-                        <p className="text-xs text-gray-600 mb-2">Détail pesée par type:</p>
+                      <div className="mt-2 p-3 bg-paper-2 rounded">
+                        <p className="text-xs text-ink-500 mb-2">Détail pesée par type:</p>
                         <ul className="space-y-1">
                           {weighed.items.map((item, idx) => (
                             <li key={idx} className="text-sm flex justify-between">
@@ -1480,8 +1523,8 @@ export default function ProductionWorkflowPage() {
                           </ul>
                         </div>
                       )}
-                      <div className="flex justify-between pt-2 border-t border-gray-300">
-                        <span className="text-gray-600">→ Facture estimée:</span>
+                      <div className="flex justify-between pt-2 border-t border-ink-300">
+                        <span className="text-ink-500">→ Facture estimée:</span>
                         <span className="font-bold text-success text-lg">{formatCurrency(invoiceAmount)}</span>
                       </div>
                     </div>
@@ -1490,19 +1533,19 @@ export default function ProductionWorkflowPage() {
               })}
 
               {/* Total Summary */}
-              <div className="p-6 bg-primary-50 border-2 border-primary-200 rounded-lg">
+              <div className="p-6 bg-paper-2 border-2 border-primary-200 rounded-lg">
                 <h3 className="text-xl font-bold text-primary-900 mb-4">
                   TOTAL JOUR - {format(new Date(), 'd MMMM yyyy', { locale: fr })}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Poids total traité</p>
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-sm text-ink-500">Poids total traité</p>
+                    <p className="text-3xl font-bold text-ink-900">
                       {formatWeight(weighedOrders.reduce((sum, w) => sum + w.totalWeight, 0))}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Montant total facturé</p>
+                    <p className="text-sm text-ink-500">Montant total facturé</p>
                     <p className="text-3xl font-bold text-success">
                       {formatCurrency(selectedOrders.reduce((sum, orderId) => sum + calculateInvoiceAmount(orderId), 0))}
                     </p>
@@ -1531,7 +1574,7 @@ export default function ProductionWorkflowPage() {
       )}
 
       {/* Info Alert */}
-      <Card className="border-primary-200 bg-primary-50">
+      <Card className="border-primary-200 bg-paper-2">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-primary-700 flex-shrink-0 mt-0.5" />
