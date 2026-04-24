@@ -351,7 +351,7 @@ export default function EstimationAnalyticsPage() {
                   {/* Recommendations */}
                   <Card className="border-accent-200 bg-brand-50">
                     <CardContent className="p-4">
-                      <h5 className="font-semibold text-accent-900 mb-2">RECOMMANDATIONS:</h5>
+                      <h5 className="font-semibold text-terra-700 mb-2">RECOMMANDATIONS:</h5>
                       <ul className="list-disc list-inside text-sm text-brand-700 space-y-1">
                         {selectedClient.orders.reduce((sum, o) => sum + (o.deviation || 0), 0) / selectedClient.orders.length > 30 && (
                           <>

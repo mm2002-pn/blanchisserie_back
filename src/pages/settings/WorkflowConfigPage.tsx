@@ -131,7 +131,7 @@ export default function WorkflowConfigPage() {
               <div key={step.code} className="relative">
                 {/* Connector Line */}
                 {index < selectedWorkflow.steps.length - 1 && (
-                  <div className="absolute left-6 top-14 w-0.5 h-16 bg-gray-300" />
+                  <div className="absolute left-6 top-14 w-0.5 h-16 bg-ink-300" />
                 )}
 
                 {/* Step Card */}

@@ -916,7 +916,7 @@ export default function ProductionWorkflowPage() {
             <div className="mt-6 flex items-center justify-between p-4 bg-paper-2 rounded-lg">
               <div>
                 <p className="text-sm text-ink-500">Commandes sélectionnées</p>
-                <p className="text-2xl font-bold text-primary-600">{selectedOrders.length} / {todayOrders.length}</p>
+                <p className="text-2xl font-bold text-brand-800">{selectedOrders.length} / {todayOrders.length}</p>
               </div>
               <Button
                 variant="primary"
@@ -975,7 +975,7 @@ export default function ProductionWorkflowPage() {
                         <div className="grid grid-cols-3 gap-4 items-center">
                           <div className="col-span-2">
                             <p className="text-sm text-ink-500 mb-1">Type de linge</p>
-                            <h4 className="text-lg font-bold text-primary-900">
+                            <h4 className="text-lg font-bold text-ink-900">
                               {getLinenTypeName(item.linenType)}
                             </h4>
                             <p className="text-sm text-ink-500 mt-1">
@@ -1005,7 +1005,7 @@ export default function ProductionWorkflowPage() {
                   <div className="p-4 bg-paper-2 border-2 border-primary-300 rounded-lg">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold text-ink-700">Poids total:</span>
-                      <span className="text-3xl font-bold text-primary-900">
+                      <span className="text-3xl font-bold text-ink-900">
                         {(currentWeighingItems.reduce((sum, item) => sum + item.weight, 0) / 1000).toFixed(2)} kg
                       </span>
                     </div>
@@ -1197,11 +1197,11 @@ export default function ProductionWorkflowPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 bg-paper-2 rounded-lg border-2 border-primary-200">
                   <p className="text-sm text-ink-500 mb-1">Cycles programmés</p>
-                  <p className="text-3xl font-bold text-primary-900">{washingBatches.length}</p>
+                  <p className="text-3xl font-bold text-ink-900">{washingBatches.length}</p>
                 </div>
                 <div className="p-4 bg-brand-50 rounded-lg border-2 border-accent-200">
                   <p className="text-sm text-ink-500 mb-1">Poids total</p>
-                  <p className="text-3xl font-bold text-accent-900">
+                  <p className="text-3xl font-bold text-terra-700">
                     {formatWeight(washingBatches.reduce((sum, b) => sum + b.totalWeight, 0))}
                   </p>
                 </div>
@@ -1291,11 +1291,11 @@ export default function ProductionWorkflowPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 bg-paper-2 rounded-lg border-2 border-primary-200">
                   <p className="text-sm text-ink-500 mb-1">Cycles programmés</p>
-                  <p className="text-3xl font-bold text-primary-900">{dryingBatches.length}</p>
+                  <p className="text-3xl font-bold text-ink-900">{dryingBatches.length}</p>
                 </div>
                 <div className="p-4 bg-brand-50 rounded-lg border-2 border-accent-200">
                   <p className="text-sm text-ink-500 mb-1">Poids total</p>
-                  <p className="text-3xl font-bold text-accent-900">
+                  <p className="text-3xl font-bold text-terra-700">
                     {formatWeight(dryingBatches.reduce((sum, b) => sum + b.totalWeight, 0))}
                   </p>
                 </div>
@@ -1385,11 +1385,11 @@ export default function ProductionWorkflowPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 bg-paper-2 rounded-lg border-2 border-primary-200">
                   <p className="text-sm text-ink-500 mb-1">Cycles programmés</p>
-                  <p className="text-3xl font-bold text-primary-900">{calandringBatches.length}</p>
+                  <p className="text-3xl font-bold text-ink-900">{calandringBatches.length}</p>
                 </div>
                 <div className="p-4 bg-brand-50 rounded-lg border-2 border-accent-200">
                   <p className="text-sm text-ink-500 mb-1">Pièces totales</p>
-                  <p className="text-3xl font-bold text-accent-900">
+                  <p className="text-3xl font-bold text-terra-700">
                     {calandringBatches.reduce((sum, b) => sum + b.totalPieces, 0)}
                   </p>
                 </div>
@@ -1534,7 +1534,7 @@ export default function ProductionWorkflowPage() {
 
               {/* Total Summary */}
               <div className="p-6 bg-paper-2 border-2 border-primary-200 rounded-lg">
-                <h3 className="text-xl font-bold text-primary-900 mb-4">
+                <h3 className="text-xl font-bold text-ink-900 mb-4">
                   TOTAL JOUR - {format(new Date(), 'd MMMM yyyy', { locale: fr })}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -1577,12 +1577,12 @@ export default function ProductionWorkflowPage() {
       <Card className="border-primary-200 bg-paper-2">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-primary-700 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-brand-700 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-primary-900 mb-1">
+              <h4 className="font-semibold text-ink-900 mb-1">
                 Nouveau workflow avec pesée par type
               </h4>
-              <p className="text-sm text-primary-700">
+              <p className="text-sm text-brand-700">
                 Chaque type de linge est pesé individuellement pour une facturation précise.
                 L'étape de vérification permet de confirmer le tri effectué par l'hôtel et d'ajuster si nécessaire.
                 La facturation se fait selon le mode configuré (poids ou pièce) pour chaque type de linge.
