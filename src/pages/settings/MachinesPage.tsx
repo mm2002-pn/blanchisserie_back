@@ -60,7 +60,7 @@ export default function MachinesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-serif font-bold text-ink-900">Machines et équipements</h2>
+          <h2 className="font-serif text-2xl font-medium tracking-tight text-ink-900">Machines et équipements</h2>
           <p className="text-ink-500 mt-1">{machines.length} machines configurées</p>
         </div>
         {canEdit('settings') && (

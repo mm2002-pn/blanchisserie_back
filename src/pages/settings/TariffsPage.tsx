@@ -22,7 +22,7 @@ export default function TariffsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-serif font-bold text-ink-900">Grilles tarifaires</h2>
+          <h2 className="font-serif text-2xl font-medium tracking-tight text-ink-900">Grilles tarifaires</h2>
           <p className="text-ink-500 mt-1">{tariffs.length} grilles configurées</p>
         </div>
         {canEdit('settings') && (
@@ -106,7 +106,7 @@ export default function TariffsPage() {
             </CardHeader>
             <CardContent>
               {/* Tariff Info */}
-              <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-paper-2 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-paper-2 rounded-input">
                 <div>
                   <p className="text-sm text-ink-500">Code</p>
                   <p className="font-medium text-ink-900">{selectedTariff.code}</p>
@@ -135,24 +135,24 @@ export default function TariffsPage() {
 
               {/* Forfait Details */}
               {selectedTariff.type === 'Forfait' && (
-                <div className="mb-6 p-4 bg-paper-2 rounded-lg border border-ink-200">
+                <div className="mb-6 p-4 bg-paper-2 rounded-input border border-ink-200">
                   <h4 className="font-semibold text-ink-900 mb-3">Détails du forfait</h4>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <p className="text-sm text-ink-500">Prix mensuel</p>
-                      <p className="text-lg font-bold text-primary-600">
+                      <p className="text-lg font-bold text-brand-800">
                         {formatCurrency(selectedTariff.monthlyPrice || 0)}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-ink-500">Volume inclus</p>
-                      <p className="text-lg font-bold text-ink-900">
+                      <p className="font-serif text-lg font-medium tracking-tight text-ink-900">
                         {selectedTariff.monthlyKgLimit} kg
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-ink-500">Dépassement</p>
-                      <p className="text-lg font-bold text-warning-600">
+                      <p className="text-lg font-bold text-warn-700">
                         {formatCurrency(selectedTariff.overagePricePerKg || 0)}/kg
                       </p>
                     </div>

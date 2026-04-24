@@ -4,7 +4,7 @@ export default function NotificationsConfigPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-serif font-bold text-ink-900">Configuration des notifications</h2>
+        <h2 className="font-serif text-2xl font-medium tracking-tight text-ink-900">Configuration des notifications</h2>
         <p className="text-ink-500 mt-1">Paramétrage des alertes et notifications</p>
       </div>
 

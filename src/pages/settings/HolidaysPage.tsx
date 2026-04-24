@@ -41,7 +41,7 @@ export default function HolidaysPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-serif font-bold text-ink-900">Jours fériés et fermetures</h2>
+          <h2 className="font-serif text-2xl font-medium tracking-tight text-ink-900">Jours fériés et fermetures</h2>
           <p className="text-ink-500 mt-1">{holidays.length} jours configurés pour 2024</p>
         </div>
         {canEdit('settings') && (
@@ -104,23 +104,23 @@ export default function HolidaysPage() {
                     <div
                       key={index}
                       className={`
-                        min-h-[80px] p-2 border rounded-lg
+                        min-h-[80px] p-2 border rounded-input
                         ${isToday ? 'border-brand-800 bg-brand-50' : 'border-ink-200'}
                         ${isWeekend ? 'bg-paper-2' : 'bg-paper'}
-                        ${hasHoliday(day) ? 'bg-danger-50 border-danger-200' : ''}
+                        ${hasHoliday(day) ? 'bg-danger-100 border-danger-600' : ''}
                       `}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className={`text-sm font-medium ${
                           isToday ? 'text-brand-800' :
-                          hasHoliday(day) ? 'text-danger' :
+                          hasHoliday(day) ? 'text-danger-600' :
                           isWeekend ? 'text-ink-400' :
                           'text-ink-900'
                         }`}>
                           {format(day, 'd')}
                         </span>
                         {hasHoliday(day) && (
-                          <Calendar className="w-3 h-3 text-danger" />
+                          <Calendar className="w-3 h-3 text-danger-600" />
                         )}
                       </div>
                       {dayHolidays.length > 0 && (
@@ -148,7 +148,7 @@ export default function HolidaysPage() {
                   <span className="text-sm text-ink-500">Aujourd'hui</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-danger-50 border border-danger-200"></div>
+                  <div className="w-4 h-4 rounded bg-danger-100 border border-danger-600"></div>
                   <span className="text-sm text-ink-500">Jour férié</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -171,7 +171,7 @@ export default function HolidaysPage() {
                 {upcomingHolidays.map(holiday => (
                   <div
                     key={holiday.id}
-                    className="p-3 border border-ink-200 rounded-lg hover:bg-paper-2"
+                    className="p-3 border border-ink-200 rounded-input hover:bg-paper-2"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-medium text-ink-900 text-sm">{holiday.name}</h4>
@@ -200,13 +200,13 @@ export default function HolidaysPage() {
           </Card>
 
           {/* Impact Alert */}
-          <Card className="border-warning-200 bg-warning-50">
+          <Card className="border-warn-600 bg-warn-100">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-warning-700 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-warn-700 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-warning-900 mb-1">Impact sur les opérations</h4>
-                  <p className="text-sm text-warning-700">
+                  <h4 className="font-semibold text-warn-700 mb-1">Impact sur les opérations</h4>
+                  <p className="text-sm text-warn-700">
                     Les jours fériés affectent automatiquement le planning de production et de livraison.
                   </p>
                 </div>
@@ -262,7 +262,7 @@ export default function HolidaysPage() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         {holiday.isRecurring ? (
-                          <span className="text-success">✓</span>
+                          <span className="text-ok-700">✓</span>
                         ) : (
                           <span className="text-ink-400">—</span>
                         )}

@@ -76,7 +76,7 @@ export default function LinenTypesPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-serif font-bold text-ink-900">Types de linge</h2>
+          <h2 className="font-serif text-2xl font-medium tracking-tight text-ink-900">Types de linge</h2>
           <p className="text-ink-500 mt-1">{linenTypes.length} types configurés</p>
         </div>
         {canEdit('settings') && (

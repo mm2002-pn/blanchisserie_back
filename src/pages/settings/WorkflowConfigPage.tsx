@@ -28,7 +28,7 @@ export default function WorkflowConfigPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-serif font-bold text-ink-900">Configuration des workflows</h2>
+          <h2 className="font-serif text-2xl font-medium tracking-tight text-ink-900">Configuration des workflows</h2>
           <p className="text-ink-500 mt-1">{workflows.length} workflows configurés</p>
         </div>
         {canEdit('settings') && (
@@ -94,7 +94,7 @@ export default function WorkflowConfigPage() {
         </CardHeader>
         <CardContent>
           {/* Workflow Info */}
-          <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-paper-2 rounded-lg">
+          <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-paper-2 rounded-input">
             <div>
               <p className="text-sm text-ink-500">Code</p>
               <p className="font-medium text-ink-900">{selectedWorkflow.code}</p>
@@ -218,24 +218,24 @@ export default function WorkflowConfigPage() {
           </div>
 
           {/* Workflow Summary */}
-          <div className="mt-6 p-4 bg-paper-2 rounded-lg border border-ink-200">
+          <div className="mt-6 p-4 bg-paper-2 rounded-input border border-ink-200">
             <h4 className="font-semibold text-ink-900 mb-3">Résumé du workflow</h4>
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <p className="text-ink-500 mb-1">Points de contrôle qualité</p>
-                <p className="text-lg font-bold text-primary-600">
+                <p className="text-lg font-bold text-brand-800">
                   {selectedWorkflow.steps.filter(s => (s as any).qualityCheck ?? false).length}
                 </p>
               </div>
               <div>
                 <p className="text-ink-500 mb-1">Machines utilisées</p>
-                <p className="text-lg font-bold text-primary-600">
+                <p className="text-lg font-bold text-brand-800">
                   {selectedWorkflow.steps.filter(s => (s as any).machineRequired ?? false).length}
                 </p>
               </div>
               <div>
                 <p className="text-ink-500 mb-1">Transitions automatiques</p>
-                <p className="text-lg font-bold text-primary-600">
+                <p className="text-lg font-bold text-brand-800">
                   {selectedWorkflow.steps.filter(s => s.nextStepAuto).length}
                 </p>
               </div>
@@ -245,13 +245,13 @@ export default function WorkflowConfigPage() {
       </Card>
 
       {/* Info Alert */}
-      <Card className="border-warning-200 bg-warning-50">
+      <Card className="border-warn-600 bg-warn-100">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-warning-700 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-warn-700 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-warning-900 mb-1">À propos des workflows</h4>
-              <p className="text-sm text-warning-700">
+              <h4 className="font-semibold text-warn-700 mb-1">À propos des workflows</h4>
+              <p className="text-sm text-warn-700">
                 Chaque type de linge suit un workflow spécifique optimisé pour sa nature.
                 Les workflows définissent les étapes obligatoires, les contrôles qualité,
                 les machines requises et les acteurs responsables. La modification d'un workflow

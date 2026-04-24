@@ -36,7 +36,7 @@ export default function ProductsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-serif font-bold text-ink-900">Produits lessiviels</h2>
+          <h2 className="font-serif text-2xl font-medium tracking-tight text-ink-900">Produits lessiviels</h2>
           <p className="text-ink-500 mt-1">{products.length} produits en stock</p>
         </div>
         {canEdit('settings') && (

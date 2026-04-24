@@ -5,7 +5,7 @@ export default function DiagnosticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-serif font-bold text-ink-900">Diagnostic système</h2>
+        <h2 className="font-serif text-2xl font-medium tracking-tight text-ink-900">Diagnostic système</h2>
         <p className="text-ink-500 mt-1">État de santé de l'application</p>
       </div>
 
