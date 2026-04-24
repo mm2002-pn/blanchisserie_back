@@ -9,6 +9,10 @@ interface EmptyStateProps {
   onAction?: () => void;
 }
 
+/**
+ * EmptyState Blanchisserie SN — carte paper, icône ink-400 dans rond paper-2,
+ * titre serif Bricolage, message ink-500, CTA primaire.
+ */
 export function EmptyState({
   icon: Icon,
   title,
@@ -17,14 +21,16 @@ export function EmptyState({
   onAction,
 }: EmptyStateProps) {
   return (
-    <div className="bg-white rounded-card shadow-soft p-12 text-center">
+    <div className="bg-paper rounded-card border-hairline border-ink-200 px-6 py-12 text-center">
       {Icon && (
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-          <Icon className="w-8 h-8 text-gray-400" />
+        <div className="inline-flex items-center justify-center w-14 h-14 bg-paper-2 rounded-full mb-4 border-hairline border-ink-200">
+          <Icon className="w-7 h-7 text-ink-400" strokeWidth={1.6} />
         </div>
       )}
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600 mb-6 max-w-md mx-auto">{message}</p>
+      <h3 className="font-serif text-xl font-medium tracking-tight text-ink-900 mb-2">
+        {title}
+      </h3>
+      <p className="text-sm text-ink-500 mb-6 max-w-md mx-auto">{message}</p>
       {actionLabel && onAction && (
         <Button onClick={onAction}>{actionLabel}</Button>
       )}

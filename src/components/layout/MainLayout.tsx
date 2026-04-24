@@ -4,17 +4,13 @@ import { Header } from './Header';
 
 export function MainLayout() {
   return (
-    <div className="min-h-screen bg-primary-50">
-      {/* Sidebar */}
+    <div className="min-h-screen bg-paper-2">
       <Sidebar />
 
-      {/* Main Content */}
-      <div className="ml-64">
-        {/* Header */}
+      <div className="ml-64 flex flex-col min-h-screen">
         <Header />
 
-        {/* Page Content */}
-        <main className="p-8">
+        <main className="flex-1 p-7">
           <Outlet />
         </main>
       </div>
