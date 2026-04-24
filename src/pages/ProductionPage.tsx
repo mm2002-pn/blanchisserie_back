@@ -1,296 +1,198 @@
-import { useState } from 'react';
-import { Badge, Button } from '@/components/ui';
-import { DataTable } from '@/components/table';
-import {
-  Play,
-  CheckCircle,
-  Clock,
-  Boxes,
-  Plus,
-  Droplet,
-  Thermometer,
-  Sparkles,
-  Wrench,
-} from 'lucide-react';
-import { formatWeight } from '@/lib/utils';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { useMemo, useState } from 'react';
+import { Plus, AlertTriangle, Flame } from 'lucide-react';
+import { Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { WorkflowTabs } from '@/components/layout/WorkflowTabs';
 
-import batchesData from '@/mocks/data/batches.json';
-import machinesData from '@/mocks/data/machines.json';
+/**
+ * Production page — Kanban board aligned on the AdminWorkflow mockup
+ * (5 lanes · batches with code, client, weight, progress, elapsed/total).
+ *
+ * Part of the "Workflow quotidien" flow : Réception → Triage → Production →
+ * Tracking. Each tab is a standalone route.
+ */
 
-type Tone = 'ok' | 'warn' | 'danger' | 'neutral' | 'brand';
-
-const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'error' | 'neutral' | 'brand'> = {
-  Terminé: 'success',
-  'En cours': 'warning',
-  'En attente': 'neutral',
-  Planifié: 'brand',
+type Lane = {
+  id: number;
+  name: string;
+  color: string; // tailwind bg class for the accent bar
+  dot: string; // tailwind bg class for the progress bar
 };
 
+type Batch = {
+  lane: number;
+  code: string;
+  client: string;
+  kg: number;
+  elapsed: string; // HH:MM
+  total: string; // HH:MM
+  priority?: boolean;
+};
+
+const LANES: Lane[] = [
+  { id: 0, name: 'Lavage', color: 'bg-brand-800', dot: 'bg-brand-800' },
+  { id: 1, name: 'Séchage', color: 'bg-brand-600', dot: 'bg-brand-600' },
+  { id: 2, name: 'Calandrage', color: 'bg-terra-600', dot: 'bg-terra-600' },
+  { id: 3, name: 'Pliage', color: 'bg-ok-600', dot: 'bg-ok-600' },
+  { id: 4, name: 'Conditionnement', color: 'bg-ink-500', dot: 'bg-ink-500' },
+];
+
+const BATCHES: Batch[] = [
+  { lane: 0, code: 'B-0408', client: 'Pullman Téranga', kg: 60, elapsed: '00:28', total: '01:00', priority: true },
+  { lane: 0, code: 'B-0409', client: 'Radisson Blu', kg: 42, elapsed: '00:12', total: '00:50' },
+  { lane: 0, code: 'B-0410', client: 'King Fahd Palace', kg: 58, elapsed: '00:08', total: '01:10' },
+  { lane: 0, code: 'B-0411', client: 'Terrou-Bi', kg: 23, elapsed: '00:02', total: '00:45' },
+  { lane: 1, code: 'B-0406', client: 'Novotel', kg: 45, elapsed: '00:22', total: '00:40', priority: true },
+  { lane: 1, code: 'B-0405', client: 'Onomo', kg: 32, elapsed: '00:15', total: '00:35' },
+  { lane: 1, code: 'B-0404', client: 'Résidence Mamoune', kg: 28, elapsed: '00:28', total: '00:40' },
+  { lane: 2, code: 'B-0402', client: 'Pullman Téranga', kg: 60, elapsed: '00:14', total: '00:30' },
+  { lane: 2, code: 'B-0401', client: 'Radisson Blu', kg: 38, elapsed: '00:08', total: '00:25' },
+  { lane: 3, code: 'B-0399', client: 'Terrou-Bi', kg: 23, elapsed: '00:06', total: '00:15' },
+  { lane: 3, code: 'B-0398', client: 'Novotel', kg: 45, elapsed: '00:11', total: '00:20' },
+  { lane: 3, code: 'B-0397', client: 'Onomo', kg: 32, elapsed: '00:04', total: '00:15' },
+  { lane: 4, code: 'B-0395', client: 'Résidence Mamoune', kg: 28, elapsed: '00:03', total: '00:10' },
+  { lane: 4, code: 'B-0394', client: 'Pullman Téranga', kg: 60, elapsed: '00:07', total: '00:12' },
+];
+
 export default function ProductionPage() {
-  const [batches] = useState(batchesData);
-  const [machines] = useState(machinesData);
+  const [search] = useState('');
 
-  const getMachineStatus = (machineId: string) => {
-    const batch = batches.find(
-      (b) => b.machineId === machineId && b.status === 'En cours',
-    );
-    return batch ? 'En cours' : 'Disponible';
-  };
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q ? BATCHES.filter((b) => `${b.code} ${b.client}`.toLowerCase().includes(q)) : BATCHES;
+  }, [search]);
 
-  const activeMachines = batches.filter((b) => b.status === 'En cours').length;
-  const completedToday = batches.filter((b) => b.status === 'Terminé').length;
-  const pending = batches.filter(
-    (b) => b.status === 'En attente' || b.status === 'Planifié',
-  ).length;
+  const byLane = useMemo(() => {
+    const m: Record<number, Batch[]> = { 0: [], 1: [], 2: [], 3: [], 4: [] };
+    visible.forEach((b) => m[b.lane].push(b));
+    return m;
+  }, [visible]);
 
-  const batchColumns = [
-    {
-      header: 'Lot',
-      accessorKey: 'batchNumber' as const,
-      cell: (row: typeof batches[0]) => (
-        <span className="font-mono text-sm font-semibold text-ink-900 tnum">
-          {row.batchNumber}
-        </span>
-      ),
-    },
-    {
-      header: 'Client',
-      accessorKey: 'clientName' as const,
-      cell: (row: typeof batches[0]) => (
-        <div>
-          <p className="text-sm font-semibold text-ink-900">{row.clientName}</p>
-          <p className="text-tiny font-mono text-ink-500">{row.orderReference}</p>
-        </div>
-      ),
-    },
-    {
-      header: 'Machine',
-      accessorKey: 'machineReference' as const,
-      cell: (row: typeof batches[0]) => (
-        <span className="font-mono text-tiny text-ink-700">
-          {row.machineReference}
-        </span>
-      ),
-    },
-    {
-      header: 'Programme',
-      accessorKey: 'programName' as const,
-      cell: (row: typeof batches[0]) => (
-        <span className="text-sm text-ink-700">{row.programName}</span>
-      ),
-    },
-    {
-      header: 'Poids',
-      accessorKey: 'weight' as const,
-      align: 'right' as const,
-      cell: (row: typeof batches[0]) => (
-        <span className="font-mono text-sm text-ink-900 tnum">
-          {formatWeight(row.weight)}
-        </span>
-      ),
-    },
-    {
-      header: 'Statut',
-      accessorKey: 'status' as const,
-      cell: (row: typeof batches[0]) => (
-        <div className="space-y-1.5">
-          <Badge
-            variant={(STATUS_VARIANT[row.status] ?? 'neutral') as any}
-            dot
-          >
-            {row.status}
-          </Badge>
-          {row.status === 'En cours' && row.progress != null && (
-            <div className="w-full bg-ink-100 rounded-full h-1">
-              <div
-                className="bg-warn-600 h-1 rounded-full transition-all"
-                style={{ width: `${row.progress}%` }}
-              />
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      header: 'Heure',
-      accessorKey: 'startTime' as const,
-      cell: (row: typeof batches[0]) => (
-        <div className="font-mono text-tiny text-ink-700 tnum">
-          {row.startTime ? (
-            <>
-              <p>{format(new Date(row.startTime), 'HH:mm', { locale: fr })}</p>
-              {row.estimatedEndTime && row.status === 'En cours' && (
-                <p className="text-ink-500">
-                  → {format(new Date(row.estimatedEndTime), 'HH:mm', { locale: fr })}
-                </p>
-              )}
-            </>
-          ) : (
-            '—'
-          )}
-        </div>
-      ),
-    },
-  ];
+  const totalBatches = BATCHES.length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="caps mb-2">Production</div>
+          <div className="caps mb-2">Workflow quotidien</div>
           <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
-            Lots en cours
+            Production en cours
           </h1>
-          <p className="text-sm text-ink-500 mt-1">
-            Machines et lots de production en temps réel · atelier Dakar Nord
+          <p className="text-sm text-ink-500 mt-1 capitalize">
+            {new Intl.DateTimeFormat('fr-FR', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            }).format(new Date())}{' '}
+            · {totalBatches} batches en production
           </p>
         </div>
-        <Button size="sm" className="gap-1.5 shrink-0">
-          <Plus className="w-3.5 h-3.5" strokeWidth={2} />
-          Nouveau lot
-        </Button>
-      </div>
-
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Kpi label="Machines actives" value={activeMachines} tint="warn" icon={Play} />
-        <Kpi label="Lots terminés" value={completedToday} tint="ok" icon={CheckCircle} />
-        <Kpi label="En attente" value={pending} tint="neutral" icon={Clock} />
-        <Kpi label="Total lots" value={batches.length} tint="brand" icon={Boxes} />
-      </div>
-
-      {/* Machine grid */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="caps">Parc machines · aujourd'hui</div>
-          <Button variant="ghost" size="sm">
-            Voir le parc
+        <div className="flex items-center gap-2 shrink-0">
+          <WorkflowTabs />
+          <Button size="sm" className="gap-1.5">
+            <Plus className="w-3.5 h-3.5" strokeWidth={2} />
+            Nouveau batch
           </Button>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {machines.slice(0, 8).map((machine) => {
-            const status = getMachineStatus(machine.id);
-            const isActive = status === 'En cours';
-            const MachineIcon = pickMachineIcon(machine.type);
+      </div>
+
+      {/* Kanban — scrollable horizontally on narrow screens */}
+      <div className="flex-1 min-h-0">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 h-full">
+          {LANES.map((lane) => {
+            const items = byLane[lane.id] ?? [];
             return (
               <div
-                key={machine.id}
-                className={cn(
-                  'card-surface p-4',
-                  isActive && 'border-warn-600',
-                )}
+                key={lane.id}
+                className="bg-paper-2 border-hairline border-ink-200 rounded-card p-3 flex flex-col min-h-[480px]"
               >
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <div
-                    className={cn(
-                      'w-9 h-9 rounded-input flex items-center justify-center shrink-0',
-                      isActive ? 'bg-warn-100' : 'bg-paper-2',
-                    )}
-                  >
-                    <MachineIcon
-                      className={cn(
-                        'w-4 h-4',
-                        isActive ? 'text-warn-700' : 'text-ink-500',
-                      )}
-                      strokeWidth={1.75}
-                    />
-                  </div>
-                  <Badge
-                    variant={isActive ? 'warning' : 'success'}
-                    dot
-                  >
-                    {status}
-                  </Badge>
+                {/* Lane header */}
+                <div className="flex items-center gap-2 px-1 pb-2.5 border-b border-hairline border-ink-200">
+                  <span className={cn('w-1 h-4 rounded-full', lane.color)} />
+                  <p className="text-sm font-semibold text-ink-900">{lane.name}</p>
+                  <span className="ml-auto font-mono text-micro font-semibold text-ink-500 tnum px-2 py-0.5 bg-paper rounded-pill border-hairline border-ink-200">
+                    {items.length}
+                  </span>
                 </div>
-                <p className="font-mono text-sm font-semibold text-ink-900 tnum">
-                  {machine.reference}
-                </p>
-                <p className="text-tiny text-ink-500 truncate mt-0.5">
-                  {machine.brand} {machine.model}
-                </p>
-                <p className="text-micro font-mono text-ink-500 mt-2">
-                  {machine.capacity} kg · capacité
-                </p>
+
+                {/* Cards */}
+                <div className="flex-1 overflow-y-auto pt-2.5 flex flex-col gap-2">
+                  {items.length === 0 && (
+                    <div className="text-center py-8 text-tiny text-ink-400">
+                      —
+                    </div>
+                  )}
+                  {items.map((b) => (
+                    <BatchCard key={b.code} batch={b} dot={lane.dot} />
+                  ))}
+                </div>
               </div>
             );
           })}
         </div>
       </div>
-
-      {/* Batches Table */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="caps">Lots de production · {batches.length}</div>
-        </div>
-        <DataTable data={batches} columns={batchColumns as any} />
-      </div>
     </div>
   );
 }
 
-function Kpi({
-  label,
-  value,
-  tint,
-  icon: Icon,
-}: {
-  label: string;
-  value: number;
-  tint: Tone;
-  icon: typeof Play;
-}) {
-  const bg =
-    tint === 'ok'
-      ? 'bg-ok-100'
-      : tint === 'warn'
-        ? 'bg-warn-100'
-        : tint === 'danger'
-          ? 'bg-danger-100'
-          : tint === 'brand'
-            ? 'bg-brand-100'
-            : 'bg-ink-100';
-  const fg =
-    tint === 'ok'
-      ? 'text-ok-700'
-      : tint === 'warn'
-        ? 'text-warn-700'
-        : tint === 'danger'
-          ? 'text-danger-600'
-          : tint === 'brand'
-            ? 'text-brand-800'
-            : 'text-ink-500';
+function BatchCard({ batch, dot }: { batch: Batch; dot: string }) {
+  const elapsed = minutes(batch.elapsed);
+  const total = minutes(batch.total);
+  const pct = total > 0 ? Math.min(1, elapsed / total) : 0;
 
   return (
-    <div className="card-surface p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-tiny font-medium text-ink-500">{label}</p>
-          <p className="font-serif text-3xl font-medium tnum tracking-tight text-ink-900 mt-2 leading-none">
-            {value}
-          </p>
-        </div>
-        <div
-          className={cn(
-            'w-9 h-9 rounded-input flex items-center justify-center shrink-0',
-            bg,
-          )}
-        >
-          <Icon className={cn('w-4 h-4', fg)} strokeWidth={1.75} />
-        </div>
+    <button
+      type="button"
+      className="bg-paper border-hairline border-ink-200 rounded-[8px] p-2.5 text-left cursor-grab hover:bg-paper-3 transition-colors"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-mono text-micro font-semibold text-ink-500 tnum">
+          {batch.code}
+        </span>
+        {batch.priority && (
+          <span className="inline-flex items-center gap-1 font-mono text-[9px] font-bold uppercase tracking-caps px-1.5 py-0.5 rounded-[4px] bg-terra-100 text-terra-700">
+            <Flame className="w-2.5 h-2.5" strokeWidth={2.5} />
+            PRIO
+          </span>
+        )}
       </div>
-    </div>
+
+      <p className="text-sm font-medium text-ink-900 mt-1 truncate">
+        {batch.client}
+      </p>
+      <p className="font-mono text-tiny text-ink-500 tnum mt-0.5">
+        {batch.kg} kg
+      </p>
+
+      {/* progress bar */}
+      <div className="h-[3px] bg-ink-100 rounded-pill mt-2 overflow-hidden">
+        <div
+          className={cn('h-full rounded-pill transition-all', dot)}
+          style={{ width: `${pct * 100}%` }}
+        />
+      </div>
+
+      <div className="flex items-center justify-between mt-1.5">
+        <p className="font-mono text-micro text-ink-500 tnum">
+          {batch.elapsed} / {batch.total}
+        </p>
+        {pct >= 0.95 && (
+          <span className="inline-flex items-center gap-0.5 font-mono text-micro font-semibold text-ok-700 tnum">
+            ✓
+          </span>
+        )}
+        {pct < 0.5 && batch.priority && (
+          <span className="inline-flex items-center gap-0.5 text-micro text-warn-700">
+            <AlertTriangle className="w-2.5 h-2.5" strokeWidth={2} />
+          </span>
+        )}
+      </div>
+    </button>
   );
 }
 
-function pickMachineIcon(type?: string) {
-  if (!type) return Wrench;
-  const t = type.toLowerCase();
-  if (t.includes('laveuse') || t.includes('washing')) return Droplet;
-  if (t.includes('sécheuse') || t.includes('secheuse') || t.includes('drying')) return Thermometer;
-  if (t.includes('calandre') || t.includes('calandring') || t.includes('presse')) return Sparkles;
-  return Wrench;
+function minutes(hhmm: string): number {
+  const [h, m] = hhmm.split(':').map((n) => parseInt(n, 10) || 0);
+  return h * 60 + m;
 }

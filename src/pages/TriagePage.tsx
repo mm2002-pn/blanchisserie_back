@@ -5,6 +5,7 @@ import { formatWeight, formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { WorkflowTabs } from '@/components/layout/WorkflowTabs';
 
 // Import mock data
 import ordersData from '@/mocks/data/orders.json';
@@ -122,7 +123,7 @@ export default function TriagePage() {
       {/* Page Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="caps mb-2">Triage</div>
+          <div className="caps mb-2">Workflow quotidien</div>
           <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
             Ventilation du poids par catégorie
           </h1>
@@ -130,6 +131,7 @@ export default function TriagePage() {
             Ventilation précise du poids par type de linge pour la facturation · tolérance 5 %.
           </p>
         </div>
+        <WorkflowTabs />
       </div>
 
       {/* KPI strip */}

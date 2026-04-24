@@ -52,8 +52,8 @@ export const MAIN_NAVIGATION: NavigationItem[] = [
     permission: MODULES.ORDERS,
   },
   {
-    label: 'Workflow Quotidien',
-    path: ROUTES.PRODUCTION_WORKFLOW,
+    label: 'Production',
+    path: ROUTES.PRODUCTION,
     icon: ClipboardList,
     permission: MODULES.PRODUCTION,
   },
