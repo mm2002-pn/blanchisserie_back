@@ -6,6 +6,7 @@ import {
   Thermometer,
   Sparkles,
   Wrench,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button, Badge, Modal, Input, Select } from '@/components/ui';
 import { DataTable } from '@/components/table/DataTable';
@@ -53,6 +54,25 @@ export default function MachinesPage() {
     return { active, maintenance, hs, totalCap };
   }, [machines]);
 
+  /**
+   * Charge actuelle simulée par machine (en réalité = somme des batches affectés).
+   * Mock déterministe basé sur l'id.
+   */
+  const currentLoad = (m: Machine) => {
+    if (m.status !== 'Active') return 0;
+    const seed = (m.reference?.length ?? 0) + (m.capacity ?? 0);
+    const ratio = 0.55 + ((seed * 13) % 50) / 100; // entre 0.55 et 1.05
+    return Math.round((m.capacity ?? 0) * Math.min(1.05, ratio));
+  };
+
+  /** Indicateur global : déficit selon le CDC */
+  const totalActive = machines
+    .filter((m) => m.status === 'Active')
+    .reduce((s, m) => s + (m.capacity ?? 0), 0);
+  const totalLoad = machines.reduce((s, m) => s + currentLoad(m), 0);
+  const utilization = totalActive > 0 ? totalLoad / totalActive : 0;
+  const deficit = utilization > 1;
+
   const columns = [
     {
       header: 'Référence',
@@ -95,6 +115,42 @@ export default function MachinesPage() {
           <span className="text-ink-500"> kg</span>
         </span>
       ),
+    },
+    {
+      header: 'Charge',
+      accessorKey: 'reference' as keyof Machine,
+      cell: (row: Machine) => {
+        const load = currentLoad(row);
+        const cap = row.capacity ?? 0;
+        const pct = cap > 0 ? Math.min(1, load / cap) : 0;
+        const fillCls =
+          pct >= 0.9
+            ? 'bg-danger-600'
+            : pct >= 0.7
+              ? 'bg-baobab-600'
+              : pct >= 0.4
+                ? 'bg-warn-600'
+                : 'bg-ink-300';
+        return (
+          <div className="space-y-1 min-w-[110px]">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="font-mono text-tiny font-semibold text-ink-900 tnum">
+                {load}
+                <span className="text-ink-500">/{cap} kg</span>
+              </span>
+              <span className="font-mono text-micro text-ink-500 tnum">
+                {Math.round(pct * 100)}%
+              </span>
+            </div>
+            <div className="h-1 bg-ink-100 rounded-pill overflow-hidden">
+              <div
+                className={cn('h-full rounded-pill', fillCls)}
+                style={{ width: `${pct * 100}%` }}
+              />
+            </div>
+          </div>
+        );
+      },
     },
     {
       header: 'Emplacement',
@@ -160,6 +216,68 @@ export default function MachinesPage() {
           tint="brand"
           mono
         />
+      </div>
+
+      {/* Capacité atelier — déficit ou OK */}
+      <div
+        className={cn(
+          'card-surface p-4 flex items-start gap-3',
+          deficit
+            ? 'bg-danger-100 border-danger-600'
+            : utilization > 0.85
+              ? 'bg-warn-100 border-warn-600'
+              : 'bg-ok-100 border-ok-600',
+        )}
+      >
+        <div
+          className={cn(
+            'w-10 h-10 rounded-input flex items-center justify-center shrink-0',
+            deficit
+              ? 'bg-danger-600 text-paper'
+              : utilization > 0.85
+                ? 'bg-warn-600 text-paper'
+                : 'bg-ok-600 text-paper',
+          )}
+        >
+          <AlertTriangle className="w-4 h-4" strokeWidth={1.75} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p
+            className={cn(
+              'caps',
+              deficit
+                ? 'text-danger-600'
+                : utilization > 0.85
+                  ? 'text-warn-700'
+                  : 'text-ok-700',
+            )}
+          >
+            Capacité atelier · charge actuelle
+          </p>
+          <p className="text-sm text-ink-900 font-medium mt-1">
+            <span className="font-mono font-semibold tnum">
+              {totalLoad} / {totalActive} kg
+            </span>{' '}
+            ({Math.round(utilization * 100)} %)
+            {deficit && (
+              <span className="text-danger-600 font-semibold">
+                {' · déficit de '}
+                <span className="font-mono tnum">
+                  {totalLoad - totalActive} kg
+                </span>{' '}
+                — redistribuer ou activer une machine en stand-by
+              </span>
+            )}
+            {!deficit && utilization > 0.85 && ' · saturation imminente'}
+            {!deficit && utilization <= 0.85 && ' · marge confortable'}
+          </p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="font-serif text-3xl font-medium tnum tracking-tight text-ink-900 leading-none">
+            {Math.round(utilization * 100)}
+            <span className="text-ink-500 text-base">%</span>
+          </p>
+        </div>
       </div>
 
       {/* Search */}

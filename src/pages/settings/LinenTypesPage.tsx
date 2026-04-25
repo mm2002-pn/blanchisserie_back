@@ -9,8 +9,11 @@ import type { LinenType } from '@/types';
 
 const CATEGORY_VARIANT: Record<string, 'info' | 'success' | 'warning' | 'neutral'> = {
   'Linge Plat': 'info',
+  LP: 'info',
   'Linge Forme': 'success',
+  LF: 'success',
   NAE: 'warning',
+  'Nettoyage à sec': 'warning',
 };
 
 export default function LinenTypesPage() {

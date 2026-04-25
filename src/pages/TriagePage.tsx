@@ -1,6 +1,16 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@/components/ui';
-import { Scale, Plus, Trash2, CheckCircle, AlertTriangle, FileText } from 'lucide-react';
+import {
+  Scale,
+  Plus,
+  Trash2,
+  CheckCircle,
+  AlertTriangle,
+  FileText,
+  Printer,
+  Tag as TagIcon,
+  QrCode,
+} from 'lucide-react';
 import { formatWeight, formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -22,6 +32,7 @@ export default function TriagePage() {
   const [linenTypes] = useState(linenTypesData);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [triageItems, setTriageItems] = useState<TriageItem[]>([]);
+  const [labelsPrinted, setLabelsPrinted] = useState(false);
 
   // Filter orders that are weighed but not triaged
   const ordersToTriage = orders.filter(o =>
@@ -92,16 +103,22 @@ export default function TriagePage() {
 
   const saveTriage = () => {
     if (!selectedOrder || !isTriageComplete()) return;
-    // In real app, this would save the triage data
+    if (!labelsPrinted) {
+      alert('⚠️ Imprime les étiquettes avant de valider le triage.');
+      return;
+    }
+    // In real app, this would save the triage data + push to washing queue
     console.log('Triage saved for order', selectedOrder.id, triageItems);
-    alert('Triage enregistré avec succès!');
+    alert('✓ Triage validé · items envoyés au pool de lavage IA pour batching.');
     setSelectedOrderId(null);
     setTriageItems([]);
+    setLabelsPrinted(false);
   };
 
   const selectOrder = (orderId: string) => {
     setSelectedOrderId(orderId);
     setTriageItems([]);
+    setLabelsPrinted(false);
   };
 
   const triagedCount = orders.filter(
@@ -437,6 +454,17 @@ export default function TriagePage() {
                   </Card>
                 )}
 
+                {/* Étiquetage section — visible quand le triage est valide */}
+                {isTriageComplete() && (
+                  <LabelingPanel
+                    orderCode={selectedOrder.orderNumber}
+                    items={triageItems}
+                    linenTypes={linenTypes}
+                    labelsPrinted={labelsPrinted}
+                    onPrint={() => setLabelsPrinted(true)}
+                  />
+                )}
+
                 {/* Action Buttons */}
                 <div className="flex gap-3">
                   <Button
@@ -445,6 +473,7 @@ export default function TriagePage() {
                     onClick={() => {
                       setSelectedOrderId(null);
                       setTriageItems([]);
+                      setLabelsPrinted(false);
                     }}
                   >
                     Annuler
@@ -453,10 +482,11 @@ export default function TriagePage() {
                     variant="primary"
                     className="flex-1"
                     onClick={saveTriage}
-                    disabled={!isTriageComplete()}
+                    disabled={!isTriageComplete() || !labelsPrinted}
+                    title={!labelsPrinted ? 'Imprime les étiquettes avant de valider' : undefined}
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Valider le triage et générer la facture
+                    Valider le triage et envoyer en lavage
                   </Button>
                 </div>
               </CardContent>
@@ -549,6 +579,122 @@ function TKpi({
         <div className={cn('w-9 h-9 rounded-input flex items-center justify-center shrink-0', bg)}>
           <Icon className={cn('w-4 h-4', fg)} strokeWidth={1.75} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────── LabelingPanel : génère N étiquettes par article ─────────── */
+
+interface LabelingPanelProps {
+  orderCode: string;
+  items: TriageItem[];
+  linenTypes: any[];
+  labelsPrinted: boolean;
+  onPrint: () => void;
+}
+
+function LabelingPanel({
+  orderCode,
+  items,
+  linenTypes,
+  labelsPrinted,
+  onPrint,
+}: LabelingPanelProps) {
+  // Préfixe basé sur le code commande (ex. CMD-2026-141 → CMD-141)
+  const prefix = useMemo(() => {
+    const parts = orderCode.split('-');
+    return parts[0] + '-' + (parts[2] ?? parts[1] ?? '000');
+  }, [orderCode]);
+
+  const totalPieces = items.reduce((s, it) => s + (it.pieces || 0), 0);
+
+  // Génère un aperçu : un tag par pièce (limité à 8 visibles)
+  const tags = useMemo(() => {
+    const list: { tag: string; type: string }[] = [];
+    items.forEach((it) => {
+      const linen = linenTypes.find((lt) => lt.id === it.linenTypeId);
+      for (let i = 1; i <= (it.pieces || 0); i++) {
+        list.push({
+          tag: `${prefix}-${String(list.length + 1).padStart(3, '0')}`,
+          type: linen?.name ?? 'Article',
+        });
+      }
+    });
+    return list;
+  }, [items, linenTypes, prefix]);
+
+  const preview = tags.slice(0, 8);
+
+  return (
+    <div
+      className={cn(
+        'card-surface p-4 mt-2',
+        labelsPrinted ? 'border-ok-600 bg-ok-100' : 'border-warn-600 bg-warn-100',
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className={cn(
+            'w-10 h-10 rounded-input flex items-center justify-center shrink-0',
+            labelsPrinted ? 'bg-ok-600 text-paper' : 'bg-warn-600 text-paper',
+          )}
+        >
+          <TagIcon className="w-4 h-4" strokeWidth={1.75} />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p
+              className={cn(
+                'caps',
+                labelsPrinted ? 'text-ok-700' : 'text-warn-700',
+              )}
+            >
+              {labelsPrinted ? 'Étiquettes imprimées' : 'Étape suivante · étiquetage'}
+            </p>
+            <span className="font-mono text-tiny font-semibold text-ink-900 tnum">
+              · {totalPieces} étiquette{totalPieces > 1 ? 's' : ''}
+            </span>
+          </div>
+          <p className="text-sm text-ink-900 font-medium mt-1">
+            {labelsPrinted
+              ? `Toutes les pièces sont étiquetées (${prefix}-001 → ${prefix}-${String(totalPieces).padStart(3, '0')}).`
+              : `Génère un tag QR par article pour le suivi en lavage groupé.`}
+          </p>
+
+          {/* Tags preview */}
+          {preview.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
+              {preview.map((t) => (
+                <span
+                  key={t.tag}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-input bg-paper border-hairline border-ink-200 font-mono text-micro text-ink-700 tnum"
+                >
+                  <QrCode className="w-2.5 h-2.5 text-ink-500" strokeWidth={1.75} />
+                  {t.tag}
+                </span>
+              ))}
+              {totalPieces > 8 && (
+                <span className="inline-flex items-center px-2 py-1 rounded-input bg-paper border-hairline border-ink-200 font-mono text-micro text-ink-500">
+                  +{totalPieces - 8}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {!labelsPrinted ? (
+          <Button onClick={onPrint} size="sm" className="gap-1.5 shrink-0">
+            <Printer className="w-3.5 h-3.5" strokeWidth={1.75} />
+            Imprimer {totalPieces}
+          </Button>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-pill bg-ok-600 text-paper text-tiny font-semibold shrink-0">
+            <CheckCircle className="w-3.5 h-3.5" strokeWidth={2} />
+            OK
+          </span>
+        )}
       </div>
     </div>
   );
