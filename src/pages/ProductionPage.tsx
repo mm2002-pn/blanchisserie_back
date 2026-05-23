@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { WorkflowTabs } from '@/components/layout/WorkflowTabs';
+import { useBatchesRealtime, useUiBatches } from '@/hooks/queries/useBatches';
 
 /**
  * Production page — Kanban board (5 lanes) avec batches MULTI-CLIENTS.
@@ -232,13 +233,17 @@ const BATCHES: Batch[] = [
 ];
 
 export default function ProductionPage() {
-  const [expanded, setExpanded] = useState<string | null>('B-0408');
+  useBatchesRealtime();
+  const { items: liveBatches, isLoading, error } = useUiBatches();
+  const batches: Batch[] = liveBatches.length > 0 ? liveBatches : BATCHES; // fallback démo si DB vide
+
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const byLane = useMemo(() => {
     const m: Record<number, Batch[]> = { 0: [], 1: [], 2: [], 3: [], 4: [] };
-    BATCHES.forEach((b) => m[b.lane].push(b));
+    batches.forEach((b) => m[b.lane].push(b));
     return m;
-  }, []);
+  }, [batches]);
 
   // Capacity per lane (sum of currently loaded items vs capacity)
   const laneStats = useMemo(() => {
@@ -259,10 +264,10 @@ export default function ProductionPage() {
     });
   }, [byLane]);
 
-  const totalBatches = BATCHES.length;
-  const totalSuggested = BATCHES.filter((b) => b.suggested).length;
+  const totalBatches = batches.length;
+  const totalSuggested = batches.filter((b) => b.suggested).length;
   const totalContributors = new Set(
-    BATCHES.flatMap((b) => b.contributors.map((c) => c.client)),
+    batches.flatMap((b) => b.contributors.map((c) => c.client)),
   ).size;
 
   return (
@@ -281,6 +286,9 @@ export default function ProductionPage() {
               month: 'long',
             }).format(new Date())}{' '}
             · {totalBatches} batches · {totalContributors} clients en flux
+            {isLoading && ' · chargement…'}
+            {error && ` · erreur: ${(error as Error).message}`}
+            {liveBatches.length === 0 && !isLoading && !error && ' · (démo, aucun batch en DB)'}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">

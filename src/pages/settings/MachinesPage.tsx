@@ -13,7 +13,7 @@ import { DataTable } from '@/components/table/DataTable';
 import { usePermissions } from '@/hooks';
 import { formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import machinesData from '@/mocks/data/machines.json';
+import { useMachines } from '@/hooks/queries/useMachines';
 import type { Machine } from '@/types';
 
 const TYPE_ICON: Record<string, typeof Droplet> = {
@@ -32,7 +32,8 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'error' | 'neutral'
 
 export default function MachinesPage() {
   const { canEdit } = usePermissions();
-  const [machines] = useState<Machine[]>(machinesData as any);
+  const { data, isLoading, error } = useMachines();
+  const machines: Machine[] = data ?? [];
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -298,13 +299,23 @@ export default function MachinesPage() {
         </div>
       </div>
 
-      <DataTable
-        data={filtered}
-        columns={columns}
-        emptyMessage={
-          search ? `Aucun résultat pour « ${search} »` : 'Aucune machine'
-        }
-      />
+      {error ? (
+        <div className="rounded-input border-hairline border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          Impossible de charger les machines : {(error as Error).message}
+        </div>
+      ) : (
+        <DataTable
+          data={filtered}
+          columns={columns}
+          emptyMessage={
+            isLoading
+              ? 'Chargement…'
+              : search
+                ? `Aucun résultat pour « ${search} »`
+                : 'Aucune machine'
+          }
+        />
+      )}
 
       {/* Modal */}
       <Modal

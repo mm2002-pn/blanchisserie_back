@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useRevenueReport } from '@/hooks/queries/useReports';
 import {
   BarChart,
   Bar,
@@ -49,14 +50,34 @@ const PERIODS: { key: Period; label: string }[] = [
 export default function ReportsPage() {
   const [period, setPeriod] = useState<Period>('6m');
 
-  const revenueByMonth = [
-    { month: 'Juil', revenue: 45, orders: 82, weight: 950 },
-    { month: 'Août', revenue: 48, orders: 88, weight: 1020 },
-    { month: 'Sept', revenue: 47.5, orders: 85, weight: 980 },
-    { month: 'Oct', revenue: 50, orders: 92, weight: 1050 },
-    { month: 'Nov', revenue: 49, orders: 89, weight: 1010 },
-    { month: 'Déc', revenue: 53, orders: 95, weight: 1100 },
-  ];
+  const apiPeriod = useMemo(() => {
+    const now = new Date();
+    const months = period === '6m' ? 6 : period === '12m' ? 12 : now.getMonth() + 1;
+    const from = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
+    return { from: from.toISOString(), to: now.toISOString() };
+  }, [period]);
+
+  const { data: revenue } = useRevenueReport(apiPeriod);
+
+  const revenueByMonth = useMemo(() => {
+    const FALLBACK = [
+      { month: 'Juil', revenue: 45, orders: 82, weight: 950 },
+      { month: 'Août', revenue: 48, orders: 88, weight: 1020 },
+      { month: 'Sept', revenue: 47.5, orders: 85, weight: 980 },
+      { month: 'Oct', revenue: 50, orders: 92, weight: 1050 },
+      { month: 'Nov', revenue: 49, orders: 89, weight: 1010 },
+      { month: 'Déc', revenue: 53, orders: 95, weight: 1100 },
+    ];
+    if (!revenue?.monthly?.length) return FALLBACK;
+    const fmt = (iso: string) =>
+      new Date(iso).toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
+    return revenue.monthly.map((m) => ({
+      month: fmt(m.month),
+      revenue: m.totalFcfa / 1_000_000,
+      orders: 0,
+      weight: 0,
+    }));
+  }, [revenue]);
 
   const revenueByCategory = [
     { name: 'Hôtels 5★', value: 28000000, pct: 52.8, color: BRAND_800 },
@@ -72,13 +93,22 @@ export default function ReportsPage() {
     { name: 'Pliage', value: 2, color: INK_400 },
   ];
 
-  const topClients = [
-    { name: 'Radisson Blu Dakar', orders: 28, revenue: 15200000, weight: 420000 },
-    { name: 'Pullman Teranga', orders: 24, revenue: 12800000, weight: 380000 },
-    { name: 'King Fahd Palace', orders: 18, revenue: 11500000, weight: 290000 },
-    { name: 'Hôtel Terrou-Bi', orders: 15, revenue: 8300000, weight: 240000 },
-    { name: 'Ngor Diarama', orders: 10, revenue: 5200000, weight: 170000 },
-  ];
+  const topClients = useMemo(() => {
+    const FALLBACK = [
+      { name: 'Radisson Blu Dakar', orders: 28, revenue: 15200000, weight: 420000 },
+      { name: 'Pullman Teranga', orders: 24, revenue: 12800000, weight: 380000 },
+      { name: 'King Fahd Palace', orders: 18, revenue: 11500000, weight: 290000 },
+      { name: 'Hôtel Terrou-Bi', orders: 15, revenue: 8300000, weight: 240000 },
+      { name: 'Ngor Diarama', orders: 10, revenue: 5200000, weight: 170000 },
+    ];
+    if (!revenue?.topClients?.length) return FALLBACK;
+    return revenue.topClients.map((t) => ({
+      name: t.client.name ?? '—',
+      orders: t.invoicesCount,
+      revenue: Number(t.totalFcfa),
+      weight: 0,
+    }));
+  }, [revenue]);
 
   const currentMonthRevenue = revenueByMonth[revenueByMonth.length - 1].revenue;
   const previousMonthRevenue = revenueByMonth[revenueByMonth.length - 2].revenue;

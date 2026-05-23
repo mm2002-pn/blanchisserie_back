@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@/components/ui';
 import { CheckCircle, Scale, Scissors, FileText, Truck, AlertTriangle, Printer, Droplets, Wind, Sparkles } from 'lucide-react';
 import { formatWeight, formatCurrency } from '@/lib/utils';
@@ -237,7 +238,7 @@ export default function ProductionWorkflowPage() {
     // Vérifier que tous les items ont été pesés
     const allWeighed = currentWeighingItems.every(item => item.weight > 0);
     if (!allWeighed) {
-      alert('⚠️ Veuillez peser tous les types de linge avant de valider.');
+      toast.error('Veuillez peser tous les types de linge avant de valider.');
       return;
     }
 
@@ -249,7 +250,7 @@ export default function ProductionWorkflowPage() {
       totalWeight
     }]);
 
-    alert(`✓ Bordereau de réception généré\n\nPoids total: ${(totalWeight/1000).toFixed(2)} kg\nImprimez et collez sur le chariot.`);
+    toast.success(`Bordereau de réception généré · ${(totalWeight/1000).toFixed(2)} kg`);
 
     // Move to next order
     const currentIndex = selectedOrders.indexOf(currentWeighingOrderId);
@@ -325,7 +326,7 @@ export default function ProductionWorkflowPage() {
 
     setTriagedOrders(prev => [...prev, { orderId: currentTriageOrderId, items: currentTriageItems }]);
 
-    alert(`✓ Fiche de triage validée\n\n${currentTriageItems.length} catégories vérifiées\nQR codes générés\nImprimez et collez sur les bacs.`);
+    toast.success(`Fiche de triage validée · ${currentTriageItems.length} catégories`);
 
     // Move to next order (useEffect will pre-fill items automatically)
     const currentIndex = selectedOrders.indexOf(currentTriageOrderId);
@@ -446,7 +447,7 @@ export default function ProductionWorkflowPage() {
   };
 
   const startWashing = () => {
-    alert(`✓ Lancement du lavage !\n\n${washingBatches.length} cycles programmés\n\nLes machines vont démarrer automatiquement.\nDurée estimée: ${Math.max(...washingBatches.map(b => b.estimatedDuration))} min`);
+    toast.success(`Lavage lancé · ${washingBatches.length} cycles · ~${Math.max(...washingBatches.map(b => b.estimatedDuration))} min`);
 
     // Générer automatiquement les batches de séchage
     const dryBatches = optimizeDryingBatches();
@@ -540,7 +541,7 @@ export default function ProductionWorkflowPage() {
   };
 
   const startDrying = () => {
-    alert(`✓ Lancement du séchage !\n\n${dryingBatches.length} cycles programmés\n\nLes sécheuses vont démarrer automatiquement.\nDurée estimée: ${Math.max(...dryingBatches.map(b => b.estimatedDuration))} min`);
+    toast.success(`Séchage lancé · ${dryingBatches.length} cycles · ~${Math.max(...dryingBatches.map(b => b.estimatedDuration))} min`);
 
     // Générer automatiquement les batches de calandrage
     const calBatches = optimizeCalandringBatches();
@@ -636,7 +637,7 @@ export default function ProductionWorkflowPage() {
   };
 
   const startCalandring = () => {
-    alert(`✓ Lancement du calandrage/pressage !\n\n${calandringBatches.length} cycles programmés\n\nLes machines vont démarrer automatiquement.\nDurée estimée: ${Math.max(...calandringBatches.map(b => b.estimatedDuration))} min`);
+    toast.success(`Calandrage/pressage lancé · ${calandringBatches.length} cycles · ~${Math.max(...calandringBatches.map(b => b.estimatedDuration))} min`);
     setCurrentStep(7);
   };
 
@@ -659,17 +660,26 @@ export default function ProductionWorkflowPage() {
   };
 
   const generateInvoices = () => {
-    alert(`✓ Factures générées pour ${selectedOrders.length} commandes\n\nMontant total: ${formatCurrency(
-      selectedOrders.reduce((sum, orderId) => sum + calculateInvoiceAmount(orderId), 0)
-    )}\n\nLes factures sont prêtes à être envoyées aux clients.`);
+    const total = selectedOrders.reduce(
+      (sum, orderId) => sum + calculateInvoiceAmount(orderId),
+      0,
+    );
+    toast.success(
+      `Factures générées · ${selectedOrders.length} commandes · ${formatCurrency(total)}`,
+    );
   };
 
   const printDeliverySlips = () => {
-    alert(`✓ Bons de livraison imprimés pour ${selectedOrders.length} commandes\n\nRemettez-les aux chauffeurs pour la livraison du linge propre.`);
+    toast.success(`Bons de livraison imprimés · ${selectedOrders.length} commandes`);
   };
 
   const finishDay = () => {
-    alert(`✓ Journée terminée !\n\n${selectedOrders.length} commandes traitées\n${weighedOrders.reduce((sum, w) => sum + w.totalWeight, 0) / 1000} kg traités\n\nTout est archivé. À demain !`);
+    const totalKg =
+      weighedOrders.reduce((sum, w) => sum + w.totalWeight, 0) / 1000;
+    toast.success(
+      `Journée terminée · ${selectedOrders.length} commandes · ${totalKg} kg traités`,
+      { duration: 6000 },
+    );
 
     // Reset for new day
     setCurrentStep(1);

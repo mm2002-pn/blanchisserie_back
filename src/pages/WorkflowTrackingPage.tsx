@@ -16,8 +16,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { WorkflowTabs } from '@/components/layout/WorkflowTabs';
 
-import ordersData from '@/mocks/data/orders.json';
-import workflowsData from '@/mocks/data/workflows.json';
+import { useOrders, useOrdersRealtime } from '@/hooks/queries/useOrders';
 
 const WORKFLOW_STATES = {
   COLLECTE_SCHEDULED: { label: 'Collecte programmée', badge: 'neutral', step: 0 },
@@ -62,8 +61,9 @@ const WORKFLOW_STEPS: { key: string; label: string; icon: typeof Package }[] = [
 ];
 
 export default function WorkflowTrackingPage() {
-  const [orders] = useState(ordersData);
-  const [_workflows] = useState(workflowsData);
+  useOrdersRealtime();
+  const { data } = useOrders({ pageSize: 200 });
+  const orders = data?.items ?? [];
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -88,7 +88,7 @@ export default function WorkflowTrackingPage() {
       const matchesSearch =
         !q ||
         order.orderNumber.toLowerCase().includes(q) ||
-        order.clientName.toLowerCase().includes(q);
+        (order.clientName ?? '').toLowerCase().includes(q);
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
       return matchesSearch && matchesStatus;
     });

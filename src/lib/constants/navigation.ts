@@ -5,10 +5,10 @@ import {
   Package,
   FileText,
   BarChart3,
-  Calendar,
   Truck,
   Settings,
   ClipboardList,
+  Workflow,
   type LucideIcon,
 } from 'lucide-react';
 import { ROUTES } from './routes';
@@ -52,9 +52,15 @@ export const MAIN_NAVIGATION: NavigationItem[] = [
     permission: MODULES.ORDERS,
   },
   {
-    label: 'Production',
-    path: ROUTES.PRODUCTION,
+    label: 'Kanban',
+    path: ROUTES.ORDERS_KANBAN,
     icon: ClipboardList,
+    permission: MODULES.ORDERS,
+  },
+  {
+    label: 'Atelier du jour',
+    path: ROUTES.ATELIER,
+    icon: Workflow,
     permission: MODULES.PRODUCTION,
   },
   {
@@ -74,12 +80,6 @@ export const MAIN_NAVIGATION: NavigationItem[] = [
     path: ROUTES.REPORTS,
     icon: BarChart3,
     permission: MODULES.REPORTS,
-  },
-  {
-    label: 'Planning',
-    path: ROUTES.SCHEDULE,
-    icon: Calendar,
-    permission: MODULES.SCHEDULE,
   },
   {
     label: 'Tournées',
@@ -134,6 +134,14 @@ export const SETTINGS_NAVIGATION: SettingsNavigationSection[] = [
       {
         label: 'Grilles tarifaires',
         path: ROUTES.SETTINGS_TARIFFS,
+      },
+      {
+        label: 'Véhicules',
+        path: ROUTES.SETTINGS_VEHICLES,
+      },
+      {
+        label: 'PDA',
+        path: ROUTES.SETTINGS_PDAS,
       },
       {
         label: 'Modèles de contrat',

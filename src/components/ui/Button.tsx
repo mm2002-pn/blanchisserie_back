@@ -17,18 +17,20 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const base =
       'inline-flex items-center justify-center gap-2 font-semibold rounded-input transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap';
 
+    // Force la couleur du texte avec !important pour éviter qu'une cascade
+    // ou un text-X depuis className ne l'écrase silencieusement.
     const variants = {
       primary:
-        'bg-brand-800 hover:bg-brand-700 active:bg-brand-900 text-paper',
+        'bg-brand-800 hover:bg-brand-700 active:bg-brand-900 !text-white',
       secondary:
-        'bg-paper hover:bg-paper-2 text-ink-800 border-hairline border-ink-200',
+        'bg-paper hover:bg-paper-2 !text-ink-800 border border-ink-300',
       outline:
-        'bg-transparent hover:bg-paper-2 text-ink-800 border-hairline border-ink-300',
-      ghost: 'bg-transparent hover:bg-paper-2 text-ink-700',
+        'bg-transparent hover:bg-paper-2 !text-ink-800 border border-ink-300',
+      ghost: 'bg-transparent hover:bg-paper-2 !text-ink-700',
       danger:
-        'bg-danger-100 hover:bg-danger-600 hover:text-paper text-danger-600 border-hairline border-danger-600',
+        'bg-danger-100 hover:bg-danger-600 hover:!text-white !text-danger-600 border border-danger-600',
       success:
-        'bg-baobab-600 hover:bg-baobab-700 text-paper',
+        'bg-baobab-600 hover:bg-baobab-700 !text-white',
     };
 
     const sizes = {

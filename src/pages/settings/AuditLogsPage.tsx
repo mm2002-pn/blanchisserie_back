@@ -4,28 +4,11 @@ import { Badge } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useAuditLogs } from '@/hooks/queries/useAuditLogs';
+import type { MappedAuditLog, UiAuditAction } from '@/lib/api/audit.api';
 
-type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'permission';
-
-type AuditLog = {
-  id: string;
-  at: string;
-  actor: string;
-  action: AuditAction;
-  entity: string;
-  details: string;
-  ip: string;
-};
-
-const MOCK_LOGS: AuditLog[] = [
-  { id: '1', at: '2026-04-24T09:42:00Z', actor: 'Aminata D.', action: 'create', entity: 'Commande', details: 'CMD-2026-141 · Hôtel Plaza', ip: '196.33.12.8' },
-  { id: '2', at: '2026-04-24T09:28:00Z', actor: 'Mamadou F.', action: 'update', entity: 'Tarif', details: 'Grille premium · drap 2p +5 %', ip: '10.0.12.6' },
-  { id: '3', at: '2026-04-24T08:55:00Z', actor: 'Admin', action: 'permission', entity: 'Utilisateur', details: 'Rokhaya T. · rôle Superviseur accordé', ip: '10.0.12.1' },
-  { id: '4', at: '2026-04-24T08:15:00Z', actor: 'Aminata D.', action: 'login', entity: 'Session', details: 'Connexion réussie (2FA OK)', ip: '196.33.12.8' },
-  { id: '5', at: '2026-04-23T22:02:00Z', actor: 'Système', action: 'delete', entity: 'Facture brouillon', details: 'FACT-2026-104 · archivée 30 j', ip: '—' },
-  { id: '6', at: '2026-04-23T17:30:00Z', actor: 'Cheikh B.', action: 'update', entity: 'Machine', details: 'LAV-003 · statut → Hors service', ip: '196.33.12.14' },
-  { id: '7', at: '2026-04-23T16:12:00Z', actor: 'Ndeye K.', action: 'create', entity: 'Triage', details: 'CMD-2026-138 · ventilation terminée', ip: '10.0.12.22' },
-];
+type AuditAction = UiAuditAction;
+type AuditLog = MappedAuditLog;
 
 const ACTION_LABEL: Record<AuditAction, string> = {
   create: 'Création',
@@ -44,7 +27,8 @@ const ACTION_VARIANT: Record<AuditAction, 'success' | 'warning' | 'error' | 'bra
 };
 
 export default function AuditLogsPage() {
-  const [logs] = useState<AuditLog[]>(MOCK_LOGS);
+  const { data, isLoading, error } = useAuditLogs();
+  const logs: AuditLog[] = data ?? [];
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<AuditAction | 'all'>('all');
 
@@ -194,7 +178,13 @@ export default function AuditLogsPage() {
             <div className="inline-flex items-center justify-center w-12 h-12 bg-paper-2 rounded-full mb-3 border-hairline border-ink-200">
               <Shield className="w-5 h-5 text-ink-400" strokeWidth={1.6} />
             </div>
-            <p className="text-sm text-ink-500">Aucune entrée pour ces filtres.</p>
+            <p className="text-sm text-ink-500">
+              {error
+                ? `Erreur : ${(error as Error).message}`
+                : isLoading
+                  ? 'Chargement…'
+                  : 'Aucune entrée pour ces filtres.'}
+            </p>
           </div>
         )}
       </div>

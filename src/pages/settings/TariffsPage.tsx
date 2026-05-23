@@ -4,7 +4,7 @@ import { Plus, Edit, Trash2, Check, Tag } from 'lucide-react';
 import { usePermissions } from '@/hooks';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import tariffsData from '@/mocks/data/tariffs.json';
+import { useTariffs } from '@/hooks/queries/useTariffs';
 
 const TYPE_VARIANT: Record<string, 'success' | 'warning' | 'neutral' | 'info' | 'brand'> = {
   Standard: 'neutral',
@@ -16,8 +16,11 @@ const TYPE_VARIANT: Record<string, 'success' | 'warning' | 'neutral' | 'info' | 
 
 export default function TariffsPage() {
   const { canEdit } = usePermissions();
-  const [tariffs] = useState(tariffsData);
-  const [selectedTariff, setSelectedTariff] = useState(tariffs[0]);
+  const { data, isLoading, error } = useTariffs();
+  const tariffs = data ?? [];
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedTariff = tariffs.find((t) => t.id === selectedId) ?? tariffs[0];
+  const setSelectedTariff = (t: typeof tariffs[number]) => setSelectedId(t.id);
 
   return (
     <div className="space-y-5">
@@ -43,6 +46,18 @@ export default function TariffsPage() {
         )}
       </div>
 
+      {error && (
+        <div className="rounded-input border-hairline border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          Impossible de charger les tarifs : {(error as Error).message}
+        </div>
+      )}
+      {isLoading && (
+        <div className="text-sm text-ink-500">Chargement des tarifs…</div>
+      )}
+      {!isLoading && tariffs.length === 0 && !error && (
+        <div className="text-sm text-ink-500">Aucune grille tarifaire.</div>
+      )}
+      {selectedTariff && (
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5">
         {/* Tariffs list */}
         <div className="space-y-2">
@@ -269,6 +284,7 @@ export default function TariffsPage() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

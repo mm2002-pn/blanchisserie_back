@@ -1,424 +1,772 @@
-import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@/components/ui';
+import { useMemo, useState } from 'react';
 import {
-  Truck,
   Scale,
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  CheckCircle,
-  Calendar,
+  Search,
+  Truck,
+  ChevronLeft,
+  Loader2,
+  CheckCircle2,
+  Building2,
+  Package,
+  X,
+  Delete,
+  Pencil,
 } from 'lucide-react';
-import { formatWeight } from '@/lib/utils';
-import { format } from 'date-fns';
+import { Button, Badge } from '@/components/ui';
+import { OrderDetailsPanel } from '@/components/orders/OrderDetailsPanel';
+import {
+  useOrders,
+  useOrdersRealtime,
+  useReceiveOrder,
+} from '@/hooks/queries/useOrders';
+import { useLinenTypes } from '@/hooks/queries/useLinenTypes';
+import { format, isToday, isYesterday, isThisWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { WorkflowTabs } from '@/components/layout/WorkflowTabs';
 
-// Import mock data
-import ordersData from '@/mocks/data/orders.json';
-import vehiclesData from '@/mocks/data/vehicles.json';
+/**
+ * Réception atelier — refonte industriel-friendly :
+ *  - Liste : KPI strip + cards d'orders à peser (grosses cibles, lecture rapide)
+ *  - Form : hero compact + 2 grosses tuiles (Poids / Pièces), chacune tappable
+ *  - Focus mode plein écran avec pavé numérique (décimal pour kg, entier pour pcs)
+ *  - Pré-remplissage automatique depuis driverWeight / driverPieces
+ *  - Aucun seuil d'écart bloquant (acceptDeviation: true en permanence)
+ */
 
-interface WeighingState {
-  orderId: string;
-  weight: string;
-  isWeighing: boolean;
+type DateFilter = 'today' | 'yesterday' | 'week' | 'all';
+const DATE_FILTERS: { key: DateFilter; label: string }[] = [
+  { key: 'today', label: "Aujourd'hui" },
+  { key: 'yesterday', label: 'Hier' },
+  { key: 'week', label: 'Cette semaine' },
+  { key: 'all', label: 'Tout' },
+];
+
+function matchesDate(filter: DateFilter, date: Date | string | undefined): boolean {
+  if (!date) return filter === 'all';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (filter === 'today') return isToday(d);
+  if (filter === 'yesterday') return isYesterday(d);
+  if (filter === 'week') return isThisWeek(d, { weekStartsOn: 1 });
+  return true;
 }
 
 export default function ReceptionPage() {
-  const [orders] = useState(ordersData);
-  const [vehicles] = useState(vehiclesData);
-  const [weighingState, setWeighingState] = useState<WeighingState | null>(null);
+  useOrdersRealtime();
+  const { data: ordersData, isLoading } = useOrders({ pageSize: 200 });
+  const orders = ordersData?.items ?? [];
 
-  // Filter orders that are collected but not yet weighed
-  const ordersToWeigh = orders.filter(o =>
-    o.status === 'Collectée' ||
-    (o.status === 'Réceptionnée' && !o.actualWeight)
+  const [dateFilter, setDateFilter] = useState<DateFilter>('today');
+  const [search, setSearch] = useState('');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Pesée n'est éligible QUE pour les commandes déchargées à l'usine
+  // (le chauffeur a confirmé son retour avec les sacs). Tant que la round
+  // n'a pas été déchargée, les commandes restent invisibles côté atelier.
+  const ordersToWeigh = useMemo(
+    () =>
+      orders.filter(
+        (o) =>
+          o.apiStatus === 'collected' &&
+          o.unloadedAt != null &&
+          !o.receivedWeight &&
+          matchesDate(dateFilter, o.collectedAt ?? o.collectionDate),
+      ),
+    [orders, dateFilter],
   );
 
-  // Filter orders that arrived today for reception
-  const todayReceptions = orders.filter(o =>
-    o.receptionDateTime &&
-    new Date(o.receptionDateTime).toDateString() === new Date().toDateString()
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return ordersToWeigh;
+    return ordersToWeigh.filter((o) =>
+      `${o.orderNumber} ${o.clientName ?? ''}`.toLowerCase().includes(q),
+    );
+  }, [ordersToWeigh, search]);
+
+  const totalKg = filtered.reduce(
+    (s, o) => s + (o.driverWeight ?? 0) / 1000,
+    0,
   );
+  const totalPieces = filtered.reduce((s, o) => s + (o.driverPieces ?? 0), 0);
 
-  // Group orders by vehicle
-  const ordersByVehicle = ordersToWeigh.reduce((acc, order) => {
-    if (order.vehicleId) {
-      if (!acc[order.vehicleId]) {
-        acc[order.vehicleId] = [];
-      }
-      acc[order.vehicleId].push(order);
-    }
-    return acc;
-  }, {} as Record<string, typeof orders>);
+  const selectedOrder = orders.find((o) => o.id === selectedId);
 
-  const startWeighing = (orderId: string) => {
-    setWeighingState({
-      orderId,
-      weight: '',
-      isWeighing: true
-    });
-  };
-
-  const addDigit = (digit: string) => {
-    if (!weighingState) return;
-    setWeighingState({
-      ...weighingState,
-      weight: weighingState.weight + digit
-    });
-  };
-
-  const clearWeight = () => {
-    if (!weighingState) return;
-    setWeighingState({
-      ...weighingState,
-      weight: ''
-    });
-  };
-
-  const confirmWeight = () => {
-    if (!weighingState) return;
-    // In real app, this would update the order with actual weight
-    console.log(`Order ${weighingState.orderId} weighed at ${weighingState.weight}kg`);
-    setWeighingState(null);
-  };
-
-  const cancelWeighing = () => {
-    setWeighingState(null);
-  };
-
-  const calculateDeviation = (estimated: number, actual: number): number => {
-    return Math.round(((actual - estimated) / estimated) * 100);
-  };
-
-  const getDeviationColor = (deviation: number): string => {
-    if (Math.abs(deviation) <= 10) return 'text-ok-700';
-    if (Math.abs(deviation) <= 30) return 'text-warn-700';
-    return 'text-danger-600';
-  };
-
-  const currentOrder = weighingState
-    ? orders.find(o => o.id === weighingState.orderId)
-    : null;
+  if (selectedOrder) {
+    return (
+      <WeighForm
+        order={selectedOrder}
+        onCancel={() => setSelectedId(null)}
+        onDone={() => setSelectedId(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">
-      {/* Page Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <div className="caps mb-2">Workflow quotidien</div>
+          <div className="caps mb-1">Atelier</div>
           <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
-            Arrivées & pesée officielle
+            Réception · Pesée
           </h1>
           <p className="text-sm text-ink-500 mt-1">
-            Contrôle des camions, déchargement et pesée qui servira de base à la facturation.
+            Pesée officielle des commandes collectées
           </p>
         </div>
-        <WorkflowTabs />
+
+        <div className="flex items-center gap-2">
+          <KpiTile
+            icon={Package}
+            label="Commandes"
+            value={String(filtered.length)}
+          />
+          <KpiTile
+            icon={Scale}
+            label="Poids estimé"
+            value={`${totalKg.toFixed(1)} kg`}
+          />
+          <KpiTile
+            icon={CheckCircle2}
+            label="Pièces"
+            value={String(totalPieces)}
+          />
+        </div>
       </div>
 
-      {/* KPI strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <RKpi label="Arrivées aujourd'hui" value={`${todayReceptions.length}`} tint="brand" icon={Calendar} />
-        <RKpi label="À peser" value={`${ordersToWeigh.length}`} tint="warn" icon={Scale} />
-        <RKpi label="Camions" value={`${Object.keys(ordersByVehicle).length}`} tint="terra" icon={Truck} />
-        <RKpi label="Pesées terminées" value={`${todayReceptions.filter(o => o.actualWeight).length}`} tint="ok" icon={CheckCircle} />
-      </div>
-
-      {/* Weighing Modal */}
-      {weighingState && currentOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="max-w-2xl w-full">
-            <CardHeader>
-              <CardTitle>Pesée Officielle - {currentOrder.clientName}</CardTitle>
-              <p className="text-sm text-ink-500 mt-1">
-                Commande {currentOrder.orderNumber} • Estimation: {currentOrder.estimatedSize}
-              </p>
-            </CardHeader>
-            <CardContent>
-              {/* Estimation Info */}
-              <div className="mb-6 p-4 bg-paper-2 rounded-input">
-                <p className="text-sm text-ink-500 mb-2">Estimation client:</p>
-                <p className="text-lg font-semibold text-ink-900">
-                  {formatWeight(currentOrder.estimatedWeight || 0)} ({currentOrder.estimatedSize})
-                </p>
-                {currentOrder.visualEstimation && (
-                  <p className="text-sm text-ink-500 mt-1">
-                    Visuel chauffeur: {currentOrder.visualEstimation}
-                  </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-1.5">
+          {DATE_FILTERS.map((f) => {
+            const active = dateFilter === f.key;
+            return (
+              <button
+                key={f.key}
+                onClick={() => setDateFilter(f.key)}
+                className={cn(
+                  'inline-flex items-center px-4 py-2 rounded-pill text-sm font-semibold border-hairline transition-colors',
+                  active
+                    ? 'bg-brand-800 text-paper border-brand-800'
+                    : 'bg-paper text-ink-700 border-ink-200 hover:bg-paper-2',
                 )}
-              </div>
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
 
-              {/* Weight Display */}
-              <div className="mb-6">
-                <p className="text-sm text-ink-500 mb-2">LIRE LE POIDS SUR LA BALANCE:</p>
-                <div className="text-center p-6 bg-paper-2 rounded-input border-2 border-ink-200">
-                  <p className="text-5xl font-bold text-ink-900 font-mono">
-                    {weighingState.weight || '0'} <span className="text-2xl">kg</span>
-                  </p>
-                </div>
-              </div>
+        <div className="relative">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400"
+            strokeWidth={1.75}
+          />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher commande / hôtel…"
+            className="w-72 pl-9 pr-4 py-2.5 text-sm bg-paper border-hairline border-ink-200 rounded-input text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-800 focus:border-2"
+          />
+        </div>
+      </div>
 
-              {/* Numeric Keypad */}
-              <div className="mb-6">
-                <div className="grid grid-cols-3 gap-3">
-                  {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.', 'C'].map((key) => (
-                    <Button
-                      key={key}
-                      variant={key === 'C' ? 'outline' : 'secondary'}
-                      size="lg"
-                      className="h-16 text-xl font-semibold"
-                      onClick={() => key === 'C' ? clearWeight() : addDigit(key)}
-                    >
-                      {key}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Comparison (if weight entered) */}
-              {weighingState.weight && parseFloat(weighingState.weight) > 0 && (
-                <div className="mb-6 p-4 bg-warn-100 rounded-input border border-warn-600">
-                  <h4 className="font-semibold text-ink-900 mb-3">COMPARAISON:</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-ink-500">Estimation client:</span>
-                      <span className="font-medium">{formatWeight(currentOrder.estimatedWeight || 0)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-ink-500">Poids réel:</span>
-                      <span className="font-bold text-brand-800">
-                        {formatWeight(parseFloat(weighingState.weight) * 1000)}
-                      </span>
-                    </div>
-                    {currentOrder.estimatedWeight && (
-                      <div className="flex justify-between items-center pt-2 border-t border-warn-600">
-                        <span className="text-ink-500">Écart:</span>
-                        <div className="flex items-center gap-2">
-                          {calculateDeviation(
-                            currentOrder.estimatedWeight,
-                            parseFloat(weighingState.weight) * 1000
-                          ) > 0 ? (
-                            <TrendingUp className="w-4 h-4 text-danger-600" />
-                          ) : (
-                            <TrendingDown className="w-4 h-4 text-ok-700" />
-                          )}
-                          <span className={`font-bold ${getDeviationColor(
-                            calculateDeviation(
-                              currentOrder.estimatedWeight,
-                              parseFloat(weighingState.weight) * 1000
-                            )
-                          )}`}>
-                            {Math.abs(calculateDeviation(
-                              currentOrder.estimatedWeight,
-                              parseFloat(weighingState.weight) * 1000
-                            ))}%
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={cancelWeighing}
-                >
-                  Annuler
-                </Button>
-                <Button
-                  variant="primary"
-                  className="flex-1"
-                  onClick={confirmWeight}
-                  disabled={!weighingState.weight || parseFloat(weighingState.weight) <= 0}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Confirmer ce poids comme officiel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+      {isLoading ? (
+        <div className="text-sm text-ink-500 italic px-4 py-8 text-center">
+          Chargement…
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="card-surface p-10 text-center bg-ok-50 border-ok-200">
+          <CheckCircle2
+            className="w-12 h-12 text-ok-700 mx-auto mb-3"
+            strokeWidth={1.5}
+          />
+          <p className="text-base font-semibold text-ok-700">
+            Aucune commande à peser
+          </p>
+          <p className="text-tiny text-ok-700 mt-1">
+            {dateFilter === 'today'
+              ? "Pas de réception aujourd'hui. Les commandes apparaissent ici dès que le chauffeur confirme son arrivée à l'usine."
+              : 'Toutes les commandes déchargées de cette période ont été pesées.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {filtered.map((o) => (
+            <OrderTile
+              key={o.id}
+              order={o}
+              onClick={() => setSelectedId(o.id)}
+            />
+          ))}
         </div>
       )}
+    </div>
+  );
+}
 
-      {/* Vehicles with Orders to Weigh */}
-      <div className="space-y-6">
-        {Object.entries(ordersByVehicle).map(([vehicleId, vehicleOrders]) => {
-          const vehicle = vehicles.find(v => v.id === vehicleId);
-          if (!vehicle) return null;
+function KpiTile({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Package;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 bg-paper border-hairline border-ink-200 rounded-input min-w-[140px]">
+      <div className="w-9 h-9 rounded-input bg-paper-2 flex items-center justify-center">
+        <Icon className="w-4 h-4 text-brand-800" strokeWidth={1.75} />
+      </div>
+      <div>
+        <p className="text-micro text-ink-500 uppercase tracking-wide">{label}</p>
+        <p className="font-mono text-lg font-semibold tnum text-ink-900 leading-tight">
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
 
-          const estimatedTotal = vehicleOrders.reduce((sum, o) => sum + (o.estimatedWeight || 0), 0);
+function OrderTile({ order, onClick }: { order: any; onClick: () => void }) {
+  const kg = order.driverWeight ? order.driverWeight / 1000 : 0;
+  const pieces = order.driverPieces ?? 0;
+  const collectedAt = order.collectedAt ? new Date(order.collectedAt) : null;
+  return (
+    <button
+      onClick={onClick}
+      className="card-surface p-4 text-left hover:border-brand-800 hover:shadow-md transition-all group"
+    >
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex-1 min-w-0">
+          <p className="font-mono text-tiny text-ink-500 tnum mb-1">
+            {order.orderNumber}
+          </p>
+          <p className="text-base font-semibold text-ink-900 truncate flex items-center gap-1.5">
+            <Building2
+              className="w-4 h-4 text-brand-800 shrink-0"
+              strokeWidth={1.75}
+            />
+            {order.clientName ?? '—'}
+          </p>
+        </div>
+        <Badge variant="info" dot>
+          À peser
+        </Badge>
+      </div>
 
-          return (
-            <Card key={vehicleId}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-brand-100 rounded-input">
-                      <Truck className="w-6 h-6 text-brand-800" />
-                    </div>
-                    <div>
-                      <CardTitle>{vehicle.matricule} - {vehicle.marque} {vehicle.modele}</CardTitle>
-                      <p className="text-sm text-ink-500 mt-1">
-                        Arrivé à {format(new Date(), 'HH:mm', { locale: fr })} • {vehicleOrders.length} commande(s)
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-ink-500">Total estimé</p>
-                    <p className="font-serif text-xl font-medium tracking-tight text-ink-900">
-                      ~{formatWeight(estimatedTotal)}
-                    </p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-ink-900">CLIENTS À DÉCHARGER:</h4>
-                  {vehicleOrders.map((order, index) => (
-                    <div
-                      key={order.id}
-                      className="p-4 border-2 border-ink-200 rounded-input hover:border-terra-600 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-serif text-lg font-medium tracking-tight text-ink-900">{index + 1}.</span>
-                            <span className="font-semibold text-ink-900">{order.clientName}</span>
-                            <Badge variant="warning" className="text-xs">
-                              estimé {order.estimatedSize}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-ink-500">
-                            Commande {order.orderNumber}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-ink-500">Estimation</p>
-                          <p className="font-serif text-lg font-medium tracking-tight text-ink-900">
-                            {formatWeight(order.estimatedWeight || 0)}
-                          </p>
-                        </div>
-                      </div>
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="bg-paper-2 rounded-input p-2.5 text-center">
+          <p className="font-mono text-xl font-semibold tnum text-ink-900 leading-tight">
+            {kg.toFixed(1)}
+            <span className="text-tiny font-normal text-ink-500"> kg</span>
+          </p>
+          <p className="text-micro text-ink-500 uppercase tracking-wide mt-0.5">
+            Poids driver
+          </p>
+        </div>
+        <div className="bg-paper-2 rounded-input p-2.5 text-center">
+          <p className="font-mono text-xl font-semibold tnum text-ink-900 leading-tight">
+            {pieces}
+          </p>
+          <p className="text-micro text-ink-500 uppercase tracking-wide mt-0.5">
+            Pièces
+          </p>
+        </div>
+      </div>
 
-                      {order.visualEstimation && (
-                        <div className="mb-3 p-2 bg-paper-2 rounded">
-                          <p className="text-xs text-ink-500">Évaluation visuelle du chauffeur:</p>
-                          <p className="text-sm font-medium text-ink-900">{order.visualEstimation}</p>
-                        </div>
-                      )}
+      <div className="flex items-center justify-between text-tiny text-ink-500">
+        <span className="flex items-center gap-1">
+          <Truck className="w-3 h-3" strokeWidth={1.75} />
+          Collectée{' '}
+          {collectedAt
+            ? format(collectedAt, "d MMM 'à' HH:mm", { locale: fr })
+            : '—'}
+        </span>
+        <span className="text-brand-800 font-semibold group-hover:underline">
+          Peser →
+        </span>
+      </div>
+    </button>
+  );
+}
 
-                      {order.collectionPhotos && order.collectionPhotos.length > 0 && (
-                        <div className="mb-3">
-                          <p className="text-xs text-ink-500 mb-1">Photos de collecte:</p>
-                          <div className="flex gap-2">
-                            {order.collectionPhotos.map((_photo, idx) => (
-                              <div key={idx} className="w-16 h-16 bg-ink-200 rounded border border-ink-300 flex items-center justify-center">
-                                <span className="text-xs text-ink-500">Photo {idx + 1}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+/* ─── Formulaire de pesée ────────────────────────────────────── */
 
-                      <Button
-                        variant="primary"
-                        className="w-full"
-                        onClick={() => startWeighing(order.id)}
-                      >
-                        <Scale className="w-4 h-4 mr-2" />
-                        Décharger et peser
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+function WeighForm({
+  order,
+  onCancel,
+  onDone,
+}: {
+  order: any;
+  onCancel: () => void;
+  onDone: () => void;
+}) {
+  const driverKg = order.driverWeight ? order.driverWeight / 1000 : 0;
+  const driverPieces = order.driverPieces ?? 0;
 
-        {Object.keys(ordersByVehicle).length === 0 && (
-          <Card className="border-ok-600 bg-ok-100">
-            <CardContent className="p-8 text-center">
-              <CheckCircle className="w-12 h-12 mx-auto mb-3 text-ok-700" />
-              <h3 className="font-semibold text-ok-700 mb-1">Aucune commande en attente de pesée</h3>
-              <p className="text-sm text-ok-700">
-                Toutes les commandes collectées ont été pesées et sont en cours de traitement.
-              </p>
-            </CardContent>
-          </Card>
+  const { data: linenTypes = [] } = useLinenTypes();
+  const labelByCode = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const lt of linenTypes) m[lt.code] = lt.name;
+    return m;
+  }, [linenTypes]);
+
+  // Pré-remplissage depuis ce qu'a saisi le driver
+  const [weightKg, setWeightKg] = useState<number>(driverKg);
+  const [pieces, setPieces] = useState<number>(driverPieces);
+  const [focused, setFocused] = useState<'weight' | 'pieces' | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const receive = useReceiveOrder();
+  const valid = weightKg > 0 && pieces > 0;
+
+  const handleSubmit = async () => {
+    if (!valid) {
+      setError('Saisis un poids et un nombre de pièces valides.');
+      return;
+    }
+    setError(null);
+    try {
+      await receive.mutateAsync({
+        id: order.id,
+        data: {
+          receivedWeight: Math.round(weightKg * 1000),
+          receivedPieces: pieces,
+          acceptDeviation: true,
+        },
+      });
+      onDone();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Échec de la pesée.');
+    }
+  };
+
+  const driverItems: { type: string; quantity: number }[] =
+    order.driverItems ?? [];
+
+  return (
+    <div className="space-y-4 pb-32">
+      <div className="flex items-center justify-between gap-3">
+        <Button
+          variant="secondary"
+          size="md"
+          onClick={onCancel}
+          className="gap-1.5"
+        >
+          <ChevronLeft className="w-4 h-4" strokeWidth={1.75} />
+          Retour
+        </Button>
+        <div className="text-right">
+          <p className="text-micro text-ink-500 uppercase tracking-wide">
+            Commande
+          </p>
+          <p className="font-mono text-lg font-semibold tnum text-ink-900 leading-tight">
+            {order.orderNumber}
+          </p>
+        </div>
+      </div>
+
+      {/* Hero : client + référence driver */}
+      <div className="card-surface p-5 bg-paper border-2 border-ink-200">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="caps">Client</p>
+            <p className="font-serif text-xl font-medium text-ink-900 mt-0.5 flex items-center gap-2">
+              <Building2
+                className="w-5 h-5 text-brand-800"
+                strokeWidth={1.75}
+              />
+              {order.clientName ?? '—'}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="caps">Référence chauffeur</p>
+            <p className="font-mono text-2xl font-semibold tnum text-ink-700 leading-tight mt-0.5">
+              {driverKg.toFixed(1)} kg
+            </p>
+            <p className="text-tiny text-ink-500">
+              {driverPieces} pièces annoncées
+            </p>
+          </div>
+        </div>
+
+        {/* Détail items chauffeur — collapsé visuellement, juste pour comparaison */}
+        {driverItems.length > 0 && (
+          <details className="mt-4 pt-3 border-t border-ink-100">
+            <summary className="caps cursor-pointer select-none flex items-center gap-1.5 hover:text-brand-800">
+              Détail comptage chauffeur ({driverItems.length} type
+              {driverItems.length > 1 ? 's' : ''})
+            </summary>
+            <ul className="mt-2 space-y-1">
+              {driverItems.map((it, i) => (
+                <li
+                  key={`${it.type}-${i}`}
+                  className="flex items-center justify-between gap-2 text-tiny"
+                >
+                  <span className="text-ink-700 truncate">
+                    {labelByCode[it.type] ?? it.type}
+                  </span>
+                  <span className="font-mono tnum font-semibold text-ink-900 shrink-0">
+                    {it.quantity}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </details>
         )}
       </div>
 
-      {/* Info Alert */}
-      <div className="card-surface bg-paper-2 p-4">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="w-4 h-4 text-ink-700 shrink-0 mt-0.5" strokeWidth={1.75} />
-          <div>
-            <p className="caps">Processus de réception</p>
-            <p className="text-tiny text-ink-700 mt-1 leading-relaxed max-w-3xl">
-              Les commandes sont créées par les clients via l'application mobile avec une estimation (S, M, L, XL).
-              Le chauffeur valide visuellement et prend des photos lors de la collecte.
-              La pesée officielle en réception détermine le poids exact qui servira à la facturation.
-              Les écarts importants ({'>'} 30 %) doivent être signalés au responsable.
+      {/* Tuiles de saisie principales — chacune tappable */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <BigInputTile
+          label="Pesée atelier"
+          unit="kg"
+          value={weightKg > 0 ? weightKg.toFixed(1).replace('.', ',') : '—'}
+          subline={
+            driverKg > 0
+              ? `Référence chauffeur : ${driverKg.toFixed(1)} kg`
+              : 'Aucune référence chauffeur'
+          }
+          icon={Scale}
+          highlight={weightKg > 0}
+          onTap={() => setFocused('weight')}
+        />
+        <BigInputTile
+          label="Nombre de pièces"
+          unit="pcs"
+          value={pieces > 0 ? String(pieces) : '—'}
+          subline={
+            driverPieces > 0
+              ? `Référence chauffeur : ${driverPieces} pièces`
+              : 'Aucune référence chauffeur'
+          }
+          icon={Package}
+          highlight={pieces > 0}
+          onTap={() => setFocused('pieces')}
+        />
+      </div>
+
+      {/* Détails commande (items annoncés + photos) */}
+      <OrderDetailsPanel order={order} />
+
+      {/* Floating action bar — contraint à la zone de contenu (après la sidebar w-64) */}
+      <div className="fixed bottom-4 left-64 right-0 px-4 z-20 pointer-events-none">
+        <div className="mx-auto w-full max-w-[960px] card-surface p-4 shadow-xl border-2 border-brand-800 bg-paper pointer-events-auto">
+          {error && (
+            <p className="text-sm text-rose-700 bg-rose-50 px-3 py-2 rounded-input border-hairline border-rose-200 mb-3">
+              {error}
+            </p>
+          )}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex-1 min-w-0">
+              <p className="text-micro text-ink-500 uppercase tracking-wide">
+                Pesée en cours
+              </p>
+              <p className="font-mono text-2xl font-semibold tnum text-ink-900 leading-tight truncate">
+                {weightKg > 0 ? `${weightKg.toFixed(1)} kg` : '— kg'} ·{' '}
+                <span className="text-ink-700">
+                  {pieces > 0 ? `${pieces} pcs` : '— pcs'}
+                </span>
+              </p>
+            </div>
+            <Button
+              size="lg"
+              onClick={handleSubmit}
+              disabled={!valid || receive.isPending}
+              className="gap-2 h-14 px-6 text-base shrink-0"
+            >
+              {receive.isPending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <CheckCircle2 className="w-5 h-5" strokeWidth={2} />
+              )}
+              Valider la pesée
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Focus mode keypad */}
+      {focused === 'weight' && (
+        <FocusKeypad
+          mode="decimal"
+          title="Pesée atelier"
+          subtitle={
+            driverKg > 0
+              ? `Référence chauffeur : ${driverKg.toFixed(1)} kg`
+              : undefined
+          }
+          unit="kg"
+          initialValue={weightKg}
+          onCancel={() => setFocused(null)}
+          onValidate={(v) => {
+            setWeightKg(v);
+            setFocused(null);
+          }}
+        />
+      )}
+      {focused === 'pieces' && (
+        <FocusKeypad
+          mode="integer"
+          title="Nombre de pièces"
+          subtitle={
+            driverPieces > 0
+              ? `Référence chauffeur : ${driverPieces} pièces`
+              : undefined
+          }
+          unit="pcs"
+          initialValue={pieces}
+          onCancel={() => setFocused(null)}
+          onValidate={(v) => {
+            setPieces(Math.round(v));
+            setFocused(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ─── Grosse tuile de saisie : valeur + bouton modifier ───────── */
+
+function BigInputTile({
+  label,
+  value,
+  unit,
+  subline,
+  icon: Icon,
+  highlight,
+  onTap,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  subline?: string;
+  icon: typeof Scale;
+  highlight?: boolean;
+  onTap: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onTap}
+      className={cn(
+        'rounded-input border-2 transition-all p-5 text-left flex flex-col gap-3 group',
+        highlight
+          ? 'border-brand-800 bg-brand-50 shadow-sm'
+          : 'border-dashed border-ink-300 bg-paper hover:border-brand-800',
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="caps flex items-center gap-1.5">
+          <Icon className="w-3.5 h-3.5 text-brand-800" strokeWidth={1.75} />
+          {label}
+        </p>
+        <Pencil
+          className={cn(
+            'w-4 h-4 transition-colors',
+            highlight
+              ? 'text-brand-800'
+              : 'text-ink-400 group-hover:text-brand-800',
+          )}
+          strokeWidth={1.75}
+        />
+      </div>
+
+      <div className="flex items-baseline gap-2">
+        <span
+          className={cn(
+            'font-mono text-5xl font-semibold tnum leading-none',
+            highlight ? 'text-brand-800' : 'text-ink-400',
+          )}
+        >
+          {value}
+        </span>
+        <span
+          className={cn(
+            'font-mono text-base',
+            highlight ? 'text-brand-800' : 'text-ink-400',
+          )}
+        >
+          {unit}
+        </span>
+      </div>
+
+      {subline && <p className="text-tiny text-ink-500">{subline}</p>}
+    </button>
+  );
+}
+
+/* ─── Focus mode : pavé numérique plein écran ─────────────────── */
+
+function FocusKeypad({
+  mode,
+  title,
+  subtitle,
+  unit,
+  initialValue,
+  onCancel,
+  onValidate,
+}: {
+  mode: 'decimal' | 'integer';
+  title: string;
+  subtitle?: string;
+  unit: string;
+  initialValue: number;
+  onCancel: () => void;
+  onValidate: (n: number) => void;
+}) {
+  // En décimal on stocke "12,5" comme string pour permettre la saisie
+  // progressive (12, 12,, 12,5). En entier on stocke juste les chiffres.
+  const [draft, setDraft] = useState<string>(() => {
+    if (initialValue === 0) return '';
+    if (mode === 'decimal') return initialValue.toString().replace('.', ',');
+    return String(Math.round(initialValue));
+  });
+
+  const parsed =
+    mode === 'decimal'
+      ? parseFloat(draft.replace(',', '.')) || 0
+      : parseInt(draft, 10) || 0;
+
+  const pressDigit = (d: string) => {
+    setDraft((prev) => {
+      // Pas de zéro initial sauf si déjà décimal
+      if (prev === '0' && d !== ',') return d;
+      // Si vide et on tape virgule → "0,"
+      if (prev === '' && d === ',') return '0,';
+      // Si on tape virgule alors qu'il y en a déjà une → ignore
+      if (d === ',' && prev.includes(',')) return prev;
+      // Cap longueur raisonnable
+      const next = `${prev}${d}`;
+      if (next.length > 7) return prev;
+      return next;
+    });
+  };
+  const pressBack = () => setDraft((prev) => prev.slice(0, -1));
+  const pressClear = () => setDraft('');
+
+  return (
+    <div className="fixed inset-0 z-40 bg-ink-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="w-full sm:max-w-md card-surface bg-paper shadow-2xl rounded-t-2xl sm:rounded-input border-2 border-brand-800 flex flex-col max-h-[100dvh] sm:max-h-[calc(100dvh-2rem)] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 p-3 sm:p-4 border-b border-ink-200 shrink-0">
+          <div className="min-w-0 flex-1">
+            <p className="font-serif text-lg sm:text-xl font-medium text-ink-900 truncate">
+              {title}
+            </p>
+            {subtitle && (
+              <p className="font-mono text-tiny text-ink-500 mt-0.5 truncate">
+                {subtitle}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-10 h-10 rounded-input flex items-center justify-center text-ink-500 hover:bg-paper-2 shrink-0"
+            aria-label="Fermer"
+          >
+            <X className="w-5 h-5" strokeWidth={2} />
+          </button>
+        </div>
+
+        {/* Scrollable body : display + keypad shrink ensemble si la hauteur est limitée */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {/* Display */}
+          <div className="px-4 py-4 sm:py-6 bg-brand-50">
+            <p className="text-center text-micro text-ink-500 uppercase tracking-wide mb-2">
+              Saisie
+            </p>
+            <p className="font-mono text-5xl sm:text-6xl md:text-7xl font-semibold tnum text-brand-800 text-center leading-none break-all">
+              {draft || '0'}
+              <span className="text-2xl sm:text-3xl font-normal text-brand-800/60 ml-2">
+                {unit}
+              </span>
             </p>
           </div>
+
+          {/* Numeric keypad */}
+          <div className="grid grid-cols-3 gap-2 p-3">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
+              <KeypadBtn key={d} onClick={() => pressDigit(d)}>
+                {d}
+              </KeypadBtn>
+            ))}
+            {mode === 'decimal' ? (
+              <KeypadBtn onClick={() => pressDigit(',')} variant="muted">
+                ,
+              </KeypadBtn>
+            ) : (
+              <KeypadBtn onClick={pressClear} variant="muted">
+                C
+              </KeypadBtn>
+            )}
+            <KeypadBtn onClick={() => pressDigit('0')}>0</KeypadBtn>
+            <KeypadBtn onClick={pressBack} variant="muted">
+              <Delete className="w-6 h-6" strokeWidth={2} />
+            </KeypadBtn>
+          </div>
+
+          {/* C button row for decimal mode (no room in main grid) */}
+          {mode === 'decimal' && (
+            <div className="px-3 pb-3">
+              <button
+                type="button"
+                onClick={pressClear}
+                className="w-full h-12 rounded-input bg-paper-2 text-ink-700 font-mono text-sm font-semibold hover:bg-ink-100 active:scale-95 transition-all"
+              >
+                Effacer
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Action buttons — toujours visibles */}
+        <div className="flex gap-2 p-3 border-t border-ink-200 shrink-0">
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={onCancel}
+            className="flex-1 h-12 sm:h-14 text-sm sm:text-base"
+          >
+            Annuler
+          </Button>
+          <Button
+            size="lg"
+            onClick={() => onValidate(parsed)}
+            disabled={parsed <= 0}
+            className="flex-[2] h-12 sm:h-14 text-sm sm:text-base gap-2"
+          >
+            <CheckCircle2 className="w-5 h-5" strokeWidth={2} />
+            Valider
+          </Button>
         </div>
       </div>
     </div>
   );
 }
 
-function RKpi({
-  label,
-  value,
-  tint,
-  icon: Icon,
+function KeypadBtn({
+  children,
+  onClick,
+  variant,
 }: {
-  label: string;
-  value: string;
-  tint: 'ok' | 'warn' | 'danger' | 'brand' | 'terra';
-  icon: typeof Calendar;
+  children: React.ReactNode;
+  onClick: () => void;
+  variant?: 'muted';
 }) {
-  const bg =
-    tint === 'ok'
-      ? 'bg-ok-100'
-      : tint === 'warn'
-        ? 'bg-warn-100'
-        : tint === 'danger'
-          ? 'bg-danger-100'
-          : tint === 'terra'
-            ? 'bg-terra-100'
-            : 'bg-brand-100';
-  const fg =
-    tint === 'ok'
-      ? 'text-ok-700'
-      : tint === 'warn'
-        ? 'text-warn-700'
-        : tint === 'danger'
-          ? 'text-danger-600'
-          : tint === 'terra'
-            ? 'text-terra-700'
-            : 'text-brand-800';
-
   return (
-    <div className="card-surface p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-tiny font-medium text-ink-500">{label}</p>
-          <p className="font-serif text-3xl font-medium tnum tracking-tight text-ink-900 mt-2 leading-none">
-            {value}
-          </p>
-        </div>
-        <div className={cn('w-9 h-9 rounded-input flex items-center justify-center shrink-0', bg)}>
-          <Icon className={cn('w-4 h-4', fg)} strokeWidth={1.75} />
-        </div>
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'h-16 rounded-input font-mono text-2xl font-semibold tnum flex items-center justify-center transition-colors active:scale-95',
+        variant === 'muted'
+          ? 'bg-paper-2 text-ink-700 hover:bg-ink-100'
+          : 'bg-paper border-hairline border-ink-200 text-ink-900 hover:bg-paper-2 active:bg-ink-100',
+      )}
+    >
+      {children}
+    </button>
   );
 }

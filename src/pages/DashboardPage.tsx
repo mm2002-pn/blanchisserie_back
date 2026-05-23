@@ -13,6 +13,7 @@ import {
   Truck,
 } from 'lucide-react';
 import { formatCurrency, formatWeight } from '@/lib/utils';
+import { useDashboard } from '@/hooks/queries/useReports';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -37,37 +38,42 @@ const INK_900 = '#1A1712';
 const PAPER = '#FCFBF9';
 
 export default function DashboardPage() {
+  const { data: dash } = useDashboard();
+  const monthRevenueM = dash ? Number(dash.revenue.monthInvoicedFcfa) / 1_000_000 : 0;
+  const totalOrders = dash
+    ? Object.values(dash.orders.byStatus).reduce((s, n) => s + n, 0)
+    : 0;
   const kpis = [
     {
       label: "Chiffre d'affaires",
-      value: '42,8',
+      value: monthRevenueM.toFixed(1).replace('.', ','),
       unit: 'M F',
-      delta: '+8,2%',
-      sub: 'vs mars',
+      delta: '',
+      sub: 'mois en cours',
       icon: TrendingUp,
     },
     {
-      label: 'Commandes traitées',
-      value: '384',
+      label: 'Commandes',
+      value: String(totalOrders),
       unit: '',
-      delta: '+12,4%',
-      sub: '94 cette semaine',
+      delta: '',
+      sub: dash ? `${dash.orders.last7Days} sur 7 derniers jours` : '—',
       icon: ShoppingCart,
     },
     {
-      label: 'Volume traité',
-      value: '18,6',
-      unit: 't',
-      delta: '+5,1%',
-      sub: 'vs mars',
+      label: 'Volume reçu (7j)',
+      value: dash ? dash.production.kgReceivedLast7Days.toFixed(1).replace('.', ',') : '0',
+      unit: 'kg',
+      delta: '',
+      sub: 'pesées atelier',
       icon: Weight,
     },
     {
-      label: 'Clients actifs',
-      value: '52',
+      label: 'Factures en attente',
+      value: dash ? String(dash.invoices.pendingCount) : '0',
       unit: '',
-      delta: '+3',
-      sub: 'hôtels · restaurants',
+      delta: dash ? `${dash.invoices.overdueCount} en retard` : '',
+      sub: dash ? `${(Number(dash.invoices.pendingTotalFcfa) / 1_000_000).toFixed(1)} M F` : '—',
       icon: Users,
     },
   ];

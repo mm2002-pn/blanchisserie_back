@@ -7,34 +7,35 @@ import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { cn } from '@/lib/utils';
 
-// Import mock data
-import ordersData from '@/mocks/data/orders.json';
+import { useOrders } from '@/hooks/queries/useOrders';
 
 export default function EstimationAnalyticsPage() {
-  const [orders] = useState(ordersData);
+  const { data } = useOrders({ pageSize: 200 });
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const orders = (data?.items ?? []).map((o) => ({
+    ...o,
+    deviation: o.weightDeviation ?? 0,
+  }));
 
-  // Filter orders with actual weights (completed weighing)
-  const weighedOrders = orders.filter(o => o.actualWeight && o.estimatedWeight);
+  const weighedOrders = orders.filter((o) => o.actualWeight && o.estimatedWeight);
 
-  // Calculate global stats
   const globalStats = {
     totalOrders: weighedOrders.length,
-    avgDeviation: weighedOrders.reduce((sum, o) => sum + Math.abs(o.deviation || 0), 0) / weighedOrders.length || 0,
-    underestimations: weighedOrders.filter(o => (o.deviation || 0) > 10).length,
-    overestimations: weighedOrders.filter(o => (o.deviation || 0) < -10).length,
-    accurate: weighedOrders.filter(o => Math.abs(o.deviation || 0) <= 10).length,
+    avgDeviation:
+      weighedOrders.reduce((sum, o) => sum + Math.abs(o.deviation || 0), 0) /
+        weighedOrders.length || 0,
+    underestimations: weighedOrders.filter((o) => (o.deviation || 0) > 10).length,
+    overestimations: weighedOrders.filter((o) => (o.deviation || 0) < -10).length,
+    accurate: weighedOrders.filter((o) => Math.abs(o.deviation || 0) <= 10).length,
   };
 
-  // Top underestimations
   const topUnderestimations = [...weighedOrders]
-    .filter(o => (o.deviation || 0) > 0)
+    .filter((o) => (o.deviation || 0) > 0)
     .sort((a, b) => (b.deviation || 0) - (a.deviation || 0))
     .slice(0, 5);
 
-  // Top overestimations
   const topOverestimations = [...weighedOrders]
-    .filter(o => (o.deviation || 0) < 0)
+    .filter((o) => (o.deviation || 0) < 0)
     .sort((a, b) => (a.deviation || 0) - (b.deviation || 0))
     .slice(0, 5);
 
@@ -43,7 +44,7 @@ export default function EstimationAnalyticsPage() {
     if (!acc[order.clientId]) {
       acc[order.clientId] = {
         clientId: order.clientId,
-        clientName: order.clientName,
+        clientName: order.clientName ?? '—',
         orders: [],
       };
     }

@@ -9,6 +9,8 @@ export interface LinenType {
   unitPrice: number;
   estimatedProcessingTime: number; // en minutes
   specialInstructions?: string;
+  /** URL d'image de catalogue (relative ou absolue), uploadable via /uploads/linen-types. */
+  imageUrl?: string;
 }
 
 // ============= MACHINES =============

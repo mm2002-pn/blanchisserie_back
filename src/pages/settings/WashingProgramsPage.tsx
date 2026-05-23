@@ -4,12 +4,13 @@ import { Button, Modal, Input, Select, Badge } from '@/components/ui';
 import { DataTable } from '@/components/table/DataTable';
 import { usePermissions } from '@/hooks';
 import { cn } from '@/lib/utils';
-import programsData from '@/mocks/data/washingPrograms.json';
+import { useWashPrograms } from '@/hooks/queries/useWashPrograms';
 import type { WashingProgram } from '@/types';
 
 export default function WashingProgramsPage() {
   const { canEdit } = usePermissions();
-  const [programs] = useState<WashingProgram[]>(programsData as any);
+  const { data, isLoading, error } = useWashPrograms();
+  const programs: WashingProgram[] = data ?? [];
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -150,11 +151,23 @@ export default function WashingProgramsPage() {
         </div>
       </div>
 
-      <DataTable
-        data={filtered}
-        columns={columns}
-        emptyMessage={search ? `Aucun résultat pour « ${search} »` : 'Aucun programme'}
-      />
+      {error ? (
+        <div className="rounded-input border-hairline border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          Impossible de charger les programmes : {(error as Error).message}
+        </div>
+      ) : (
+        <DataTable
+          data={filtered}
+          columns={columns}
+          emptyMessage={
+            isLoading
+              ? 'Chargement…'
+              : search
+                ? `Aucun résultat pour « ${search} »`
+                : 'Aucun programme'
+          }
+        />
+      )}
 
       {/* Modal */}
       <Modal

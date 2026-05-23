@@ -1,15 +1,20 @@
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/lib/constants';
+import { ApiError } from '@/lib/api/client';
+import { login as loginApi, logoutApi, mapApiUser } from '@/lib/api/auth.api';
 
 /**
- * Custom hook for authentication
+ * Hook d'authentification — branché sur l'API réelle.
+ *  - login   : POST /auth/login → store user + tokens
+ *  - logout  : best-effort POST /auth/logout puis flush local
  */
 export function useAuth() {
   const navigate = useNavigate();
   const {
     user,
     token,
+    refreshToken,
     isAuthenticated,
     isLoading,
     error,
@@ -20,38 +25,32 @@ export function useAuth() {
     clearError,
   } = useAuthStore();
 
-  const login = async (email: string, _password: string) => {
+  const login = async (email: string, password: string) => {
     setLoading(true);
     clearError();
-
     try {
-      // TODO: Replace with actual API call
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mock user data
-      const mockUser = {
-        id: '1',
-        firstName: 'Admin',
-        lastName: 'User',
-        email,
-        role: 'Administrateur' as const,
-        isActive: true,
-      };
-
-      const mockToken = 'mock-jwt-token';
-
-      setUser(mockUser, mockToken);
+      const res = await loginApi(email, password);
+      const mapped = mapApiUser(res.user);
+      setUser(mapped, res.accessToken, res.refreshToken);
       navigate(ROUTES.DASHBOARD);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-      throw err;
+      const message =
+        err instanceof ApiError
+          ? err.code === 'UNAUTHORIZED'
+            ? 'Email ou mot de passe incorrect'
+            : err.message
+          : err instanceof Error
+            ? err.message
+            : 'Erreur de connexion';
+      setError(message);
+      throw new Error(message);
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await logoutApi(refreshToken);
     logoutStore();
     navigate(ROUTES.LOGIN);
   };

@@ -12,16 +12,18 @@ import DashboardPage from '@/pages/DashboardPage';
 // Operational pages
 import ClientsPage from '@/pages/ClientsPage';
 import OrdersPage from '@/pages/OrdersPage';
-import ProductionPage from '@/pages/ProductionPage';
+import OrdersKanbanPage from '@/pages/OrdersKanbanPage';
+import OrderDetailPage from '@/pages/OrderDetailPage';
+import TraitementJourPage from '@/pages/TraitementJourPage';
+import AtelierJourLayout from '@/pages/AtelierJourLayout';
 import InventoryPage from '@/pages/InventoryPage';
 import InvoicesPage from '@/pages/InvoicesPage';
 import ReportsPage from '@/pages/ReportsPage';
-import SchedulePage from '@/pages/SchedulePage';
 import RoutePlanningPage from '@/pages/RoutePlanningPage';
+import RoutePlanningNewPage from '@/pages/RoutePlanningNewPage';
 import ReceptionPage from '@/pages/ReceptionPage';
 import TriagePage from '@/pages/TriagePage';
 import ProductionWorkflowPage from '@/pages/ProductionWorkflowPage';
-import WorkflowTrackingPage from '@/pages/WorkflowTrackingPage';
 import EstimationAnalyticsPage from '@/pages/EstimationAnalyticsPage';
 
 // Settings pages
@@ -33,6 +35,8 @@ import ZonesPage from '@/pages/settings/ZonesPage';
 import ProductsPage from '@/pages/settings/ProductsPage';
 import AdditionalServicesPage from '@/pages/settings/AdditionalServicesPage';
 import TariffsPage from '@/pages/settings/TariffsPage';
+import VehiclesPage from '@/pages/settings/VehiclesPage';
+import PdasPage from '@/pages/settings/PdasPage';
 import ContractsPage from '@/pages/settings/ContractsPage';
 import HolidaysPage from '@/pages/settings/HolidaysPage';
 import NotificationsConfigPage from '@/pages/settings/NotificationsConfigPage';
@@ -71,6 +75,8 @@ export function AppRouter() {
             <Route path="products" element={<ProductsPage />} />
             <Route path="additional-services" element={<AdditionalServicesPage />} />
             <Route path="tariffs" element={<TariffsPage />} />
+            <Route path="vehicles" element={<VehiclesPage />} />
+            <Route path="pdas" element={<PdasPage />} />
             <Route path="contracts" element={<ContractsPage />} />
             <Route path="holidays" element={<HolidaysPage />} />
             <Route path="notifications" element={<NotificationsConfigPage />} />
@@ -86,17 +92,37 @@ export function AppRouter() {
           {/* Operational routes */}
           <Route path={ROUTES.CLIENTS} element={<ClientsPage />} />
           <Route path={ROUTES.ORDERS} element={<OrdersPage />} />
-          <Route path={ROUTES.RECEPTION} element={<ReceptionPage />} />
-          <Route path={ROUTES.TRIAGE} element={<TriagePage />} />
+          <Route path={ROUTES.ORDERS_KANBAN} element={<OrdersKanbanPage />} />
+          <Route path={ROUTES.ORDER_DETAIL} element={<OrderDetailPage />} />
+          {/* Atelier du jour — wrapper unique avec stepper Pesée → Triage → Production.
+              Les anciennes routes /reception, /triage, /traitement-jour redirigent vers les sous-routes. */}
+          <Route path={ROUTES.ATELIER} element={<AtelierJourLayout />}>
+            <Route index element={<Navigate to="pesee" replace />} />
+            <Route path="pesee" element={<ReceptionPage />} />
+            <Route path="triage" element={<TriagePage />} />
+            <Route path="production" element={<TraitementJourPage />} />
+          </Route>
+          {/* Anciennes URLs → redirections vers le wrapper Atelier */}
+          <Route path="/reception" element={<Navigate to={ROUTES.RECEPTION} replace />} />
+          <Route path="/triage" element={<Navigate to={ROUTES.TRIAGE} replace />} />
+          <Route path="/traitement-jour" element={<Navigate to={ROUTES.TRAITEMENT_JOUR} replace />} />
+          <Route
+            path={ROUTES.PRODUCTION_DAY}
+            element={<Navigate to={ROUTES.ATELIER} replace />}
+          />
+          <Route path={ROUTES.PRODUCTION} element={<Navigate to={ROUTES.ATELIER} replace />} />
+          {/* /workflow-tracking redirige vers le Kanban (vue plus claire) */}
+          <Route path={ROUTES.WORKFLOW_TRACKING} element={<Navigate to={ROUTES.ORDERS_KANBAN} replace />} />
+          {/* Pages techniques toujours accessibles par URL directe */}
           <Route path={ROUTES.PRODUCTION_WORKFLOW} element={<ProductionWorkflowPage />} />
-          <Route path={ROUTES.PRODUCTION} element={<ProductionPage />} />
           <Route path={ROUTES.INVENTORY} element={<InventoryPage />} />
           <Route path={ROUTES.INVOICES} element={<InvoicesPage />} />
           <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
-          <Route path={ROUTES.WORKFLOW_TRACKING} element={<WorkflowTrackingPage />} />
           <Route path={ROUTES.ESTIMATION_ANALYTICS} element={<EstimationAnalyticsPage />} />
-          <Route path={ROUTES.SCHEDULE} element={<SchedulePage />} />
+          {/* /schedule redirige vers /route-planning (les tournées couvrent collecte ET livraison) */}
+          <Route path={ROUTES.SCHEDULE} element={<Navigate to={ROUTES.ROUTE_PLANNING} replace />} />
           <Route path={ROUTES.ROUTE_PLANNING} element={<RoutePlanningPage />} />
+          <Route path={ROUTES.ROUTE_PLANNING_NEW} element={<RoutePlanningNewPage />} />
         </Route>
 
         {/* Catch all - redirect to dashboard */}

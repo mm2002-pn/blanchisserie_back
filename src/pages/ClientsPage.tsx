@@ -3,8 +3,8 @@ import { Plus, Search, Building2, Star, ChevronRight } from 'lucide-react';
 import { Button, Badge } from '@/components/ui';
 import { DataTable } from '@/components/table/DataTable';
 import { usePermissions } from '@/hooks';
+import { useClients } from '@/hooks/queries/useClients';
 import { cn } from '@/lib/utils';
-import clientsData from '@/mocks/data/clients.json';
 import type { Client } from '@/types';
 
 type Segment = 'all' | 'hotel' | 'restaurant' | 'other';
@@ -18,9 +18,10 @@ const SEGMENTS: { key: Segment; label: string; match: (c: Client) => boolean }[]
 
 export default function ClientsPage() {
   const { canCreate } = usePermissions();
-  const [clients] = useState<Client[]>(clientsData as any);
   const [segment, setSegment] = useState<Segment>('all');
   const [search, setSearch] = useState('');
+  const { data, isLoading, error } = useClients({ pageSize: 100 });
+  const clients: Client[] = data?.items ?? [];
 
   const visible = useMemo(() => {
     const seg = SEGMENTS.find((s) => s.key === segment) ?? SEGMENTS[0];
@@ -178,16 +179,26 @@ export default function ClientsPage() {
       </div>
 
       {/* Table */}
-      <DataTable
-        data={visible}
-        columns={columns}
-        onRowClick={() => {
-          /* navigate to client-details when available */
-        }}
-        emptyMessage={
-          search ? `Aucun résultat pour « ${search} »` : 'Aucun client dans cette catégorie'
-        }
-      />
+      {error ? (
+        <div className="rounded-input border-hairline border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          Impossible de charger les clients : {(error as Error).message}
+        </div>
+      ) : (
+        <DataTable
+          data={visible}
+          columns={columns}
+          onRowClick={() => {
+            /* navigate to client-details when available */
+          }}
+          emptyMessage={
+            isLoading
+              ? 'Chargement…'
+              : search
+                ? `Aucun résultat pour « ${search} »`
+                : 'Aucun client dans cette catégorie'
+          }
+        />
+      )}
     </div>
   );
 }

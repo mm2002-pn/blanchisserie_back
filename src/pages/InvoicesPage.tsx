@@ -15,7 +15,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-import invoicesData from '@/mocks/data/invoices.json';
+import { useInvoices, useInvoicesRealtime } from '@/hooks/queries/useInvoices';
 
 type StatusKey = 'Payée' | 'En attente' | 'En retard' | 'Brouillon';
 
@@ -36,7 +36,9 @@ const FILTERS: { key: FilterKey; label: string; match: (s: string) => boolean }[
 ];
 
 export default function InvoicesPage() {
-  const [invoices] = useState(invoicesData);
+  useInvoicesRealtime();
+  const { data, isLoading, error } = useInvoices();
+  const invoices = data ?? [];
   const [filter, setFilter] = useState<FilterKey>('all');
   const [search, setSearch] = useState('');
 
@@ -310,18 +312,26 @@ export default function InvoicesPage() {
       </div>
 
       {/* Table */}
-      <DataTable
-        data={filtered}
-        columns={columns as any}
-        onRowClick={() => {
-          /* navigate to invoice-details when available */
-        }}
-        emptyMessage={
-          search
-            ? `Aucun résultat pour « ${search} »`
-            : 'Aucune facture dans cette catégorie'
-        }
-      />
+      {error ? (
+        <div className="rounded-input border-hairline border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          Impossible de charger les factures : {(error as Error).message}
+        </div>
+      ) : (
+        <DataTable
+          data={filtered}
+          columns={columns as any}
+          onRowClick={() => {
+            /* navigate to invoice-details when available */
+          }}
+          emptyMessage={
+            isLoading
+              ? 'Chargement…'
+              : search
+                ? `Aucun résultat pour « ${search} »`
+                : 'Aucune facture dans cette catégorie'
+          }
+        />
+      )}
     </div>
   );
 }
