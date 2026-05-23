@@ -130,17 +130,39 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* Demo creds */}
+          {/* Demo creds — clic = pré-remplit le formulaire */}
           <div className="mt-8 p-4 bg-paper-2 rounded-input border-hairline border-ink-200">
             <p className="caps mb-2">Accès démo</p>
-            <p className="text-tiny text-ink-600">
-              <span className="font-medium">Email :</span>{' '}
-              <code className="font-mono text-ink-900">admin@blanchisserie.com</code>
+            <p className="text-tiny text-ink-600 mb-2">
+              Mot de passe pour tous :{' '}
+              <code className="font-mono text-ink-900">Password!1</code>
             </p>
-            <p className="text-tiny text-ink-600 mt-1">
-              <span className="font-medium">Mot de passe :</span>{' '}
-              <code className="font-mono text-ink-900">password</code>
-            </p>
+            <div className="space-y-1">
+              {[
+                ['Admin', 'admin@blanchisserie.sn'],
+                ['Manager', 'mgr@blanchisserie.sn'],
+                ['Superviseur', 'sup@blanchisserie.sn'],
+                ['Opérateur', 'op1@blanchisserie.sn'],
+                ['Chauffeur', 'driver@blanchisserie.sn'],
+              ].map(([role, mail]) => (
+                <button
+                  key={mail}
+                  type="button"
+                  onClick={() => {
+                    setEmail(mail);
+                    setPassword('Password!1');
+                  }}
+                  className="w-full flex items-center justify-between gap-3 px-2 py-1 rounded hover:bg-paper text-left transition-colors"
+                >
+                  <span className="text-tiny font-semibold text-ink-700">
+                    {role}
+                  </span>
+                  <code className="font-mono text-tiny text-ink-500 truncate">
+                    {mail}
+                  </code>
+                </button>
+              ))}
+            </div>
           </div>
 
           <p className="text-center text-micro font-mono text-ink-500 mt-8">
