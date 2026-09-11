@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Vite remplace ces vars au build (elles sont publiques par nature)
+  VITE_API_URL = "https://api.blanchisserie.sanoushop.com/api/v1"
+  VITE_WS_URL  = "https://api.blanchisserie.sanoushop.com"
+  NODE_VERSION = "22"
+
+# SPA fallback : toute route inconnue retourne index.html
+# (sinon F5 sur /atelier-jour/production → 404)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

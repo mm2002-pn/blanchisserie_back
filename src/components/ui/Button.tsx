@@ -3,39 +3,52 @@ import type { ButtonHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'success';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
 }
 
+/**
+ * Bouton Blanchisserie SN — radius 10, bordure hairline pour secondary.
+ * Primary = brand-800 (bleu boubou), danger = danger-600, success = baobab-700.
+ */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, disabled, children, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium rounded-input transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+    const base =
+      'inline-flex items-center justify-center gap-2 font-semibold rounded-input transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap';
 
+    // Force la couleur du texte avec !important pour éviter qu'une cascade
+    // ou un text-X depuis className ne l'écrase silencieusement.
     const variants = {
-      primary: 'bg-accent-500 hover:bg-accent-600 text-white focus:ring-accent-500',
-      secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-700 focus:ring-gray-500',
-      outline: 'border-2 border-gray-300 hover:border-accent-500 hover:text-accent-500 bg-transparent focus:ring-accent-500',
-      danger: 'bg-error hover:bg-error-dark text-white focus:ring-error',
-      success: 'bg-success hover:bg-success-dark text-white focus:ring-success',
+      primary:
+        'bg-brand-800 hover:bg-brand-700 active:bg-brand-900 !text-white',
+      secondary:
+        'bg-paper hover:bg-paper-2 !text-ink-800 border border-ink-300',
+      outline:
+        'bg-transparent hover:bg-paper-2 !text-ink-800 border border-ink-300',
+      ghost: 'bg-transparent hover:bg-paper-2 !text-ink-700',
+      danger:
+        'bg-danger-100 hover:bg-danger-600 hover:!text-white !text-danger-600 border border-danger-600',
+      success:
+        'bg-baobab-600 hover:bg-baobab-700 !text-white',
     };
 
     const sizes = {
-      sm: 'px-3 py-1.5 text-sm',
-      md: 'px-4 py-2 text-base',
-      lg: 'px-6 py-3 text-lg',
+      sm: 'px-3 py-1.5 text-tiny',
+      md: 'px-4 py-2 text-sm',
+      lg: 'px-5 py-2.5 text-base',
     };
 
     return (
       <button
         ref={ref}
-        className={cn(baseStyles, variants[variant], sizes[size], className)}
+        className={cn(base, variants[variant], sizes[size], className)}
         disabled={disabled || isLoading}
         {...props}
       >
         {isLoading && (
           <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4"
+            className="animate-spin -ml-1 h-4 w-4"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

@@ -14,6 +14,9 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   placeholder?: string;
 }
 
+/**
+ * Select Blanchisserie SN — même style que Input, chevron natif.
+ */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, options, error, label, id, placeholder, ...props }, ref) => {
     const selectId = id || props.name;
@@ -23,18 +26,19 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={selectId}
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-tiny font-semibold text-ink-700 mb-1.5"
           >
             {label}
-            {props.required && <span className="text-error ml-1">*</span>}
+            {props.required && <span className="text-danger-600 ml-1">*</span>}
           </label>
         )}
         <select
           ref={ref}
           id={selectId}
           className={cn(
-            'w-full px-3 py-2 border border-gray-300 rounded-input focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent bg-white cursor-pointer transition-all duration-200',
-            error && 'border-error focus:ring-error',
+            'w-full px-3 py-2 bg-paper-2 border border-ink-300 rounded-input text-sm text-ink-900',
+            'focus:outline-none focus:bg-paper focus:border-brand-800 focus:ring-2 focus:ring-brand-800/15 cursor-pointer transition-colors',
+            error && 'border-danger-600 focus:border-danger-600',
             className
           )}
           {...props}
@@ -50,7 +54,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             </option>
           ))}
         </select>
-        {error && <p className="mt-1 text-sm text-error">{error}</p>}
+        {error && <p className="mt-1 text-tiny text-danger-600">{error}</p>}
       </div>
     );
   }

@@ -4,22 +4,29 @@ import { cn } from '@/lib/utils';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  /** Active l'ombre légère façon mockup dashboard */
+  elevated?: boolean;
 }
 
+/**
+ * Card Blanchisserie SN — fond paper, bordure hairline, radius 14.
+ * Pas d'ombre par défaut (la bordure suffit) ; utiliser `elevated` pour les CTAs.
+ */
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, padding = 'md', children, ...props }, ref) => {
+  ({ className, padding = 'md', elevated = false, children, ...props }, ref) => {
     const paddings = {
       none: '',
       sm: 'p-4',
-      md: 'p-6',
-      lg: 'p-8',
+      md: 'p-5',
+      lg: 'p-7',
     };
 
     return (
       <div
         ref={ref}
         className={cn(
-          'bg-white rounded-card shadow-soft',
+          'bg-paper rounded-card border-hairline border-ink-200',
+          elevated && 'shadow-card',
           paddings[padding],
           className
         )}
@@ -35,11 +42,7 @@ Card.displayName = 'Card';
 
 export const CardHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, children, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn('mb-4', className)}
-      {...props}
-    >
+    <div ref={ref} className={cn('mb-4', className)} {...props}>
       {children}
     </div>
   )
@@ -51,7 +54,7 @@ export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadi
   ({ className, children, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn('text-lg font-semibold text-gray-900', className)}
+      className={cn('font-serif text-xl font-medium tracking-tight text-ink-900', className)}
       {...props}
     >
       {children}
@@ -63,11 +66,7 @@ CardTitle.displayName = 'CardTitle';
 
 export const CardContent = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, children, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn('text-gray-700', className)}
-      {...props}
-    >
+    <div ref={ref} className={cn('text-ink-700', className)} {...props}>
       {children}
     </div>
   )

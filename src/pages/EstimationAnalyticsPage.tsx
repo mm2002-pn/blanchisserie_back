@@ -5,35 +5,37 @@ import { formatWeight, formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { cn } from '@/lib/utils';
 
-// Import mock data
-import ordersData from '@/mocks/data/orders.json';
+import { useOrders } from '@/hooks/queries/useOrders';
 
 export default function EstimationAnalyticsPage() {
-  const [orders] = useState(ordersData);
+  const { data } = useOrders({ pageSize: 200 });
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const orders = (data?.items ?? []).map((o) => ({
+    ...o,
+    deviation: o.weightDeviation ?? 0,
+  }));
 
-  // Filter orders with actual weights (completed weighing)
-  const weighedOrders = orders.filter(o => o.actualWeight && o.estimatedWeight);
+  const weighedOrders = orders.filter((o) => o.actualWeight && o.estimatedWeight);
 
-  // Calculate global stats
   const globalStats = {
     totalOrders: weighedOrders.length,
-    avgDeviation: weighedOrders.reduce((sum, o) => sum + Math.abs(o.deviation || 0), 0) / weighedOrders.length || 0,
-    underestimations: weighedOrders.filter(o => (o.deviation || 0) > 10).length,
-    overestimations: weighedOrders.filter(o => (o.deviation || 0) < -10).length,
-    accurate: weighedOrders.filter(o => Math.abs(o.deviation || 0) <= 10).length,
+    avgDeviation:
+      weighedOrders.reduce((sum, o) => sum + Math.abs(o.deviation || 0), 0) /
+        weighedOrders.length || 0,
+    underestimations: weighedOrders.filter((o) => (o.deviation || 0) > 10).length,
+    overestimations: weighedOrders.filter((o) => (o.deviation || 0) < -10).length,
+    accurate: weighedOrders.filter((o) => Math.abs(o.deviation || 0) <= 10).length,
   };
 
-  // Top underestimations
   const topUnderestimations = [...weighedOrders]
-    .filter(o => (o.deviation || 0) > 0)
+    .filter((o) => (o.deviation || 0) > 0)
     .sort((a, b) => (b.deviation || 0) - (a.deviation || 0))
     .slice(0, 5);
 
-  // Top overestimations
   const topOverestimations = [...weighedOrders]
-    .filter(o => (o.deviation || 0) < 0)
+    .filter((o) => (o.deviation || 0) < 0)
     .sort((a, b) => (a.deviation || 0) - (b.deviation || 0))
     .slice(0, 5);
 
@@ -42,7 +44,7 @@ export default function EstimationAnalyticsPage() {
     if (!acc[order.clientId]) {
       acc[order.clientId] = {
         clientId: order.clientId,
-        clientName: order.clientName,
+        clientName: order.clientName ?? '—',
         orders: [],
       };
     }
@@ -110,9 +112,9 @@ export default function EstimationAnalyticsPage() {
 
   const getDeviationColor = (deviation: number): string => {
     const abs = Math.abs(deviation);
-    if (abs <= 10) return 'text-success';
-    if (abs <= 30) return 'text-warning';
-    return 'text-danger';
+    if (abs <= 10) return 'text-ok-700';
+    if (abs <= 30) return 'text-warn-700';
+    return 'text-danger-600';
   };
 
   const getDeviationBadge = (deviation: number): 'success' | 'warning' | 'error' => {
@@ -123,58 +125,27 @@ export default function EstimationAnalyticsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-heading font-bold text-gray-900">
-          Analyse des Écarts
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Comparaison estimations vs poids réels
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="caps mb-2">Analyses · estimations</div>
+          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
+            Écart estimation vs poids réel
+          </h1>
+          <p className="text-sm text-ink-500 mt-1">
+            Mesure la précision des estimations mobile pour calibrer la facturation.
+          </p>
+        </div>
       </div>
 
-      {/* Global Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card padding="md">
-          <div className="text-center">
-            <Calendar className="w-8 h-8 mx-auto mb-2 text-primary-600" />
-            <p className="text-2xl font-bold text-gray-900">{globalStats.totalOrders}</p>
-            <p className="text-sm text-gray-600 mt-1">Commandes pesées</p>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="text-center">
-            <Award className="w-8 h-8 mx-auto mb-2 text-success" />
-            <p className="text-2xl font-bold text-success">{globalStats.accurate}</p>
-            <p className="text-sm text-gray-600 mt-1">Précises (±10%)</p>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="text-center">
-            <TrendingUp className="w-8 h-8 mx-auto mb-2 text-danger" />
-            <p className="text-2xl font-bold text-danger">{globalStats.underestimations}</p>
-            <p className="text-sm text-gray-600 mt-1">Sous-estimées</p>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="text-center">
-            <TrendingDown className="w-8 h-8 mx-auto mb-2 text-warning" />
-            <p className="text-2xl font-bold text-warning">{globalStats.overestimations}</p>
-            <p className="text-sm text-gray-600 mt-1">Surestimées</p>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="text-center">
-            <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-gray-600" />
-            <p className="text-2xl font-bold text-gray-900">{globalStats.avgDeviation.toFixed(1)}%</p>
-            <p className="text-sm text-gray-600 mt-1">Écart moyen</p>
-          </div>
-        </Card>
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <EKpi label="Commandes pesées" value={`${globalStats.totalOrders}`} tint="brand" icon={Calendar} />
+        <EKpi label="Précises ±10%" value={`${globalStats.accurate}`} tint="ok" icon={Award} />
+        <EKpi label="Sous-estimées" value={`${globalStats.underestimations}`} tint="danger" icon={TrendingUp} />
+        <EKpi label="Surestimées" value={`${globalStats.overestimations}`} tint="warn" icon={TrendingDown} />
+        <EKpi label="Écart moyen" value={`${globalStats.avgDeviation.toFixed(1)} %`} tint="neutral" icon={AlertTriangle} mono />
       </div>
 
       {/* Deviation Distribution Chart */}
@@ -204,21 +175,21 @@ export default function EstimationAnalyticsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-danger" />
+              <TrendingUp className="w-5 h-5 text-danger-600" />
               <CardTitle>Top des sous-estimations</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {topUnderestimations.map((order, index) => (
-                <div key={order.id} className="p-4 border border-danger-200 bg-danger-50 rounded-lg">
+                <div key={order.id} className="p-4 border border-danger-600 bg-danger-100 rounded-input">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-gray-900">{index + 1}.</span>
-                        <span className="font-semibold text-gray-900">{order.clientName}</span>
+                        <span className="font-serif text-lg font-medium tracking-tight text-ink-900">{index + 1}.</span>
+                        <span className="font-semibold text-ink-900">{order.clientName}</span>
                       </div>
-                      <p className="text-sm text-gray-600">{order.orderNumber}</p>
+                      <p className="text-sm text-ink-500">{order.orderNumber}</p>
                     </div>
                     <Badge variant="error" className="text-xs">
                       +{order.deviation}%
@@ -226,17 +197,17 @@ export default function EstimationAnalyticsPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-gray-600">Estimé</p>
-                      <p className="font-medium text-gray-900">{formatWeight(order.estimatedWeight || 0)}</p>
+                      <p className="text-ink-500">Estimé</p>
+                      <p className="font-medium text-ink-900">{formatWeight(order.estimatedWeight || 0)}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Réel</p>
-                      <p className="font-bold text-danger">{formatWeight(order.actualWeight || 0)}</p>
+                      <p className="text-ink-500">Réel</p>
+                      <p className="font-bold text-danger-600">{formatWeight(order.actualWeight || 0)}</p>
                     </div>
                   </div>
                   {order.invoiceDeviation && (
                     <div className="mt-2 pt-2 border-t border-danger-300">
-                      <p className="text-xs text-gray-600">Impact facturation: <span className="font-bold text-danger">+{formatCurrency(order.invoiceDeviation)}</span></p>
+                      <p className="text-xs text-ink-500">Impact facturation: <span className="font-bold text-danger-600">+{formatCurrency(order.invoiceDeviation)}</span></p>
                     </div>
                   )}
                 </div>
@@ -249,21 +220,21 @@ export default function EstimationAnalyticsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <TrendingDown className="w-5 h-5 text-warning" />
+              <TrendingDown className="w-5 h-5 text-warn-700" />
               <CardTitle>Top des surestimations</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {topOverestimations.map((order, index) => (
-                <div key={order.id} className="p-4 border border-warning-200 bg-warning-50 rounded-lg">
+                <div key={order.id} className="p-4 border border-warn-600 bg-warn-100 rounded-input">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-gray-900">{index + 1}.</span>
-                        <span className="font-semibold text-gray-900">{order.clientName}</span>
+                        <span className="font-serif text-lg font-medium tracking-tight text-ink-900">{index + 1}.</span>
+                        <span className="font-semibold text-ink-900">{order.clientName}</span>
                       </div>
-                      <p className="text-sm text-gray-600">{order.orderNumber}</p>
+                      <p className="text-sm text-ink-500">{order.orderNumber}</p>
                     </div>
                     <Badge variant="warning" className="text-xs">
                       {order.deviation}%
@@ -271,12 +242,12 @@ export default function EstimationAnalyticsPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-gray-600">Estimé</p>
-                      <p className="font-medium text-gray-900">{formatWeight(order.estimatedWeight || 0)}</p>
+                      <p className="text-ink-500">Estimé</p>
+                      <p className="font-medium text-ink-900">{formatWeight(order.estimatedWeight || 0)}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Réel</p>
-                      <p className="font-bold text-warning-700">{formatWeight(order.actualWeight || 0)}</p>
+                      <p className="text-ink-500">Réel</p>
+                      <p className="font-bold text-warn-700">{formatWeight(order.actualWeight || 0)}</p>
                     </div>
                   </div>
                 </div>
@@ -290,7 +261,7 @@ export default function EstimationAnalyticsPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary-600" />
+            <Users className="w-5 h-5 text-brand-800" />
             <CardTitle>Analyse par client</CardTitle>
           </div>
         </CardHeader>
@@ -302,17 +273,17 @@ export default function EstimationAnalyticsPage() {
                 {clientStats.map((client) => (
                   <div
                     key={client.clientId}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    className={`p-4 border-2 rounded-input cursor-pointer transition-colors ${
                       selectedClientId === client.clientId
-                        ? 'border-accent-500 bg-accent-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-brand-800 bg-brand-50'
+                        : 'border-ink-200 hover:border-ink-300'
                     }`}
                     onClick={() => setSelectedClientId(client.clientId)}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="font-semibold text-gray-900">{client.clientName}</p>
-                        <p className="text-sm text-gray-600">{client.totalOrders} commandes</p>
+                        <p className="font-semibold text-ink-900">{client.clientName}</p>
+                        <p className="text-sm text-ink-500">{client.totalOrders} commandes</p>
                       </div>
                       <Badge variant={getDeviationBadge(client.avgDeviation)} className="text-xs">
                         {client.avgDeviation > 0 ? '+' : ''}{client.avgDeviation.toFixed(1)}%
@@ -320,11 +291,11 @@ export default function EstimationAnalyticsPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <p className="text-gray-600">Moy. estimée</p>
-                        <p className="font-medium text-gray-900">{formatWeight(client.avgEstimated)}</p>
+                        <p className="text-ink-500">Moy. estimée</p>
+                        <p className="font-medium text-ink-900">{formatWeight(client.avgEstimated)}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Moy. réelle</p>
+                        <p className="text-ink-500">Moy. réelle</p>
                         <p className={`font-bold ${getDeviationColor(client.avgDeviation)}`}>
                           {formatWeight(client.avgActual)}
                         </p>
@@ -339,15 +310,15 @@ export default function EstimationAnalyticsPage() {
             <div>
               {selectedClient ? (
                 <div className="space-y-4">
-                  <div className="p-4 bg-primary-50 rounded-lg border border-primary-200">
-                    <h4 className="font-semibold text-gray-900 mb-3">{selectedClient.clientName}</h4>
+                  <div className="p-4 bg-paper-2 rounded-input border border-ink-200">
+                    <h4 className="font-semibold text-ink-900 mb-3">{selectedClient.clientName}</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Nombre de commandes:</span>
+                        <span className="text-ink-500">Nombre de commandes:</span>
                         <span className="font-bold">{selectedClient.orders.length}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Écart moyen:</span>
+                        <span className="text-ink-500">Écart moyen:</span>
                         <span className={`font-bold ${getDeviationColor(
                           selectedClient.orders.reduce((sum, o) => sum + (o.deviation || 0), 0) / selectedClient.orders.length
                         )}`}>
@@ -358,17 +329,17 @@ export default function EstimationAnalyticsPage() {
                   </div>
 
                   <div>
-                    <h5 className="font-semibold text-gray-900 mb-3">Historique des 6 dernières commandes:</h5>
+                    <h5 className="font-semibold text-ink-900 mb-3">Historique des 6 dernières commandes:</h5>
                     <div className="space-y-2">
                       {selectedClient.orders.slice(0, 6).map((order) => (
-                        <div key={order.id} className="p-3 border border-gray-200 rounded-lg bg-white">
+                        <div key={order.id} className="p-3 border border-ink-200 rounded-input bg-paper">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-medium text-gray-900">{order.orderNumber}</span>
+                            <span className="text-sm font-medium text-ink-900">{order.orderNumber}</span>
                             <Badge variant={getDeviationBadge(order.deviation || 0)} className="text-xs">
                               {order.deviation || 0 > 0 ? '+' : ''}{order.deviation}%
                             </Badge>
                           </div>
-                          <div className="flex justify-between text-xs text-gray-600">
+                          <div className="flex justify-between text-xs text-ink-500">
                             <span>{format(new Date(order.collectionDate), 'dd MMM yyyy', { locale: fr })}</span>
                             <span>Estimé: {formatWeight(order.estimatedWeight || 0)}</span>
                             <span>Réel: {formatWeight(order.actualWeight || 0)}</span>
@@ -379,10 +350,10 @@ export default function EstimationAnalyticsPage() {
                   </div>
 
                   {/* Recommendations */}
-                  <Card className="border-accent-200 bg-accent-50">
+                  <Card className="border-accent-200 bg-brand-50">
                     <CardContent className="p-4">
-                      <h5 className="font-semibold text-accent-900 mb-2">RECOMMANDATIONS:</h5>
-                      <ul className="list-disc list-inside text-sm text-accent-700 space-y-1">
+                      <h5 className="font-semibold text-terra-700 mb-2">RECOMMANDATIONS:</h5>
+                      <ul className="list-disc list-inside text-sm text-brand-700 space-y-1">
                         {selectedClient.orders.reduce((sum, o) => sum + (o.deviation || 0), 0) / selectedClient.orders.length > 30 && (
                           <>
                             <li>Reclasser les estimations standard vers catégorie supérieure</li>
@@ -396,15 +367,15 @@ export default function EstimationAnalyticsPage() {
                           </>
                         )}
                         {Math.abs(selectedClient.orders.reduce((sum, o) => sum + (o.deviation || 0), 0) / selectedClient.orders.length) <= 10 && (
-                          <li className="text-success">✓ Les estimations de ce client sont précises, maintenir le système actuel</li>
+                          <li className="text-ok-700">✓ Les estimations de ce client sont précises, maintenir le système actuel</li>
                         )}
                       </ul>
                     </CardContent>
                   </Card>
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <div className="text-center py-12 text-ink-500">
+                  <Users className="w-16 h-16 mx-auto mb-4 text-ink-400" />
                   <p>Sélectionnez un client pour voir l'analyse détaillée</p>
                 </div>
               )}
@@ -414,15 +385,15 @@ export default function EstimationAnalyticsPage() {
       </Card>
 
       {/* Info Alert */}
-      <Card className="border-primary-200 bg-primary-50">
+      <Card className="border-ink-200 bg-paper-2">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-primary-700 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-ink-700 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-primary-900 mb-1">
+              <h4 className="font-semibold text-ink-900 mb-1">
                 Analyse prédictive
               </h4>
-              <p className="text-sm text-primary-700">
+              <p className="text-sm text-ink-700">
                 L'analyse des écarts permet d'identifier les clients qui sous-estiment ou surestiment systématiquement leurs commandes.
                 Un écart de ±10% est considéré comme acceptable. Au-delà de 30%, des actions correctives sont recommandées :
                 formation du personnel client, ajustement des forfaits, ou révision des catégories d'estimation (S, M, L, XL).
@@ -432,6 +403,68 @@ export default function EstimationAnalyticsPage() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function EKpi({
+  label,
+  value,
+  tint,
+  icon: Icon,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  tint: 'ok' | 'warn' | 'danger' | 'brand' | 'terra' | 'neutral';
+  icon: typeof Calendar;
+  mono?: boolean;
+}) {
+  const bg =
+    tint === 'ok'
+      ? 'bg-ok-100'
+      : tint === 'warn'
+        ? 'bg-warn-100'
+        : tint === 'danger'
+          ? 'bg-danger-100'
+          : tint === 'terra'
+            ? 'bg-terra-100'
+            : tint === 'neutral'
+              ? 'bg-ink-100'
+              : 'bg-brand-100';
+  const fg =
+    tint === 'ok'
+      ? 'text-ok-700'
+      : tint === 'warn'
+        ? 'text-warn-700'
+        : tint === 'danger'
+          ? 'text-danger-600'
+          : tint === 'terra'
+            ? 'text-terra-700'
+            : tint === 'neutral'
+              ? 'text-ink-700'
+              : 'text-brand-800';
+
+  return (
+    <div className="card-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-tiny font-medium text-ink-500">{label}</p>
+          <p
+            className={cn(
+              'mt-1.5 leading-none tracking-tight text-ink-900',
+              mono
+                ? 'font-mono text-lg font-semibold tnum'
+                : 'font-serif text-3xl font-medium tnum',
+            )}
+          >
+            {value}
+          </p>
+        </div>
+        <div className={cn('w-9 h-9 rounded-input flex items-center justify-center shrink-0', bg)}>
+          <Icon className={cn('w-4 h-4', fg)} strokeWidth={1.75} />
+        </div>
+      </div>
     </div>
   );
 }

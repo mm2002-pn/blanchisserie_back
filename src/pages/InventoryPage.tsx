@@ -1,19 +1,29 @@
-import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@/components/ui';
+import { useMemo, useState } from 'react';
+import { Badge, Button } from '@/components/ui';
 import { DataTable } from '@/components/table';
-import { Package, AlertTriangle, TrendingDown, ShoppingCart } from 'lucide-react';
+import {
+  Package,
+  AlertTriangle,
+  TrendingDown,
+  ShoppingCart,
+  Plus,
+  Search,
+  Boxes,
+} from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
-// Import mock data
 import inventoryData from '@/mocks/data/inventory.json';
+
+type StockStatus = 'critical' | 'low' | 'normal' | 'high';
 
 export default function InventoryPage() {
   const [inventory] = useState(inventoryData);
+  const [search, setSearch] = useState('');
 
-  // Calculate stock status
-  const getStockStatus = (item: typeof inventory[0]) => {
+  const getStockStatus = (item: typeof inventory[0]): StockStatus => {
     const stockLevel = (item.currentStock / item.maxStock) * 100;
     if (item.currentStock <= item.minStock) return 'critical';
     if (item.currentStock <= item.reorderPoint) return 'low';
@@ -23,48 +33,72 @@ export default function InventoryPage() {
 
   const getStockBadge = (item: typeof inventory[0]) => {
     const status = getStockStatus(item);
-    if (status === 'critical') return { variant: 'error' as const, label: 'Critique' };
+    if (status === 'critical')
+      return { variant: 'error' as const, label: 'Critique' };
     if (status === 'low') return { variant: 'warning' as const, label: 'Bas' };
     if (status === 'high') return { variant: 'success' as const, label: 'Bon' };
-    return { variant: 'gray' as const, label: 'Normal' };
+    return { variant: 'neutral' as const, label: 'Normal' };
   };
 
-  // Columns for inventory table
-  const inventoryColumns = [
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return inventory;
+    return inventory.filter((item) =>
+      `${item.productName} ${item.category} ${item.supplier}`.toLowerCase().includes(q),
+    );
+  }, [inventory, search]);
+
+  const totalItems = inventory.length;
+  const criticalItems = inventory.filter((i) => getStockStatus(i) === 'critical').length;
+  const lowStockItems = inventory.filter((i) => getStockStatus(i) === 'low').length;
+  const totalValue = inventory.reduce((s, i) => s + i.currentStock * i.unitPrice, 0);
+  const reorderItems = inventory.filter((i) => i.currentStock <= i.reorderPoint);
+
+  const columns = [
     {
       header: 'Produit',
-      accessorKey: 'productName',
+      accessorKey: 'productName' as const,
       cell: (row: typeof inventory[0]) => (
-        <div>
-          <p className="font-medium text-gray-900">{row.productName}</p>
-          <p className="text-sm text-gray-500">{row.category}</p>
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-input bg-paper-2 border-hairline border-ink-200 flex items-center justify-center shrink-0">
+            <Package className="w-4 h-4 text-brand-800" strokeWidth={1.75} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ink-900 truncate">
+              {row.productName}
+            </p>
+            <p className="text-tiny text-ink-500 truncate">{row.category}</p>
+          </div>
         </div>
       ),
     },
     {
-      header: 'Stock actuel',
-      accessorKey: 'currentStock',
+      header: 'Stock',
+      accessorKey: 'currentStock' as const,
       cell: (row: typeof inventory[0]) => {
-        const percentage = (row.currentStock / row.maxStock) * 100;
+        const pct = Math.min(100, (row.currentStock / row.maxStock) * 100);
         const badge = getStockBadge(row);
+        const fill =
+          pct <= 20
+            ? 'bg-danger-600'
+            : pct <= 40
+              ? 'bg-warn-600'
+              : 'bg-baobab-600';
         return (
-          <div className="space-y-2">
+          <div className="space-y-1.5 min-w-[180px]">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-900">
-                {row.currentStock} {row.unit}
+              <span className="font-mono text-sm font-semibold text-ink-900 tnum">
+                {row.currentStock}
               </span>
-              <Badge variant={badge.variant} className="text-xs">
+              <span className="text-tiny text-ink-500">{row.unit}</span>
+              <Badge variant={badge.variant} dot>
                 {badge.label}
               </Badge>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-ink-100 rounded-full h-1">
               <div
-                className={`h-2 rounded-full transition-all ${
-                  percentage <= 20 ? 'bg-danger' :
-                  percentage <= 40 ? 'bg-warning' :
-                  'bg-success'
-                }`}
-                style={{ width: `${Math.min(percentage, 100)}%` }}
+                className={cn('h-1 rounded-full transition-all', fill)}
+                style={{ width: `${pct}%` }}
               />
             </div>
           </div>
@@ -73,180 +107,248 @@ export default function InventoryPage() {
     },
     {
       header: 'Min / Max',
-      accessorKey: 'minStock',
+      accessorKey: 'minStock' as const,
       cell: (row: typeof inventory[0]) => (
-        <div className="text-sm text-gray-600">
-          <p>Min: {row.minStock} {row.unit}</p>
-          <p>Max: {row.maxStock} {row.unit}</p>
+        <div className="font-mono text-tiny text-ink-700 tnum">
+          <p>
+            <span className="text-ink-500">min</span> {row.minStock} {row.unit}
+          </p>
+          <p>
+            <span className="text-ink-500">max</span> {row.maxStock} {row.unit}
+          </p>
         </div>
       ),
     },
     {
-      header: 'Point de commande',
-      accessorKey: 'reorderPoint',
+      header: 'Commande',
+      accessorKey: 'reorderPoint' as const,
       cell: (row: typeof inventory[0]) => (
-        <span className="text-sm text-gray-600">
+        <span className="font-mono text-sm text-ink-700 tnum">
           {row.reorderPoint} {row.unit}
         </span>
       ),
     },
     {
-      header: 'Prix unitaire',
-      accessorKey: 'unitPrice',
+      header: 'PU',
+      accessorKey: 'unitPrice' as const,
+      align: 'right' as const,
       cell: (row: typeof inventory[0]) => (
-        <span className="text-sm text-gray-900 font-medium">
+        <span className="font-mono text-sm text-ink-700 tnum">
           {formatCurrency(row.unitPrice)}
         </span>
       ),
     },
     {
-      header: 'Valeur stock',
-      accessorKey: 'value',
+      header: 'Valeur',
+      accessorKey: 'value' as keyof typeof inventory[0],
+      align: 'right' as const,
       cell: (row: typeof inventory[0]) => (
-        <span className="text-sm text-gray-900 font-medium">
+        <span className="font-mono text-sm font-semibold text-ink-900 tnum">
           {formatCurrency(row.currentStock * row.unitPrice)}
         </span>
       ),
     },
     {
       header: 'Fournisseur',
-      accessorKey: 'supplier',
+      accessorKey: 'supplier' as const,
       cell: (row: typeof inventory[0]) => (
-        <span className="text-sm text-gray-600">{row.supplier}</span>
+        <span className="text-sm text-ink-700">{row.supplier}</span>
       ),
     },
     {
-      header: 'Dernier réappro',
-      accessorKey: 'lastRestockDate',
+      header: 'Réappro',
+      accessorKey: 'lastRestockDate' as const,
       cell: (row: typeof inventory[0]) => (
-        <span className="text-sm text-gray-600">
+        <span className="font-mono text-tiny text-ink-500 tnum">
           {format(new Date(row.lastRestockDate), 'dd/MM/yyyy', { locale: fr })}
         </span>
       ),
     },
   ];
 
-  // Stats
-  const totalItems = inventory.length;
-  const criticalItems = inventory.filter(item => getStockStatus(item) === 'critical').length;
-  const lowStockItems = inventory.filter(item => getStockStatus(item) === 'low').length;
-  const totalValue = inventory.reduce((sum, item) => sum + (item.currentStock * item.unitPrice), 0);
-
-  // Items needing reorder
-  const reorderItems = inventory.filter(item => item.currentStock <= item.reorderPoint);
-
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-heading font-bold text-gray-900">Inventaire</h1>
-        <p className="text-gray-600 mt-1">Gestion des stocks</p>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="caps mb-2">Inventaire</div>
+          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
+            Stock consommables
+          </h1>
+          <p className="text-sm text-ink-500 mt-1">
+            Lessives, détachants et produits d'entretien · Atelier Dakar Nord
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="secondary" size="sm">
+            Ajustement
+          </Button>
+          <Button size="sm" className="gap-1.5">
+            <Plus className="w-3.5 h-3.5" strokeWidth={2} />
+            Nouveau produit
+          </Button>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total articles</p>
-              <p className="text-2xl font-bold text-gray-900">{totalItems}</p>
-            </div>
-            <div className="p-3 bg-accent-50 rounded-lg">
-              <Package className="w-6 h-6 text-accent-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Stock critique</p>
-              <p className="text-2xl font-bold text-danger">{criticalItems}</p>
-            </div>
-            <div className="p-3 bg-danger-50 rounded-lg">
-              <AlertTriangle className="w-6 h-6 text-danger" />
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Stock bas</p>
-              <p className="text-2xl font-bold text-warning">{lowStockItems}</p>
-            </div>
-            <div className="p-3 bg-warning-50 rounded-lg">
-              <TrendingDown className="w-6 h-6 text-warning-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Valeur totale</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalValue)}</p>
-            </div>
-            <div className="p-3 bg-success-50 rounded-lg">
-              <ShoppingCart className="w-6 h-6 text-success-600" />
-            </div>
-          </div>
-        </Card>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Kpi
+          label="Articles"
+          value={`${totalItems}`}
+          sub="références en stock"
+          tint="brand"
+          icon={Boxes}
+        />
+        <Kpi
+          label="Critique"
+          value={`${criticalItems}`}
+          sub="à commander"
+          tint="danger"
+          icon={AlertTriangle}
+        />
+        <Kpi
+          label="Stock bas"
+          value={`${lowStockItems}`}
+          sub="à surveiller"
+          tint="warn"
+          icon={TrendingDown}
+        />
+        <Kpi
+          label="Valeur"
+          value={formatCurrency(totalValue)}
+          sub="stock disponible"
+          tint="ok"
+          icon={ShoppingCart}
+          mono
+        />
       </div>
 
-      {/* Reorder Alert */}
+      {/* Reorder alert */}
       {reorderItems.length > 0 && (
-        <Card className="border-warning-200 bg-warning-50">
-          <CardContent>
-            <div className="flex items-start gap-4">
-              <div className="p-2 bg-warning-100 rounded-lg">
-                <ShoppingCart className="w-5 h-5 text-warning-700" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-warning-900 mb-1">
-                  Réapprovisionnement nécessaire
-                </h3>
-                <p className="text-sm text-warning-700 mb-3">
-                  {reorderItems.length} article(s) ont atteint ou dépassé leur point de commande
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {reorderItems.map(item => (
-                    <Badge key={item.id} variant="warning">
-                      {item.productName} ({item.currentStock} {item.unit})
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <Button variant="primary" size="sm">
-                Créer commande
-              </Button>
+        <div className="card-surface bg-warn-100 border-warn-600 p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-input bg-warn-600 flex items-center justify-center shrink-0">
+              <ShoppingCart className="w-4 h-4 text-paper" strokeWidth={2} />
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="caps text-warn-700">Réapprovisionnement</p>
+                <span className="font-mono text-tiny text-warn-700 tnum">
+                  · {reorderItems.length} article{reorderItems.length > 1 ? 's' : ''}
+                </span>
+              </div>
+              <p className="text-sm text-ink-900 font-medium mt-1">
+                Point de commande atteint sur {reorderItems.length} produit
+                {reorderItems.length > 1 ? 's' : ''}.
+              </p>
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                {reorderItems.slice(0, 6).map((item) => (
+                  <Badge key={item.id} variant="warning">
+                    {item.productName}
+                    <span className="font-mono text-micro text-warn-700 ml-1 tnum">
+                      · {item.currentStock} {item.unit}
+                    </span>
+                  </Badge>
+                ))}
+                {reorderItems.length > 6 && (
+                  <Badge variant="neutral">+{reorderItems.length - 6}</Badge>
+                )}
+              </div>
+            </div>
+            <Button size="sm" className="shrink-0">
+              Créer commande
+            </Button>
+          </div>
+        </div>
       )}
 
-      {/* Inventory Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Stock des produits</CardTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                Ajustement
-              </Button>
-              <Button size="sm">
-                + Nouveau produit
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            data={inventory}
-            columns={inventoryColumns as any}
+      {/* Search */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="caps">Stock · {filtered.length} produit{filtered.length > 1 ? 's' : ''}</div>
+        <div className="relative">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400"
+            strokeWidth={1.75}
           />
-        </CardContent>
-      </Card>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher un produit, un fournisseur…"
+            className="w-72 pl-9 pr-4 py-2 text-sm bg-paper border-hairline border-ink-200 rounded-input text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-800 focus:border-2"
+          />
+        </div>
+      </div>
+
+      <DataTable
+        data={filtered}
+        columns={columns as any}
+        emptyMessage={
+          search ? `Aucun résultat pour « ${search} »` : 'Aucun produit en stock'
+        }
+      />
+    </div>
+  );
+}
+
+function Kpi({
+  label,
+  value,
+  sub,
+  tint,
+  icon: Icon,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  tint: 'ok' | 'warn' | 'danger' | 'brand';
+  icon: typeof Package;
+  mono?: boolean;
+}) {
+  const bg =
+    tint === 'ok'
+      ? 'bg-ok-100'
+      : tint === 'warn'
+        ? 'bg-warn-100'
+        : tint === 'danger'
+          ? 'bg-danger-100'
+          : 'bg-brand-100';
+  const fg =
+    tint === 'ok'
+      ? 'text-ok-700'
+      : tint === 'warn'
+        ? 'text-warn-700'
+        : tint === 'danger'
+          ? 'text-danger-600'
+          : 'text-brand-800';
+
+  return (
+    <div className="card-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-tiny font-medium text-ink-500">{label}</p>
+          <p
+            className={cn(
+              'mt-1.5 leading-none tracking-tight text-ink-900',
+              mono
+                ? 'font-mono text-lg font-semibold tnum'
+                : 'font-serif text-3xl font-medium tnum',
+            )}
+          >
+            {value}
+          </p>
+          <p className="text-tiny text-ink-500 mt-1.5">{sub}</p>
+        </div>
+        <div
+          className={cn(
+            'w-9 h-9 rounded-input flex items-center justify-center shrink-0',
+            bg,
+          )}
+        >
+          <Icon className={cn('w-4 h-4', fg)} strokeWidth={1.75} />
+        </div>
+      </div>
     </div>
   );
 }

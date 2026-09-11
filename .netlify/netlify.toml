@@ -1,6 +1,6 @@
+redirectsOrigin = "config"
 plugins = []
 headers = []
-redirects = []
 
 [functions]
 
@@ -8,11 +8,14 @@ redirects = []
 
 [build]
 publish = "C:\\xampp\\htdocs\\blanchisserie_back\\dist"
-publishOrigin = "ui"
-commandOrigin = "ui"
+publishOrigin = "config"
+commandOrigin = "config"
 command = "npm run build"
 
 [build.environment]
+VITE_API_URL = "https://api.blanchisserie.sanoushop.com/api/v1"
+VITE_WS_URL = "https://api.blanchisserie.sanoushop.com"
+NODE_VERSION = "22"
 
 [build.processing]
 
@@ -25,3 +28,15 @@ command = "npm run build"
 [build.processing.js]
 
 [build.services]
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]

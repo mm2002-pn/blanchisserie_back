@@ -1,241 +1,330 @@
 import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@/components/ui';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Badge, Button } from '@/components/ui';
+import { Plus, Edit, Trash2, Check, Tag } from 'lucide-react';
 import { usePermissions } from '@/hooks';
 import { formatCurrency } from '@/lib/utils';
-import tariffsData from '@/mocks/data/tariffs.json';
+import { cn } from '@/lib/utils';
+import { useTariffs } from '@/hooks/queries/useTariffs';
+
+const TYPE_VARIANT: Record<string, 'success' | 'warning' | 'neutral' | 'info' | 'brand'> = {
+  Standard: 'neutral',
+  Premium: 'success',
+  Service: 'warning',
+  Segment: 'info',
+  Forfait: 'brand',
+};
 
 export default function TariffsPage() {
   const { canEdit } = usePermissions();
-  const [tariffs] = useState(tariffsData);
-  const [selectedTariff, setSelectedTariff] = useState(tariffs[0]);
-
-  const typeBadgeVariants: Record<string, 'success' | 'warning' | 'gray' | 'info'> = {
-    'Standard': 'gray',
-    'Premium': 'success',
-    'Service': 'warning',
-    'Segment': 'info',
-    'Forfait': 'info',
-  };
+  const { data, isLoading, error } = useTariffs();
+  const tariffs = data ?? [];
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedTariff = tariffs.find((t) => t.id === selectedId) ?? tariffs[0];
+  const setSelectedTariff = (t: typeof tariffs[number]) => setSelectedId(t.id);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-heading font-bold text-gray-900">Grilles tarifaires</h2>
-          <p className="text-gray-600 mt-1">{tariffs.length} grilles configurées</p>
+          <div className="caps mb-2">Tarification</div>
+          <h2 className="font-serif text-2xl font-medium tracking-tight text-ink-900">
+            {tariffs.length}
+            <span className="text-ink-500 text-lg ml-2 font-normal">
+              grilles tarifaires
+            </span>
+          </h2>
+          <p className="text-sm text-ink-500 mt-1">
+            Définis les prix par catégorie de client, segment ou forfait mensuel.
+          </p>
         </div>
         {canEdit('settings') && (
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
+          <Button size="sm" className="gap-1.5 shrink-0">
+            <Plus className="w-3.5 h-3.5" strokeWidth={2} />
             Nouvelle grille
           </Button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Tariffs List */}
-        <div className="lg:col-span-1 space-y-3">
+      {error && (
+        <div className="rounded-input border-hairline border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          Impossible de charger les tarifs : {(error as Error).message}
+        </div>
+      )}
+      {isLoading && (
+        <div className="text-sm text-ink-500">Chargement des tarifs…</div>
+      )}
+      {!isLoading && tariffs.length === 0 && !error && (
+        <div className="text-sm text-ink-500">Aucune grille tarifaire.</div>
+      )}
+      {selectedTariff && (
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5">
+        {/* Tariffs list */}
+        <div className="space-y-2">
+          <div className="caps mb-1">Grilles · {tariffs.length}</div>
           {tariffs.map((tariff) => (
-            <Card
+            <button
               key={tariff.id}
-              className={`cursor-pointer transition-all ${
-                selectedTariff.id === tariff.id
-                  ? 'border-accent-500 border-2 bg-accent-50'
-                  : 'hover:border-gray-300'
-              }`}
               onClick={() => setSelectedTariff(tariff)}
+              className={cn(
+                'w-full text-left card-surface p-3.5 transition-colors',
+                selectedTariff.id === tariff.id
+                  ? 'border-brand-800 bg-brand-50'
+                  : 'hover:bg-paper-2',
+              )}
             >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900">{tariff.name}</h3>
-                      {tariff.isDefault && (
-                        <Badge variant="success" className="text-xs">Par défaut</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-600 mb-2">{tariff.code}</p>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-semibold text-ink-900 truncate">
+                      {tariff.name}
+                    </p>
+                    {tariff.isDefault && (
+                      <Badge variant="success" dot>
+                        défaut
+                      </Badge>
+                    )}
                   </div>
-                  <Badge variant={typeBadgeVariants[tariff.type]} className="text-xs">
-                    {tariff.type}
-                  </Badge>
+                  <p className="font-mono text-tiny text-ink-500 tnum mt-0.5">
+                    {tariff.code}
+                  </p>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{tariff.description}</p>
-                {tariff.type === 'Forfait' && (
-                  <div className="text-sm font-medium text-accent-600">
-                    {formatCurrency(tariff.monthlyPrice || 0)}/mois
-                  </div>
+                <Badge variant={(TYPE_VARIANT[tariff.type] ?? 'neutral') as any}>
+                  {tariff.type}
+                </Badge>
+              </div>
+
+              <p className="text-tiny text-ink-500 line-clamp-2">
+                {tariff.description}
+              </p>
+
+              {tariff.type === 'Forfait' && (
+                <p className="font-mono text-sm font-semibold text-brand-800 tnum mt-2">
+                  {formatCurrency(tariff.monthlyPrice || 0)}
+                  <span className="text-ink-500 font-normal"> /mois</span>
+                </p>
+              )}
+
+              <div className="flex items-center gap-2 mt-2.5">
+                <Badge variant={tariff.isActive ? 'success' : 'neutral'} dot>
+                  {tariff.isActive ? 'Actif' : 'Inactif'}
+                </Badge>
+                {tariff.items && tariff.items.length > 0 && (
+                  <span className="font-mono text-micro text-ink-500 tnum">
+                    · {tariff.items.length} lignes
+                  </span>
                 )}
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant={tariff.isActive ? 'success' : 'error'} className="text-xs">
-                    {tariff.isActive ? 'Actif' : 'Inactif'}
-                  </Badge>
-                  {tariff.items && tariff.items.length > 0 && (
-                    <span className="text-xs text-gray-500">{tariff.items.length} tarifs</span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </button>
           ))}
         </div>
 
-        {/* Tariff Details */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>{selectedTariff.name}</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">{selectedTariff.description}</p>
-                </div>
-                {canEdit('settings') && (
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Edit className="w-4 h-4 mr-2" />
-                      Modifier
-                    </Button>
-                    {!selectedTariff.isDefault && (
-                      <Button variant="danger" size="sm">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
+        {/* Detail panel */}
+        <div className="card-surface p-5 min-w-0">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant={(TYPE_VARIANT[selectedTariff.type] ?? 'neutral') as any}>
+                  {selectedTariff.type}
+                </Badge>
+                <span className="font-mono text-tiny text-ink-500 tnum">
+                  {selectedTariff.code}
+                </span>
+              </div>
+              <h3 className="font-serif text-xl font-medium tracking-tight text-ink-900">
+                {selectedTariff.name}
+              </h3>
+              <p className="text-tiny text-ink-500 mt-1">
+                {selectedTariff.description}
+              </p>
+            </div>
+            {canEdit('settings') && (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Button variant="secondary" size="sm" className="gap-1">
+                  <Edit className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  Modifier
+                </Button>
+                {!selectedTariff.isDefault && (
+                  <Button variant="danger" size="sm" className="!px-2">
+                    <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  </Button>
                 )}
               </div>
-            </CardHeader>
-            <CardContent>
-              {/* Tariff Info */}
-              <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="text-sm text-gray-600">Code</p>
-                  <p className="font-medium text-gray-900">{selectedTariff.code}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Type</p>
-                  <Badge variant={typeBadgeVariants[selectedTariff.type]}>
-                    {selectedTariff.type}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Valide du</p>
-                  <p className="font-medium text-gray-900">
-                    {new Date(selectedTariff.validFrom).toLocaleDateString('fr-FR')}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Valide jusqu'au</p>
-                  <p className="font-medium text-gray-900">
-                    {selectedTariff.validUntil
-                      ? new Date(selectedTariff.validUntil).toLocaleDateString('fr-FR')
-                      : 'Indéterminé'}
-                  </p>
+            )}
+          </div>
+
+          {/* Meta grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-5">
+            <MetaTile label="Code" value={selectedTariff.code} mono />
+            <MetaTile label="Type" value={selectedTariff.type} />
+            <MetaTile
+              label="Valide du"
+              value={new Date(selectedTariff.validFrom).toLocaleDateString('fr-FR')}
+              mono
+            />
+            <MetaTile
+              label="Valide jusqu'au"
+              value={
+                selectedTariff.validUntil
+                  ? new Date(selectedTariff.validUntil).toLocaleDateString('fr-FR')
+                  : 'Indéterminé'
+              }
+              mono
+            />
+          </div>
+
+          {/* Forfait details */}
+          {selectedTariff.type === 'Forfait' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+              <ForfaitStat
+                label="Prix mensuel"
+                value={formatCurrency(selectedTariff.monthlyPrice || 0)}
+                tint="brand"
+              />
+              <ForfaitStat
+                label="Volume inclus"
+                value={`${selectedTariff.monthlyKgLimit} kg`}
+                tint="ok"
+              />
+              <ForfaitStat
+                label="Dépassement"
+                value={`${formatCurrency(selectedTariff.overagePricePerKg || 0)} / kg`}
+                tint="warn"
+              />
+            </div>
+          )}
+
+          {/* Applicable clients */}
+          {selectedTariff.applicableClients &&
+            selectedTariff.applicableClients.length > 0 && (
+              <div className="mb-5">
+                <p className="caps mb-2">Clients applicables</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedTariff.applicableClients.map((client) => (
+                    <Badge key={client} variant="neutral">
+                      <Check className="w-3 h-3 mr-0.5" strokeWidth={2} />
+                      {client}
+                    </Badge>
+                  ))}
                 </div>
               </div>
+            )}
 
-              {/* Forfait Details */}
-              {selectedTariff.type === 'Forfait' && (
-                <div className="mb-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
-                  <h4 className="font-semibold text-gray-900 mb-3">Détails du forfait</h4>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Prix mensuel</p>
-                      <p className="text-lg font-bold text-primary-600">
-                        {formatCurrency(selectedTariff.monthlyPrice || 0)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Volume inclus</p>
-                      <p className="text-lg font-bold text-gray-900">
-                        {selectedTariff.monthlyKgLimit} kg
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Dépassement</p>
-                      <p className="text-lg font-bold text-warning-600">
-                        {formatCurrency(selectedTariff.overagePricePerKg || 0)}/kg
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Applicable Clients */}
-              {selectedTariff.applicableClients && selectedTariff.applicableClients.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="font-semibold text-gray-900 mb-2">Clients applicables</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedTariff.applicableClients.map((client, index) => (
-                      <Badge key={index} variant="gray">
-                        {client}
-                      </Badge>
+          {/* Items table */}
+          {selectedTariff.items && selectedTariff.items.length > 0 && (
+            <div>
+              <p className="caps mb-3">Détail des tarifs · {selectedTariff.items.length}</p>
+              <div className="overflow-x-auto card-surface">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="bg-paper-2 px-4 py-3 text-left text-micro font-semibold uppercase tracking-caps text-ink-500 border-b border-hairline border-ink-200">
+                        Code
+                      </th>
+                      <th className="bg-paper-2 px-4 py-3 text-left text-micro font-semibold uppercase tracking-caps text-ink-500 border-b border-hairline border-ink-200">
+                        Type
+                      </th>
+                      <th className="bg-paper-2 px-4 py-3 text-right text-micro font-semibold uppercase tracking-caps text-ink-500 border-b border-hairline border-ink-200">
+                        Prix / kg
+                      </th>
+                      <th className="bg-paper-2 px-4 py-3 text-right text-micro font-semibold uppercase tracking-caps text-ink-500 border-b border-hairline border-ink-200">
+                        Prix / pièce
+                      </th>
+                      <th className="bg-paper-2 px-4 py-3 text-center text-micro font-semibold uppercase tracking-caps text-ink-500 border-b border-hairline border-ink-200">
+                        Mode
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedTariff.items.map((item, index) => (
+                      <tr
+                        key={index}
+                        className={cn(
+                          'hover:bg-paper-2 transition-colors',
+                          index < selectedTariff.items.length - 1 &&
+                            'border-b border-hairline border-ink-200',
+                        )}
+                      >
+                        <td className="px-4 py-3 font-mono text-sm font-semibold text-ink-900 tnum">
+                          {item.linenTypeCode}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-ink-900">
+                          {item.linenTypeName}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-sm text-ink-900 tnum">
+                          {formatCurrency(item.pricePerKg)}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-sm text-ink-700 tnum">
+                          {item.pricePerPiece ? formatCurrency(item.pricePerPiece) : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <Badge
+                            variant={
+                              item.billingMode === 'piece' ? 'info' : 'warning'
+                            }
+                          >
+                            {item.billingMode === 'piece' ? 'à la pièce' : 'au kg'}
+                          </Badge>
+                        </td>
+                      </tr>
                     ))}
-                  </div>
-                </div>
-              )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
-              {/* Price Items Table */}
-              {selectedTariff.items && selectedTariff.items.length > 0 && (
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Détail des tarifs</h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200 bg-gray-50">
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
-                            Code
-                          </th>
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
-                            Type de linge
-                          </th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">
-                            Prix au kg
-                          </th>
-                          <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">
-                            Prix à la pièce
-                          </th>
-                          <th className="text-center py-3 px-4 text-sm font-medium text-gray-700">
-                            Mode facturation
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedTariff.items.map((item, index) => (
-                          <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="py-3 px-4 text-sm font-medium text-gray-900">
-                              {item.linenTypeCode}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-gray-900">
-                              {item.linenTypeName}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-right text-gray-900">
-                              {formatCurrency(item.pricePerKg)}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-right text-gray-900">
-                              {item.pricePerPiece ? formatCurrency(item.pricePerPiece) : '-'}
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <Badge variant={item.billingMode === 'piece' ? 'info' : 'warning'} className="text-xs">
-                                {item.billingMode === 'piece' ? 'À la pièce' : 'Au kg'}
-                              </Badge>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {selectedTariff.items && selectedTariff.items.length === 0 && selectedTariff.type === 'Forfait' && (
-                <div className="text-center py-8 text-gray-500">
-                  <p>Ce forfait s'applique à tous les types de linge</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {selectedTariff.items?.length === 0 && selectedTariff.type === 'Forfait' && (
+            <div className="card-surface bg-paper-2 p-6 text-center flex items-center justify-center gap-2">
+              <Tag className="w-4 h-4 text-ink-500" strokeWidth={1.75} />
+              <p className="text-sm text-ink-500">
+                Ce forfait s'applique à tous les types de linge.
+              </p>
+            </div>
+          )}
         </div>
       </div>
+      )}
+    </div>
+  );
+}
+
+function MetaTile({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="p-3 rounded-input bg-paper-2 border-hairline border-ink-200">
+      <p className="caps">{label}</p>
+      <p
+        className={cn(
+          'mt-1 text-ink-900',
+          mono ? 'font-mono text-sm tnum' : 'text-sm font-semibold',
+        )}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ForfaitStat({
+  label,
+  value,
+  tint,
+}: {
+  label: string;
+  value: string;
+  tint: 'brand' | 'ok' | 'warn';
+}) {
+  const bg =
+    tint === 'brand' ? 'bg-brand-100' : tint === 'ok' ? 'bg-ok-100' : 'bg-warn-100';
+  const fg =
+    tint === 'brand' ? 'text-brand-800' : tint === 'ok' ? 'text-ok-700' : 'text-warn-700';
+
+  return (
+    <div className={cn('p-4 rounded-input', bg)}>
+      <p className={cn('caps', fg)}>{label}</p>
+      <p className="font-mono text-lg font-semibold text-ink-900 tnum mt-1">
+        {value}
+      </p>
     </div>
   );
 }

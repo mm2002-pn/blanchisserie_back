@@ -1,390 +1,459 @@
-import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '@/components/ui';
-import { Package, CheckCircle, Clock, PlayCircle, AlertCircle, Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Badge, Button } from '@/components/ui';
+import {
+  Package,
+  CheckCircle,
+  Clock,
+  PlayCircle,
+  Search,
+  Building2,
+  ArrowRight,
+  ChevronRight,
+} from 'lucide-react';
 import { formatWeight } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { WorkflowTabs } from '@/components/layout/WorkflowTabs';
 
-// Import mock data
-import ordersData from '@/mocks/data/orders.json';
-import workflowsData from '@/mocks/data/workflows.json';
+import { useOrders, useOrdersRealtime } from '@/hooks/queries/useOrders';
 
-// Workflow states mapping
 const WORKFLOW_STATES = {
-  COLLECTE_SCHEDULED: { label: 'Collecte programmée', color: 'default', step: 0 },
-  COLLECTE_IN_PROGRESS: { label: 'Collecte en cours', color: 'primary', step: 1 },
-  COLLECTE_COMPLETED: { label: 'Collectée', color: 'success', step: 1 },
-  RECEPTION_PENDING: { label: 'En attente de réception', color: 'warning', step: 2 },
-  WEIGHING_IN_PROGRESS: { label: 'Pesée en cours', color: 'primary', step: 3 },
-  WEIGHING_COMPLETED: { label: 'Pesée terminée', color: 'success', step: 3 },
-  TRIAGE_PENDING: { label: 'En attente de triage', color: 'warning', step: 4 },
-  TRIAGE_IN_PROGRESS: { label: 'Triage en cours', color: 'primary', step: 4 },
-  TRIAGE_COMPLETED: { label: 'Triage terminé', color: 'success', step: 4 },
-  LAVAGE_PENDING: { label: 'En attente de lavage', color: 'warning', step: 5 },
-  LAVAGE_IN_PROGRESS: { label: 'Lavage en cours', color: 'primary', step: 5 },
-  LAVAGE_COMPLETED: { label: 'Lavage terminé', color: 'success', step: 5 },
-  SECHAGE_IN_PROGRESS: { label: 'Séchage en cours', color: 'primary', step: 6 },
-  SECHAGE_COMPLETED: { label: 'Séchage terminé', color: 'success', step: 6 },
-  CALANDRAGE_IN_PROGRESS: { label: 'Calandrage en cours', color: 'primary', step: 7 },
-  CALANDRAGE_COMPLETED: { label: 'Calandrage terminé', color: 'success', step: 7 },
-  REPASSAGE_IN_PROGRESS: { label: 'Repassage en cours', color: 'primary', step: 8 },
-  REPASSAGE_COMPLETED: { label: 'Repassage terminé', color: 'success', step: 8 },
-  FINITION_IN_PROGRESS: { label: 'Finition en cours', color: 'primary', step: 9 },
-  FINITION_COMPLETED: { label: 'Finition terminée', color: 'success', step: 9 },
-  LIVRAISON_SCHEDULED: { label: 'Livraison programmée', color: 'warning', step: 10 },
-  LIVRAISON_IN_PROGRESS: { label: 'En cours de livraison', color: 'primary', step: 10 },
-  LIVRAISON_COMPLETED: { label: 'Livrée', color: 'success', step: 10 },
-  CANCELLED: { label: 'Annulée', color: 'danger', step: -1 },
+  COLLECTE_SCHEDULED: { label: 'Collecte programmée', badge: 'neutral', step: 0 },
+  COLLECTE_IN_PROGRESS: { label: 'Collecte en cours', badge: 'info', step: 1 },
+  COLLECTE_COMPLETED: { label: 'Collectée', badge: 'success', step: 1 },
+  RECEPTION_PENDING: { label: 'En attente de réception', badge: 'warning', step: 2 },
+  WEIGHING_IN_PROGRESS: { label: 'Pesée en cours', badge: 'info', step: 3 },
+  WEIGHING_COMPLETED: { label: 'Pesée terminée', badge: 'success', step: 3 },
+  TRIAGE_PENDING: { label: 'En attente de triage', badge: 'warning', step: 4 },
+  TRIAGE_IN_PROGRESS: { label: 'Triage en cours', badge: 'info', step: 4 },
+  TRIAGE_COMPLETED: { label: 'Triage terminé', badge: 'success', step: 4 },
+  LAVAGE_PENDING: { label: 'En attente de lavage', badge: 'warning', step: 5 },
+  LAVAGE_IN_PROGRESS: { label: 'Lavage en cours', badge: 'info', step: 5 },
+  LAVAGE_COMPLETED: { label: 'Lavage terminé', badge: 'success', step: 5 },
+  SECHAGE_IN_PROGRESS: { label: 'Séchage en cours', badge: 'info', step: 6 },
+  SECHAGE_COMPLETED: { label: 'Séchage terminé', badge: 'success', step: 6 },
+  CALANDRAGE_IN_PROGRESS: { label: 'Calandrage en cours', badge: 'info', step: 7 },
+  CALANDRAGE_COMPLETED: { label: 'Calandrage terminé', badge: 'success', step: 7 },
+  REPASSAGE_IN_PROGRESS: { label: 'Repassage en cours', badge: 'info', step: 8 },
+  REPASSAGE_COMPLETED: { label: 'Repassage terminé', badge: 'success', step: 8 },
+  FINITION_IN_PROGRESS: { label: 'Finition en cours', badge: 'info', step: 9 },
+  FINITION_COMPLETED: { label: 'Finition terminée', badge: 'success', step: 9 },
+  LIVRAISON_SCHEDULED: { label: 'Livraison programmée', badge: 'warning', step: 10 },
+  LIVRAISON_IN_PROGRESS: { label: 'En cours de livraison', badge: 'info', step: 10 },
+  LIVRAISON_COMPLETED: { label: 'Livrée', badge: 'success', step: 10 },
+  CANCELLED: { label: 'Annulée', badge: 'error', step: -1 },
 } as const;
 
 type WorkflowStateKey = keyof typeof WORKFLOW_STATES;
 
+const WORKFLOW_STEPS: { key: string; label: string; icon: typeof Package }[] = [
+  { key: 'COLLECTE', label: 'Collecte', icon: Package },
+  { key: 'RECEPTION', label: 'Réception', icon: CheckCircle },
+  { key: 'WEIGHING', label: 'Pesée', icon: Clock },
+  { key: 'TRIAGE', label: 'Triage', icon: PlayCircle },
+  { key: 'LAVAGE', label: 'Lavage', icon: PlayCircle },
+  { key: 'SECHAGE', label: 'Séchage', icon: PlayCircle },
+  { key: 'CALANDRAGE', label: 'Calandrage', icon: PlayCircle },
+  { key: 'REPASSAGE', label: 'Repassage', icon: PlayCircle },
+  { key: 'FINITION', label: 'Finition', icon: PlayCircle },
+  { key: 'LIVRAISON', label: 'Livraison', icon: CheckCircle },
+];
+
 export default function WorkflowTrackingPage() {
-  const [orders] = useState(ordersData);
-  const [_workflows] = useState(workflowsData);
+  useOrdersRealtime();
+  const { data } = useOrders({ pageSize: 200 });
+  const orders = data?.items ?? [];
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const selectedOrder = selectedOrderId
-    ? orders.find(o => o.id === selectedOrderId)
+    ? orders.find((o) => o.id === selectedOrderId)
     : null;
 
-  // Filter orders
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.clientName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const statusCounts = useMemo(() => {
+    return orders.reduce(
+      (acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+  }, [orders]);
 
-  // Count by status
-  const statusCounts = orders.reduce((acc, order) => {
-    acc[order.status] = (acc[order.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const filteredOrders = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    return orders.filter((order) => {
+      const matchesSearch =
+        !q ||
+        order.orderNumber.toLowerCase().includes(q) ||
+        (order.clientName ?? '').toLowerCase().includes(q);
+      const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, searchTerm, statusFilter]);
 
   const getWorkflowProgress = (state: string): number => {
-    const stateInfo = WORKFLOW_STATES[state as WorkflowStateKey];
-    if (!stateInfo || stateInfo.step < 0) return 0;
-    return Math.round((stateInfo.step / 10) * 100);
+    const info = WORKFLOW_STATES[state as WorkflowStateKey];
+    if (!info || info.step < 0) return 0;
+    return Math.round((info.step / 10) * 100);
   };
-
-  // Workflow steps definition
-  const workflowSteps = [
-    { key: 'COLLECTE', label: 'Collecte', icon: Package },
-    { key: 'RECEPTION', label: 'Réception', icon: CheckCircle },
-    { key: 'WEIGHING', label: 'Pesée', icon: Clock },
-    { key: 'TRIAGE', label: 'Triage', icon: PlayCircle },
-    { key: 'LAVAGE', label: 'Lavage', icon: PlayCircle },
-    { key: 'SECHAGE', label: 'Séchage', icon: PlayCircle },
-    { key: 'CALANDRAGE', label: 'Calandrage', icon: PlayCircle },
-    { key: 'REPASSAGE', label: 'Repassage', icon: PlayCircle },
-    { key: 'FINITION', label: 'Finition', icon: PlayCircle },
-    { key: 'LIVRAISON', label: 'Livraison', icon: CheckCircle },
-  ];
 
   const getCurrentStepIndex = (state: string): number => {
-    const stateInfo = WORKFLOW_STATES[state as WorkflowStateKey];
-    return stateInfo?.step || 0;
+    return WORKFLOW_STATES[state as WorkflowStateKey]?.step ?? 0;
   };
 
-  const getStepStatus = (stepIndex: number, currentStepIndex: number): 'completed' | 'current' | 'pending' => {
+  const getStepStatus = (
+    stepIndex: number,
+    currentStepIndex: number,
+  ): 'completed' | 'current' | 'pending' => {
     if (stepIndex < currentStepIndex) return 'completed';
     if (stepIndex === currentStepIndex) return 'current';
     return 'pending';
   };
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-heading font-bold text-gray-900">
-          Suivi des Workflows
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Suivi de l'état des commandes dans le processus de traitement
-        </p>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="caps mb-2">Workflow quotidien</div>
+          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
+            Suivi des commandes en production
+          </h1>
+          <p className="text-sm text-ink-500 mt-1">
+            Chaque type de linge (LP / LF / NAE) suit son workflow configuré · avancement en temps réel.
+          </p>
+        </div>
+        <WorkflowTabs />
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <Card
-          padding="sm"
-          className={`cursor-pointer transition-colors ${statusFilter === 'all' ? 'border-accent-500 bg-accent-50' : 'hover:border-gray-300'}`}
+      {/* Status chips */}
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusChip
+          label="Toutes"
+          count={orders.length}
+          active={statusFilter === 'all'}
           onClick={() => setStatusFilter('all')}
-        >
-          <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
-            <p className="text-xs text-gray-600 mt-1">Toutes</p>
-          </div>
-        </Card>
-
+        />
         {Object.entries(statusCounts).map(([status, count]) => (
-          <Card
+          <StatusChip
             key={status}
-            padding="sm"
-            className={`cursor-pointer transition-colors ${statusFilter === status ? 'border-accent-500 bg-accent-50' : 'hover:border-gray-300'}`}
+            label={status}
+            count={count}
+            active={statusFilter === status}
             onClick={() => setStatusFilter(status)}
-          >
-            <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{count}</p>
-              <p className="text-xs text-gray-600 mt-1">{status}</p>
-            </div>
-          </Card>
+          />
         ))}
       </div>
 
-      {/* Search Bar */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Rechercher par numéro de commande ou client..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Search */}
+      <div className="relative">
+        <Search
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400"
+          strokeWidth={1.75}
+        />
+        <input
+          type="search"
+          placeholder="Rechercher par numéro de commande ou client…"
+          className="w-full max-w-lg pl-9 pr-4 py-2 text-sm bg-paper border-hairline border-ink-200 rounded-input text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-800 focus:border-2"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Orders List */}
+      {/* Two columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Orders list */}
         <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Commandes ({filteredOrders.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                {filteredOrders.map((order) => {
-                  const stateInfo = WORKFLOW_STATES[order.workflowState as WorkflowStateKey];
-                  const progress = getWorkflowProgress(order.workflowState);
+          <div className="caps mb-2">
+            Commandes · {filteredOrders.length}
+          </div>
+          <div className="space-y-2 max-h-[660px] overflow-y-auto pr-1">
+            {filteredOrders.map((order) => {
+              const info = WORKFLOW_STATES[order.workflowState as WorkflowStateKey];
+              const progress = getWorkflowProgress(order.workflowState);
+              const isSelected = selectedOrderId === order.id;
+
+              return (
+                <button
+                  key={order.id}
+                  onClick={() => setSelectedOrderId(order.id)}
+                  className={cn(
+                    'w-full text-left card-surface p-4 transition-colors',
+                    isSelected
+                      ? 'border-brand-800 bg-brand-50'
+                      : 'hover:bg-paper-2',
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-input bg-paper-2 border-hairline border-ink-200 flex items-center justify-center shrink-0">
+                        <Building2
+                          className="w-4 h-4 text-brand-800"
+                          strokeWidth={1.75}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-ink-900 truncate">
+                          {order.clientName}
+                        </p>
+                        <p className="font-mono text-tiny text-ink-500 tnum">
+                          {order.orderNumber}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={(info?.badge ?? 'neutral') as any}
+                      dot
+                    >
+                      {order.status}
+                    </Badge>
+                  </div>
+
+                  <div className="mt-3 mb-1 flex items-center justify-between text-micro">
+                    <span className="text-ink-500 truncate">
+                      {info?.label ?? order.workflowState}
+                    </span>
+                    <span className="font-mono text-ink-900 tnum ml-2">
+                      {progress}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-ink-100 rounded-full h-1">
+                    <div
+                      className={cn(
+                        'h-1 rounded-full transition-all',
+                        progress === 100 ? 'bg-ok-600' : 'bg-brand-800',
+                      )}
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3 mt-3 text-micro font-mono text-ink-500 tnum">
+                    <span>
+                      <span className="uppercase">Col.</span>{' '}
+                      {format(new Date(order.collectionDate), 'dd/MM', { locale: fr })}
+                    </span>
+                    <span>→</span>
+                    <span>
+                      <span className="uppercase">Liv.</span>{' '}
+                      {format(new Date(order.deliveryDate), 'dd/MM', { locale: fr })}
+                    </span>
+                    {order.actualWeight && (
+                      <span className="ml-auto text-ink-700">
+                        {formatWeight(order.actualWeight)}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+
+            {filteredOrders.length === 0 && (
+              <div className="card-surface px-6 py-10 text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-paper-2 rounded-full mb-3 border-hairline border-ink-200">
+                  <Package className="w-5 h-5 text-ink-400" strokeWidth={1.6} />
+                </div>
+                <p className="text-sm text-ink-500">
+                  Aucune commande ne correspond à ces critères.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Detail with timeline */}
+        <div>
+          <div className="caps mb-2">Détail workflow</div>
+          {selectedOrder ? (
+            <div className="card-surface p-5 sticky top-4">
+              {/* Client head */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-11 h-11 rounded-input bg-brand-100 flex items-center justify-center shrink-0">
+                    <Building2 className="w-5 h-5 text-brand-800" strokeWidth={1.75} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-serif text-lg font-medium tracking-tight text-ink-900 truncate">
+                      {selectedOrder.clientName}
+                    </p>
+                    <p className="font-mono text-tiny text-ink-500 tnum">
+                      {selectedOrder.orderNumber}
+                    </p>
+                  </div>
+                </div>
+                <Badge
+                  variant={
+                    (WORKFLOW_STATES[selectedOrder.workflowState as WorkflowStateKey]
+                      ?.badge ?? 'neutral') as any
+                  }
+                  dot
+                >
+                  {selectedOrder.status}
+                </Badge>
+              </div>
+
+              {/* Summary strip */}
+              <div className="grid grid-cols-2 gap-3 mt-5 mb-6">
+                <div className="p-3 bg-paper-2 rounded-input border-hairline border-ink-200">
+                  <p className="caps">Progression</p>
+                  <div className="flex items-baseline gap-1 mt-1">
+                    <span className="font-serif text-2xl font-medium tnum tracking-tight text-ink-900">
+                      {getWorkflowProgress(selectedOrder.workflowState)}
+                    </span>
+                    <span className="text-tiny text-ink-500">%</span>
+                  </div>
+                  <div className="w-full bg-ink-100 rounded-full h-1 mt-2">
+                    <div
+                      className="h-1 rounded-full bg-brand-800"
+                      style={{
+                        width: `${getWorkflowProgress(selectedOrder.workflowState)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3 bg-paper-2 rounded-input border-hairline border-ink-200">
+                  <p className="caps">Poids</p>
+                  <p className="font-mono text-sm font-semibold text-ink-900 tnum mt-1">
+                    {selectedOrder.actualWeight
+                      ? formatWeight(selectedOrder.actualWeight)
+                      : '—'}
+                  </p>
+                  {selectedOrder.estimatedWeight && (
+                    <p className="text-micro text-ink-500 font-mono tnum mt-1">
+                      est. {formatWeight(selectedOrder.estimatedWeight)}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div className="caps mb-3">Étapes</div>
+              <div className="relative">
+                {WORKFLOW_STEPS.map((step, index) => {
+                  const currentStepIndex = getCurrentStepIndex(
+                    selectedOrder.workflowState,
+                  );
+                  const stepStatus = getStepStatus(index, currentStepIndex);
+                  const Icon = step.icon;
 
                   return (
-                    <div
-                      key={order.id}
-                      className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                        selectedOrderId === order.id
-                          ? 'border-accent-500 bg-accent-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => setSelectedOrderId(order.id)}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-semibold text-gray-900">{order.clientName}</p>
-                          <p className="text-sm text-gray-600">{order.orderNumber}</p>
-                        </div>
-                        <Badge variant={stateInfo?.color as any || 'default'} className="text-xs">
-                          {order.status}
-                        </Badge>
-                      </div>
+                    <div key={step.key} className="flex gap-3 relative">
+                      {/* connector */}
+                      {index < WORKFLOW_STEPS.length - 1 && (
+                        <div
+                          className={cn(
+                            'absolute left-[18px] top-9 w-px h-7',
+                            stepStatus === 'completed' ? 'bg-ok-600' : 'bg-ink-200',
+                          )}
+                        />
+                      )}
 
-                      {/* Progress Bar */}
-                      <div className="mb-2">
-                        <div className="flex justify-between text-xs text-gray-600 mb-1">
-                          <span>{stateInfo?.label}</span>
-                          <span>{progress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full transition-all ${
-                              progress === 100 ? 'bg-success' : 'bg-accent'
-                            }`}
-                            style={{ width: `${progress}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4 text-xs text-gray-600">
-                        <div>
-                          <span className="font-medium">Collecte:</span> {format(new Date(order.collectionDate), 'dd/MM', { locale: fr })}
-                        </div>
-                        <div>
-                          <span className="font-medium">Livraison:</span> {format(new Date(order.deliveryDate), 'dd/MM', { locale: fr })}
-                        </div>
-                        {order.actualWeight && (
-                          <div>
-                            <span className="font-medium">Poids:</span> {formatWeight(order.actualWeight)}
-                          </div>
+                      <div
+                        className={cn(
+                          'w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors',
+                          stepStatus === 'completed' && 'bg-ok-600 text-paper',
+                          stepStatus === 'current' && 'bg-brand-800 text-paper ring-2 ring-brand-100',
+                          stepStatus === 'pending' && 'bg-ink-100 text-ink-500',
                         )}
+                      >
+                        {stepStatus === 'completed' ? (
+                          <CheckCircle className="w-4 h-4" strokeWidth={2} />
+                        ) : stepStatus === 'current' ? (
+                          <Clock className="w-4 h-4" strokeWidth={2} />
+                        ) : (
+                          <Icon className="w-4 h-4" strokeWidth={1.75} />
+                        )}
+                      </div>
+
+                      <div className="flex-1 pb-4">
+                        <div className="flex items-center justify-between">
+                          <p
+                            className={cn(
+                              'font-sans text-sm font-semibold',
+                              stepStatus === 'completed' && 'text-ok-700',
+                              stepStatus === 'current' && 'text-brand-800',
+                              stepStatus === 'pending' && 'text-ink-500',
+                            )}
+                          >
+                            {step.label}
+                          </p>
+                          <span className="font-mono text-micro text-ink-400 tnum">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <p className="text-tiny text-ink-500 mt-0.5">
+                          {stepStatus === 'completed' &&
+                            `Terminée · ${format(new Date(selectedOrder.collectionDate), 'dd MMM à HH:mm', { locale: fr })}`}
+                          {stepStatus === 'current' && 'En cours…'}
+                          {stepStatus === 'pending' && 'En attente'}
+                        </p>
                       </div>
                     </div>
                   );
                 })}
-
-                {filteredOrders.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <AlertCircle className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                    <p>Aucune commande trouvée</p>
-                  </div>
-                )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Order Detail with Timeline */}
-        <div>
-          {selectedOrder ? (
-            <Card>
-              <CardHeader>
-                <div>
-                  <CardTitle>{selectedOrder.clientName}</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Commande {selectedOrder.orderNumber}
-                  </p>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Order Info */}
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-gray-600">Statut actuel</p>
-                      <Badge variant={WORKFLOW_STATES[selectedOrder.workflowState as WorkflowStateKey]?.color as any || 'default'}>
-                        {WORKFLOW_STATES[selectedOrder.workflowState as WorkflowStateKey]?.label}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-gray-600">Progression</p>
-                      <p className="font-bold text-gray-900">{getWorkflowProgress(selectedOrder.workflowState)}%</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600">Estimation</p>
-                      <p className="font-medium text-gray-900">
-                        {selectedOrder.estimatedSize} ({formatWeight(selectedOrder.estimatedWeight || 0)})
-                      </p>
-                    </div>
-                    {selectedOrder.actualWeight && (
-                      <div>
-                        <p className="text-gray-600">Poids réel</p>
-                        <p className="font-medium text-gray-900">{formatWeight(selectedOrder.actualWeight)}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Timeline */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900">Étapes du workflow</h4>
-
-                  {workflowSteps.map((step, index) => {
-                    const currentStepIndex = getCurrentStepIndex(selectedOrder.workflowState);
-                    const stepStatus = getStepStatus(index, currentStepIndex);
-                    const Icon = step.icon;
-
-                    return (
-                      <div key={step.key} className="relative">
-                        {/* Connector Line */}
-                        {index < workflowSteps.length - 1 && (
-                          <div className={`absolute left-6 top-14 w-0.5 h-12 ${
-                            stepStatus === 'completed' ? 'bg-success' : 'bg-gray-300'
-                          }`} />
-                        )}
-
-                        {/* Step */}
-                        <div className="flex gap-4">
-                          {/* Step Icon */}
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            stepStatus === 'completed'
-                              ? 'bg-success text-white'
-                              : stepStatus === 'current'
-                              ? 'bg-accent-100 text-accent-600'
-                              : 'bg-gray-200 text-gray-400'
-                          }`}>
-                            {stepStatus === 'completed' ? (
-                              <CheckCircle className="w-6 h-6" />
-                            ) : stepStatus === 'current' ? (
-                              <Clock className="w-6 h-6" />
-                            ) : (
-                              <Icon className="w-6 h-6" />
-                            )}
-                          </div>
-
-                          {/* Step Content */}
-                          <div className="flex-1 pb-4">
-                            <h5 className={`font-semibold ${
-                              stepStatus === 'completed'
-                                ? 'text-success'
-                                : stepStatus === 'current'
-                                ? 'text-accent-600'
-                                : 'text-gray-400'
-                            }`}>
-                              {step.label}
-                            </h5>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {stepStatus === 'completed' && 'Terminée'}
-                              {stepStatus === 'current' && 'En cours...'}
-                              {stepStatus === 'pending' && 'En attente'}
-                            </p>
-
-                            {/* Show timestamp if available */}
-                            {stepStatus === 'completed' && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                {/* In real app, would show actual timestamp */}
-                                Terminée le {format(new Date(selectedOrder.collectionDate), 'dd/MM/yyyy à HH:mm', { locale: fr })}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Actions */}
-                {selectedOrder.workflowState !== 'LIVRAISON_COMPLETED' && (
-                  <div className="mt-6">
-                    <Button variant="primary" className="w-full">
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      Passer à l'étape suivante
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              {/* Action */}
+              {selectedOrder.workflowState !== 'LIVRAISON_COMPLETED' && (
+                <Button className="w-full mt-2 gap-1.5">
+                  <PlayCircle className="w-4 h-4" strokeWidth={1.75} />
+                  Passer à l'étape suivante
+                  <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+                </Button>
+              )}
+            </div>
           ) : (
-            <Card className="border-gray-200">
-              <CardContent className="p-12 text-center">
-                <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Sélectionnez une commande
-                </h3>
-                <p className="text-gray-600">
-                  Choisissez une commande dans la liste de gauche pour voir son workflow détaillé.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="card-surface px-6 py-14 text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-paper-2 rounded-full mb-4 border-hairline border-ink-200">
+                <ChevronRight className="w-6 h-6 text-ink-400" strokeWidth={1.6} />
+              </div>
+              <h3 className="font-serif text-lg font-medium tracking-tight text-ink-900 mb-1">
+                Sélectionne une commande
+              </h3>
+              <p className="text-sm text-ink-500 max-w-xs mx-auto">
+                Clique sur une commande à gauche pour voir son workflow détaillé et les étapes franchies.
+              </p>
+            </div>
           )}
         </div>
       </div>
-
-      {/* Info Alert */}
-      <Card className="border-primary-200 bg-primary-50">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-primary-700 flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-semibold text-primary-900 mb-1">
-                Suivi en temps réel
-              </h4>
-              <p className="text-sm text-primary-700">
-                Cette page affiche l'état actuel de chaque commande dans son workflow de traitement.
-                Chaque type de linge (LP, LF, NAE) suit un workflow spécifique défini dans les paramètres.
-                Les étapes s'enchaînent automatiquement ou manuellement selon la configuration.
-                Le suivi permet d'identifier les goulots d'étranglement et d'optimiser les processus.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
+  );
+}
+
+function StatusChip({
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-tiny font-semibold transition-colors border-hairline',
+        active
+          ? 'bg-brand-800 text-paper border-brand-800'
+          : 'bg-paper text-ink-700 border-ink-200 hover:bg-paper-2',
+      )}
+    >
+      {label}
+      <span
+        className={cn(
+          'font-mono tnum',
+          active ? 'text-brand-100' : 'text-ink-400',
+        )}
+      >
+        {count}
+      </span>
+    </button>
   );
 }
