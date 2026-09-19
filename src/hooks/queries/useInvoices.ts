@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { listInvoices } from '@/lib/api/invoices.api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { generateInvoicePdf, listInvoices } from '@/lib/api/invoices.api';
 import { useRealtime } from '../useRealtime';
 
 export const invoicesKeys = {
@@ -12,6 +12,16 @@ export function useInvoices(params: { status?: string; clientId?: string } = {})
   return useQuery({
     queryKey: invoicesKeys.list(params),
     queryFn: () => listInvoices(params),
+  });
+}
+
+export function useGenerateInvoicePdf() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { id: string; force?: boolean }) => generateInvoicePdf(vars.id, vars.force),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: invoicesKeys.all });
+    },
   });
 }
 

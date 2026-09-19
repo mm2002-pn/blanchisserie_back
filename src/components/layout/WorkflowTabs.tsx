@@ -4,14 +4,13 @@ import { ROUTES } from '@/lib/constants';
 
 const TABS = [
   { label: 'Réception', route: ROUTES.RECEPTION },
-  { label: 'Triage', route: ROUTES.TRIAGE },
   { label: 'Production', route: ROUTES.PRODUCTION },
   { label: 'Tracking', route: ROUTES.WORKFLOW_TRACKING },
 ];
 
 /**
- * Mini tab switcher partagé par les 4 écrans du Workflow quotidien.
- * Utilisé dans le header des pages Reception / Triage / Production / WorkflowTracking.
+ * Mini tab switcher partagé par les écrans du Workflow quotidien.
+ * Utilisé dans le header des pages Réception (pesée + triage) / Production / WorkflowTracking.
  */
 export function WorkflowTabs() {
   return (

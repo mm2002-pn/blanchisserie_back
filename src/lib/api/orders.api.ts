@@ -59,9 +59,11 @@ export interface ApiOrder {
   collectionDriverId: string | null;
   collectionVehicleId: string | null;
   collectionPdaId?: string | null;
+  collectionRoundId?: string | null;
   deliveryDriverId: string | null;
   deliveryVehicleId: string | null;
   deliveryPdaId?: string | null;
+  deliveryRoundId?: string | null;
   collectionDriver?: ApiOrderDriver | null;
   deliveryDriver?: ApiOrderDriver | null;
   collectionVehicle?: ApiOrderVehicle | null;
@@ -137,6 +139,9 @@ export type MappedOrder = Omit<Order, 'status'> & {
   /** Drivers explicites — distinguer collecte vs livraison (assignedDriverId fusionne les deux). */
   collectionDriverId?: string | null;
   deliveryDriverId?: string | null;
+  /** Tournée assignée — permet de distinguer "prête, pas encore planifiée" de "déjà dans une tournée". */
+  collectionRoundId?: string | null;
+  deliveryRoundId?: string | null;
   /** Calculé en aval ; pas exposé par l'API listing — placeholder. */
   estimatedInvoiceAmount?: number;
   /** Alias de weightDeviation pour compat pages. */
@@ -204,6 +209,8 @@ export function mapApiOrder(o: ApiOrder): MappedOrder {
         }
       : null,
     vehicleId: o.collectionVehicleId ?? o.deliveryVehicleId ?? undefined,
+    collectionRoundId: o.collectionRoundId ?? undefined,
+    deliveryRoundId: o.deliveryRoundId ?? undefined,
     estimatedInvoiceAmount: 0,
     invoiceDeviation: o.weightDeviation ?? 0,
     pickupGeoLat: o.pickupGeoLat ?? undefined,

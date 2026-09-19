@@ -1,21 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Badge, Button } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import { DataTable } from '@/components/table';
-import {
-  FileText,
-  Download,
-  AlertCircle,
-  Search,
-  Plus,
-  ChevronRight,
-  TrendingUp,
-} from 'lucide-react';
+import { FileText, Loader2, Search, Building2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { usePageHeader } from '@/context/PageHeaderContext';
 
-import { useInvoices, useInvoicesRealtime } from '@/hooks/queries/useInvoices';
+import { useInvoices, useInvoicesRealtime, useGenerateInvoicePdf } from '@/hooks/queries/useInvoices';
 
 type StatusKey = 'Payée' | 'En attente' | 'En retard' | 'Brouillon';
 
@@ -35,12 +28,25 @@ const FILTERS: { key: FilterKey; label: string; match: (s: string) => boolean }[
   { key: 'overdue', label: 'En retard', match: (s) => s === 'En retard' },
 ];
 
+/** Origine de l'API (sans le préfixe /api/v1) — pour ouvrir les PDF statiques (/uploads/...). */
+const API_ORIGIN = (
+  (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:4000/api/v1'
+).replace(/\/api\/v1\/?$/, '');
+
 export default function InvoicesPage() {
+  usePageHeader({
+    eyebrow: 'Facturation',
+    title: 'Factures',
+    sub: 'Encaissement, relances et documents commerciaux.',
+  });
+
   useInvoicesRealtime();
   const { data, isLoading, error } = useInvoices();
   const invoices = data ?? [];
   const [filter, setFilter] = useState<FilterKey>('all');
   const [search, setSearch] = useState('');
+  const generatePdf = useGenerateInvoicePdf();
+  const [pdfLoadingId, setPdfLoadingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const f = FILTERS.find((x) => x.key === filter) ?? FILTERS[0];
@@ -54,13 +60,12 @@ export default function InvoicesPage() {
     });
   }, [invoices, filter, search]);
 
-  // Aggregates
   const paid = invoices.filter((i) => i.status === 'Payée');
   const pending = invoices.filter((i) => i.status === 'En attente');
   const overdue = invoices.filter((i) => i.status === 'En retard');
-  const totalRevenue = paid.reduce((s, i) => s + i.totalAmount, 0);
-  const outstanding = [...pending, ...overdue].reduce((s, i) => s + i.totalAmount, 0);
-  const overdueAmount = overdue.reduce((s, i) => s + i.totalAmount, 0);
+  const encaisse = paid.reduce((s, i) => s + i.totalAmount, 0);
+  const enAttente = pending.reduce((s, i) => s + i.totalAmount, 0);
+  const enRetard = overdue.reduce((s, i) => s + i.totalAmount, 0);
 
   const countByKey: Record<FilterKey, number> = {
     all: invoices.length,
@@ -69,50 +74,70 @@ export default function InvoicesPage() {
     overdue: overdue.length,
   };
 
+  const kpis = [
+    { label: 'Encaissé', value: formatCurrency(encaisse), accent: '#2C7A4B' },
+    { label: 'En attente', value: formatCurrency(enAttente), accent: '#F0A03D' },
+    { label: 'En retard', value: formatCurrency(enRetard), accent: '#C1441F' },
+  ];
+
+  const openPdf = async (invoiceId: string, pdfUrl: string | null) => {
+    if (pdfUrl) {
+      window.open(`${API_ORIGIN}${pdfUrl}`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    setPdfLoadingId(invoiceId);
+    try {
+      const res = await generatePdf.mutateAsync({ id: invoiceId });
+      window.open(`${API_ORIGIN}${res.pdfUrl}`, '_blank', 'noopener,noreferrer');
+    } finally {
+      setPdfLoadingId(null);
+    }
+  };
+
   const columns = [
     {
       header: 'Facture',
       accessorKey: 'invoiceNumber' as const,
-      cell: (row: typeof invoices[0]) => (
+      cell: (row: (typeof invoices)[0]) => (
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-input bg-paper-2 border-hairline border-ink-200 flex items-center justify-center shrink-0">
             <FileText className="w-4 h-4 text-brand-800" strokeWidth={1.75} />
           </div>
-          <div className="min-w-0">
-            <p className="font-mono text-sm font-semibold text-ink-900 tnum">
-              {row.invoiceNumber}
-            </p>
-            <p className="text-tiny text-ink-500 font-mono">{row.orderReference}</p>
-          </div>
+          <span className="font-mono text-sm font-semibold text-ink-900 tnum">
+            {row.invoiceNumber}
+          </span>
         </div>
       ),
     },
     {
       header: 'Client',
       accessorKey: 'clientName' as const,
-      cell: (row: typeof invoices[0]) => (
-        <span className="text-sm text-ink-900 font-medium">{row.clientName}</span>
+      cell: (row: (typeof invoices)[0]) => (
+        <div className="flex items-center gap-2">
+          <Building2 className="w-3.5 h-3.5 text-ink-500 shrink-0" strokeWidth={1.75} />
+          <span className="text-sm text-ink-900 font-medium truncate">{row.clientName}</span>
+        </div>
       ),
     },
     {
-      header: 'Émise',
-      accessorKey: 'invoiceDate' as const,
-      cell: (row: typeof invoices[0]) => (
-        <span className="text-sm text-ink-700 font-mono tnum">
-          {format(new Date(row.invoiceDate), 'dd MMM yyyy', { locale: fr })}
-        </span>
+      header: 'Statut',
+      accessorKey: 'status' as const,
+      cell: (row: (typeof invoices)[0]) => (
+        <Badge variant={STATUS_VARIANT[row.status as StatusKey] ?? 'neutral'} dot>
+          {row.status}
+        </Badge>
       ),
     },
     {
       header: 'Échéance',
       accessorKey: 'dueDate' as const,
-      cell: (row: typeof invoices[0]) => {
-        const overdue = row.status === 'En retard';
+      cell: (row: (typeof invoices)[0]) => {
+        const isOverdue = row.status === 'En retard';
         return (
           <span
             className={cn(
               'text-sm font-mono tnum',
-              overdue ? 'text-danger-600 font-semibold' : 'text-ink-700',
+              isOverdue ? 'text-danger-600 font-semibold' : 'text-ink-700',
             )}
           >
             {format(new Date(row.dueDate), 'dd MMM yyyy', { locale: fr })}
@@ -121,149 +146,57 @@ export default function InvoicesPage() {
       },
     },
     {
-      header: 'TTC',
+      header: 'Montant',
       accessorKey: 'totalAmount' as const,
       align: 'right' as const,
-      cell: (row: typeof invoices[0]) => (
+      cell: (row: (typeof invoices)[0]) => (
         <span className="font-mono text-sm font-semibold text-ink-900 tnum">
           {formatCurrency(row.totalAmount)}
         </span>
       ),
     },
     {
-      header: 'Statut',
-      accessorKey: 'status' as const,
-      cell: (row: typeof invoices[0]) => (
-        <div>
-          <Badge
-            variant={STATUS_VARIANT[row.status as StatusKey] ?? 'neutral'}
-            dot
-          >
-            {row.status}
-          </Badge>
-          {row.paidDate && (
-            <p className="text-micro font-mono text-ink-500 mt-1">
-              {format(new Date(row.paidDate), 'dd/MM/yyyy', { locale: fr })}
-            </p>
-          )}
-        </div>
-      ),
-    },
-    {
-      header: '',
+      header: 'Documents',
       accessorKey: 'id' as const,
       align: 'right' as const,
-      cell: () => (
-        <div className="flex items-center gap-1 justify-end">
-          <button
-            className="p-1.5 rounded-input hover:bg-paper-2 text-ink-500 hover:text-brand-800 transition-colors"
-            title="Télécharger"
-          >
-            <Download className="w-4 h-4" strokeWidth={1.75} />
-          </button>
-          <ChevronRight className="w-4 h-4 text-ink-400" strokeWidth={1.75} />
-        </div>
+      cell: (row: (typeof invoices)[0]) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            void openPdf(row.id, row.pdfUrl);
+          }}
+          disabled={pdfLoadingId === row.id}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-ink-200 hover:border-terra-600 hover:bg-terra-100 text-ink-700 hover:text-terra-700 transition-colors text-tiny font-semibold disabled:opacity-50"
+        >
+          {pdfLoadingId === row.id ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <FileText className="w-3.5 h-3.5" strokeWidth={1.75} />
+          )}
+          {row.pdfUrl ? 'Ouvrir PDF' : 'Générer PDF'}
+        </button>
       ),
     },
   ];
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="caps mb-2">Facturation</div>
-          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
-            Factures
-          </h1>
-          <p className="text-sm text-ink-500 mt-1">
-            {invoices.length} factures émises · {paid.length} payées
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant="secondary" size="sm" className="gap-1.5">
-            <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
-            Export PDF
-          </Button>
-          <Button size="sm" className="gap-1.5">
-            <Plus className="w-3.5 h-3.5" strokeWidth={2} />
-            Nouvelle facture
-          </Button>
-        </div>
-      </div>
-
-      {/* Revenue hero + alert */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        {/* Hero revenue */}
-        <div className="card-surface bg-brand-900 border-brand-900 text-paper p-5 lg:col-span-2">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="caps text-brand-100">Encaissé · à date</p>
-              <p className="font-serif text-4xl font-medium tnum tracking-tight mt-2 leading-none">
-                {formatCurrency(totalRevenue)}
-              </p>
-              <p className="text-tiny text-brand-100 mt-2">
-                {paid.length} factures payées · avril 2026
-              </p>
+    <div className="space-y-4">
+      {/* KPIs */}
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        {kpis.map((k) => (
+          <div
+            key={k.label}
+            className="bg-paper border border-hairline border-ink-200 rounded-card p-4 pt-3.5"
+            style={{ borderTop: `3px solid ${k.accent}` }}
+          >
+            <div className="caps" style={{ color: k.accent }}>
+              {k.label}
             </div>
-            <div className="w-11 h-11 rounded-input bg-terra-600 flex items-center justify-center shrink-0">
-              <TrendingUp className="w-5 h-5 text-paper" strokeWidth={1.75} />
+            <div className="font-heading font-bold text-2xl tracking-tight mt-2 text-ink-900 tnum">
+              {k.value}
             </div>
           </div>
-
-          <div className="flex items-center gap-5 mt-4 pt-4 border-t border-brand-700">
-            <div>
-              <p className="caps text-brand-100">En attente</p>
-              <p className="font-mono text-base font-semibold mt-1 tnum">
-                {formatCurrency(outstanding - overdueAmount)}
-              </p>
-            </div>
-            <div className="h-8 w-px bg-brand-700" />
-            <div>
-              <p className="caps text-brand-100">En retard</p>
-              <p className="font-mono text-base font-semibold mt-1 tnum text-danger-100">
-                {formatCurrency(overdueAmount)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Overdue alert */}
-        {overdue.length > 0 ? (
-          <div className="card-surface bg-danger-100 border-danger-600 p-5 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <AlertCircle className="w-4 h-4 text-danger-600" strokeWidth={2} />
-                <p className="caps text-danger-600">Action requise</p>
-              </div>
-              <p className="font-serif text-xl font-medium tracking-tight text-ink-900">
-                {overdue.length} facture
-                {overdue.length > 1 ? 's' : ''} en retard
-              </p>
-              <p className="text-tiny text-ink-700 mt-1.5">
-                Total : {formatCurrency(overdueAmount)}
-              </p>
-            </div>
-            <Button variant="danger" size="sm" className="self-start mt-4">
-              Relancer les clients
-            </Button>
-          </div>
-        ) : (
-          <div className="card-surface bg-ok-100 border-ok-600 p-5 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-ok-700" strokeWidth={2} />
-                <p className="caps text-ok-700">Facturation à jour</p>
-              </div>
-              <p className="font-serif text-xl font-medium tracking-tight text-ink-900">
-                Aucune facture en retard
-              </p>
-              <p className="text-tiny text-ink-700 mt-1.5">
-                Continue comme ça, l'encaissement suit.
-              </p>
-            </div>
-          </div>
-        )}
+        ))}
       </div>
 
       {/* Filters + Search */}
@@ -283,12 +216,7 @@ export default function InvoicesPage() {
                 )}
               >
                 {f.label}
-                <span
-                  className={cn(
-                    'font-mono tnum',
-                    active ? 'text-brand-100' : 'text-ink-400',
-                  )}
-                >
+                <span className={cn('font-mono tnum', active ? 'text-brand-100' : 'text-ink-400')}>
                   {countByKey[f.key]}
                 </span>
               </button>
@@ -306,14 +234,14 @@ export default function InvoicesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher une facture, un client…"
-            className="w-72 pl-9 pr-4 py-2 text-sm bg-paper border-hairline border-ink-200 rounded-input text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-800 focus:border-2"
+            className="w-72 pl-9 pr-4 py-2 text-sm bg-paper border border-ink-200 rounded-input text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-800"
           />
         </div>
       </div>
 
       {/* Table */}
       {error ? (
-        <div className="rounded-input border-hairline border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+        <div className="rounded-input border border-danger-600/40 bg-danger-100 px-4 py-3 text-sm text-danger-600">
           Impossible de charger les factures : {(error as Error).message}
         </div>
       ) : (
@@ -328,7 +256,7 @@ export default function InvoicesPage() {
               ? 'Chargement…'
               : search
                 ? `Aucun résultat pour « ${search} »`
-                : 'Aucune facture dans cette catégorie'
+                : 'Aucune facture pour le moment'
           }
         />
       )}

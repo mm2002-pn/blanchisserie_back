@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Scale,
@@ -11,6 +11,7 @@ import {
   Sparkles,
   AlertTriangle,
   Trash2,
+  RefreshCw,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -105,7 +106,7 @@ export default function TraitementJourPage() {
   const { data: waitingCounts } = useWaitingCounts();
 
   // ---- Buckets par étape ------------------------------------------------
-  // Sur cette page le triage est externalisé sur /atelier-jour/triage.
+  // Sur cette page le triage est externalisé sur /reception.
   // Ici on ne montre que les commandes "triagées" prêtes à sélectionner.
   const triagedPool = pipelineOrders.filter((o) => o.apiStatus === 'triaged');
   const inProduction = pipelineOrders.filter((o) => o.apiStatus === 'in_production');
@@ -180,7 +181,7 @@ export default function TraitementJourPage() {
 
   // Pipeline dynamique (ordre + métadonnées des étapes).
   // Sur cette page la 1re étape (`triage`) devient "Sélection production"
-  // car le triage opérationnel se fait désormais sur /atelier-jour/triage.
+  // car le triage opérationnel se fait désormais sur /reception.
   const PIPELINE_STEPS = usePipelineSteps();
   const STEPS = useMemo(
     () =>
@@ -188,9 +189,9 @@ export default function TraitementJourPage() {
         s.key === 'triage'
           ? {
               ...s,
-              title: 'Sélection production',
-              shortLabel: 'Sélection',
-              hint: 'Choisir les commandes triées à lancer en production',
+              title: 'Lancement production',
+              shortLabel: 'Lancement',
+              hint: 'Plan de charge machines proposé automatiquement, modifiable par glisser-déposer',
             }
           : s,
       ),
@@ -340,32 +341,63 @@ export default function TraitementJourPage() {
               count={readyOrders.length}
               active={readyOrders.length > 0}
             >
-              {readyOrders.length === 0 ? (
-                <EmptyHint icon={Truck} tone="muted">
-                  Aucune commande prête à livrer.
-                </EmptyHint>
-              ) : (
-                <div className="card-surface bg-paper p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-serif text-lg font-medium text-ink-900">
-                      {readyOrders.length} commande
-                      {readyOrders.length > 1 ? 's' : ''} prête
-                      {readyOrders.length > 1 ? 's' : ''} à livrer
-                    </p>
-                    <p className="text-sm text-ink-500 mt-1">
-                      La planification des tournées de livraison se fait sur la
-                      page dédiée.
-                    </p>
+              {(() => {
+                const unplanned = readyOrders.filter((o) => !o.deliveryRoundId);
+                const planned = readyOrders.filter((o) => o.deliveryRoundId);
+                if (readyOrders.length === 0) {
+                  return (
+                    <EmptyHint icon={Truck} tone="muted">
+                      Aucune commande prête à livrer.
+                    </EmptyHint>
+                  );
+                }
+                return (
+                  <div className="space-y-3">
+                    {unplanned.length > 0 && (
+                      <div className="card-surface bg-paper p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-serif text-lg font-medium text-ink-900">
+                            {unplanned.length} commande{unplanned.length > 1 ? 's' : ''} prête
+                            {unplanned.length > 1 ? 's' : ''} à livrer
+                          </p>
+                          <p className="text-sm text-ink-500 mt-1">
+                            La planification des tournées de livraison se fait sur la
+                            page dédiée.
+                          </p>
+                        </div>
+                        <Link
+                          to="/route-planning/new?type=delivery"
+                          className="inline-flex items-center gap-2 px-5 h-11 rounded-input bg-brand-800 text-paper text-sm font-semibold hover:bg-brand-900 transition-colors shrink-0"
+                        >
+                          <Truck className="w-4 h-4" strokeWidth={2} />
+                          Planifier les livraisons
+                        </Link>
+                      </div>
+                    )}
+                    {planned.length > 0 && (
+                      <div className="card-surface bg-ok-50 border-ok-200 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-serif text-lg font-medium text-ink-900">
+                            {planned.length} commande{planned.length > 1 ? 's' : ''} déjà dans
+                            une tournée
+                          </p>
+                          <p className="text-sm text-ink-500 mt-1">
+                            En attente de la livraison effective par le chauffeur — rien à
+                            planifier de plus ici.
+                          </p>
+                        </div>
+                        <Link
+                          to="/route-planning"
+                          className="inline-flex items-center gap-2 px-5 h-11 rounded-input border border-ok-600 text-ok-700 text-sm font-semibold hover:bg-ok-100 transition-colors shrink-0"
+                        >
+                          <Truck className="w-4 h-4" strokeWidth={2} />
+                          Voir les tournées
+                        </Link>
+                      </div>
+                    )}
                   </div>
-                  <Link
-                    to="/route-planning/new?type=delivery"
-                    className="inline-flex items-center gap-2 px-5 h-11 rounded-input bg-brand-800 text-paper text-sm font-semibold hover:bg-brand-900 transition-colors shrink-0"
-                  >
-                    <Truck className="w-4 h-4" strokeWidth={2} />
-                    Planifier les livraisons
-                  </Link>
-                </div>
-              )}
+                );
+              })()}
             </StepSection>
           ),
         }}
@@ -806,18 +838,25 @@ function recalcBatch(b: ProposalBatch): ProposalBatch {
 
 function ProductionLauncher({
   pool,
-  dailyCapacity,
+  dailyCapacity: _dailyCapacity,
 }: {
   pool: MappedOrder[];
   dailyCapacity: number;
 }) {
   const qc = useQueryClient();
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [mode, setMode] = useState<'ai' | 'manual'>('ai');
   /** Proposition éditable (clone local de la réponse compute, modifiable). */
   const [editableProposal, setEditableProposal] = useState<AiProposal | null>(
     null,
   );
+  /** Bannière "Suggestion de regroupement" — visible juste après le calcul, tant que non ignorée. */
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  /** État local du bouton "Recalculer" — indépendant de compute.isPending (géré à la main
+   *  avec try/finally pour garantir qu'il s'arrête toujours, même en cas de souci react-query). */
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  /** Items sortis d'un batch (drag vers la file d'attente) — bucket virtuel, hors machine. */
+  const [unassigned, setUnassigned] = useState<ProposalItem[]>([]);
+  const computedOnce = useRef(false);
 
   // Catalogue machines + programmes pour la réaffectation manuelle
   const { data: machines = [] } = useMachines();
@@ -831,37 +870,9 @@ function ProductionLauncher({
     [machines],
   );
 
-  const compose = () => {
-    const sorted = [...pool].sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    );
-    const set = new Set<string>();
-    let cumKg = 0;
-    for (const o of sorted) {
-      const kg = o.totalWeight ?? 0;
-      if (cumKg + kg > dailyCapacity) break;
-      set.add(o.id);
-      cumKg += kg;
-    }
-    setSelectedIds(set);
-  };
-
-  const toggle = (id: string) =>
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-
-  const selectedKg = pool
-    .filter((o) => selectedIds.has(o.id))
-    .reduce((s, o) => s + (o.totalWeight ?? 0), 0);
-
   const compute = useMutation({
     mutationFn: async () => {
-      const orderIds = Array.from(selectedIds);
+      const orderIds = pool.map((o) => o.id);
       const { data } = await api.post<AiProposal>('/batches/suggest', {
         orderIds,
         useAi: mode === 'ai',
@@ -871,8 +882,84 @@ function ProductionLauncher({
     onSuccess: (data) => {
       // Clone profond pour pouvoir éditer sans muter le cache de la mutation
       setEditableProposal(JSON.parse(JSON.stringify(data)) as AiProposal);
+      setUnassigned([]);
+      setSuggestOpen(true);
     },
   });
+
+  // Calcule automatiquement la proposition dès qu'il y a des commandes triées
+  // en attente — comme dans la maquette, pas d'étape de sélection manuelle.
+  useEffect(() => {
+    if (computedOnce.current) return;
+    if (pool.length === 0) return;
+    computedOnce.current = true;
+    compute.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pool.length]);
+
+  /** Commandes du pool jamais renvoyées par le calcul (capacité machine insuffisante ce jour). */
+  const placedOrderIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const b of editableProposal?.batches ?? []) {
+      for (const it of b.items) s.add(it.orderId);
+    }
+    for (const it of unassigned) s.add(it.orderId);
+    return s;
+  }, [editableProposal, unassigned]);
+  const neverComputedOrders = useMemo(
+    () => pool.filter((o) => !placedOrderIds.has(o.id)),
+    [pool, placedOrderIds],
+  );
+
+  /** Commande jamais incluse dans le calcul (capacité insuffisante) : on récupère
+   *  son détail par article via un appel ciblé, puis on la place sur la machine visée. */
+  const [recomputingOrderId, setRecomputingOrderId] = useState<string | null>(null);
+  const placeNeverComputedOrder = async (orderId: string, machine: Machine) => {
+    setRecomputingOrderId(orderId);
+    try {
+      const { data } = await api.post<AiProposal>('/batches/suggest', {
+        orderIds: [orderId],
+        useAi: false,
+      });
+      const items = (data.batches ?? []).flatMap((b) => b.items);
+      if (items.length === 0) return;
+      const movingWeightG = items.reduce((s, it) => s + (it.weight ?? 0), 0);
+      const newTotalKg = (currentLoadG(machine) + movingWeightG) / 1000;
+      if (newTotalKg > machine.capacity) {
+        setDropError(
+          `Capacité dépassée sur ${machine.brand} ${machine.model} : ${newTotalKg.toFixed(1)} kg pour ${machine.capacity} kg max.`,
+        );
+        return;
+      }
+      setDropError(null);
+      setEditableProposal((prev) => {
+        const batches = (prev?.batches ?? []).map((b) => ({ ...b, items: [...b.items] }));
+        let targetIdx = batches.findIndex((b) => b.machineId === machine.id);
+        if (targetIdx === -1) {
+          const p = programs[0];
+          batches.push({
+            machineId: machine.id,
+            machineRef: `${machine.brand} ${machine.model} · ${machine.reference}`,
+            programId: p?.id ?? '',
+            programName: p?.name,
+            capacity: machine.capacity,
+            totalWeight: 0,
+            utilization: 0,
+            contributors: [],
+            items: [],
+          });
+          targetIdx = batches.length - 1;
+        }
+        batches[targetIdx] = recalcBatch({
+          ...batches[targetIdx]!,
+          items: [...batches[targetIdx]!.items, ...items],
+        });
+        return { ...(prev ?? {}), batches };
+      });
+    } finally {
+      setRecomputingOrderId(null);
+    }
+  };
 
   const persist = useMutation({
     mutationFn: async () => {
@@ -885,359 +972,516 @@ function ProductionLauncher({
     onSuccess: () => {
       compute.reset();
       setEditableProposal(null);
-      setSelectedIds(new Set());
+      setUnassigned([]);
+      setSuggestOpen(false);
+      computedOnce.current = false;
       void qc.invalidateQueries({ queryKey: ordersKeys.all });
       void qc.invalidateQueries({ queryKey: batchesKeys.all });
     },
   });
 
-  const cancelProposal = () => {
-    compute.reset();
-    setEditableProposal(null);
-  };
-
-  /** Déplace une liste d'items (par leur index dans le batch source) vers un autre batch. */
+  /**
+   * Déplace une liste d'items (par leur index dans le batch source) vers un autre batch.
+   * sourceIdx/targetIdx === -1 désigne la file d'attente (bucket `unassigned`, hors machine).
+   *
+   * Calcule `taken` directement depuis les données déjà connues (pas de tableau partagé
+   * rempli à l'intérieur de deux setState séparés — l'ordre d'exécution des updaters React
+   * n'est pas garanti, ce qui pouvait laisser `taken` vide au moment de l'ajout à la cible).
+   */
   const moveItems = (
     sourceIdx: number,
     itemIdxs: number[],
     targetIdx: number,
   ) => {
     if (sourceIdx === targetIdx || itemIdxs.length === 0) return;
+    const sourceItems = sourceIdx === -1 ? unassigned : (editableProposal?.batches?.[sourceIdx]?.items ?? []);
+    const taken = itemIdxs.map((i) => sourceItems[i]).filter((it): it is ProposalItem => !!it);
+    if (taken.length === 0) return;
+    const takenIds = new Set(taken.map((it) => it.tagId));
+
+    if (sourceIdx === -1) {
+      setUnassigned((prev) => prev.filter((it) => !takenIds.has(it.tagId)));
+    } else {
+      setEditableProposal((prev) => {
+        if (!prev?.batches) return prev;
+        const batches = prev.batches.map((b, idx) =>
+          idx === sourceIdx
+            ? recalcBatch({ ...b, items: b.items.filter((it) => !takenIds.has(it.tagId)) })
+            : b,
+        );
+        return { ...prev, batches };
+      });
+    }
+
+    if (targetIdx === -1) {
+      setUnassigned((prev) => [...prev, ...taken]);
+    } else {
+      setEditableProposal((prev) => {
+        if (!prev?.batches) return prev;
+        const batches = prev.batches.map((b, idx) =>
+          idx === targetIdx ? recalcBatch({ ...b, items: [...b.items, ...taken] }) : b,
+        );
+        return { ...prev, batches };
+      });
+    }
+  };
+
+  /** Message d'erreur transitoire (capacité dépassée, etc.) affiché sous le plan de charge. */
+  const [dropError, setDropError] = useState<string | null>(null);
+
+  /** Poids (g) déjà engagé sur `machine` dans la proposition courante. */
+  const currentLoadG = (machine: Machine) => {
+    const b = (editableProposal?.batches ?? []).find((x) => x.machineId === machine.id);
+    return (b?.items ?? []).reduce((s, it) => s + (it.weight ?? 0), 0);
+  };
+
+  /** Retire les items de leur source (batch ou file d'attente) et les place sur `machine`
+   *  (créant son batch au passage si besoin) — le tout en une seule mise à jour cohérente.
+   *  Refuse si ça dépasse la capacité de la machine. */
+  const dropItemsOnMachine = (
+    sourceIdx: number,
+    itemIdxs: number[],
+    machine: Machine,
+  ) => {
+    const sourceItems = sourceIdx === -1 ? unassigned : (editableProposal?.batches?.[sourceIdx]?.items ?? []);
+    const taken = itemIdxs.map((i) => sourceItems[i]).filter((it): it is ProposalItem => !!it);
+    if (taken.length === 0) return;
+    const takenIds = new Set(taken.map((it) => it.tagId));
+    const movingWeightG = taken.reduce((s, it) => s + (it.weight ?? 0), 0);
+    const newTotalKg = (currentLoadG(machine) + movingWeightG) / 1000;
+    if (newTotalKg > machine.capacity) {
+      setDropError(
+        `Capacité dépassée sur ${machine.brand} ${machine.model} : ${newTotalKg.toFixed(1)} kg pour ${machine.capacity} kg max. Retire des articles avant d'en ajouter.`,
+      );
+      return;
+    }
+    setDropError(null);
+
+    if (sourceIdx === -1) {
+      setUnassigned((prev) => prev.filter((it) => !takenIds.has(it.tagId)));
+    }
+
     setEditableProposal((prev) => {
-      if (!prev?.batches) return prev;
-      const next: AiProposal = {
-        ...prev,
-        batches: prev.batches.map((b) => ({ ...b, items: [...b.items] })),
-      };
-      const source = next.batches![sourceIdx]!;
-      const target = next.batches![targetIdx]!;
-      // Trier en ordre décroissant pour splice sans décaler les index restants
-      const sorted = [...itemIdxs].sort((a, b) => b - a);
-      const taken: ProposalItem[] = [];
-      for (const idx of sorted) {
-        const [it] = source.items.splice(idx, 1);
-        if (it) taken.push(it);
+      let batches = (prev?.batches ?? []).map((b) => ({ ...b, items: [...b.items] }));
+
+      if (sourceIdx !== -1) {
+        batches = batches.map((b, idx) =>
+          idx === sourceIdx
+            ? recalcBatch({ ...b, items: b.items.filter((it) => !takenIds.has(it.tagId)) })
+            : b,
+        );
       }
-      target.items.push(...taken);
-      next.batches![sourceIdx] = recalcBatch(source);
-      next.batches![targetIdx] = recalcBatch(target);
-      return next;
-    });
-  };
 
-  /** Change la machine d'un batch (et recalcule utilisation avec la nouvelle capacité). */
-  const setBatchMachine = (batchIdx: number, machine: Machine) => {
-    setEditableProposal((prev) => {
-      if (!prev?.batches) return prev;
-      const next: AiProposal = {
-        ...prev,
-        batches: prev.batches.map((b) => ({ ...b, items: [...b.items] })),
-      };
-      const b = next.batches![batchIdx]!;
-      b.machineId = machine.id;
-      b.machineRef = `${machine.brand} ${machine.model} · ${machine.reference}`;
-      b.capacity = machine.capacity;
-      next.batches![batchIdx] = recalcBatch(b);
-      return next;
-    });
-  };
-
-  /** Change le programme de lavage d'un batch. */
-  const setBatchProgram = (batchIdx: number, program: WashingProgram) => {
-    setEditableProposal((prev) => {
-      if (!prev?.batches) return prev;
-      const next: AiProposal = {
-        ...prev,
-        batches: prev.batches.map((b) => ({ ...b, items: [...b.items] })),
-      };
-      const b = next.batches![batchIdx]!;
-      b.programId = program.id;
-      b.programName = program.name;
-      next.batches![batchIdx] = b;
-      return next;
-    });
-  };
-
-  /** Ajoute un batch vide ; l'utilisateur lui assignera ensuite machine/programme + déplacera des items. */
-  const addEmptyBatch = () => {
-    if (availableMachines.length === 0) return;
-    const m = availableMachines[0]!;
-    const p = programs[0];
-    setEditableProposal((prev) => {
-      if (!prev?.batches) return prev;
-      const fresh: ProposalBatch = {
-        machineId: m.id,
-        machineRef: `${m.brand} ${m.model} · ${m.reference}`,
-        programId: p?.id ?? '',
-        programName: p?.name,
-        capacity: m.capacity,
-        totalWeight: 0,
-        utilization: 0,
-        contributors: [],
-        items: [],
-      };
-      return { ...prev, batches: [...prev.batches, fresh] };
-    });
-  };
-
-  /** Supprime un batch ; ses items sont absorbés par le batch précédent
-   *  (ou suivant si on supprime le 1er) pour ne perdre aucune pièce. */
-  const removeBatch = (batchIdx: number) => {
-    setEditableProposal((prev) => {
-      if (!prev?.batches || prev.batches.length <= 1) return prev;
-      const next: AiProposal = {
-        ...prev,
-        batches: prev.batches.map((b) => ({ ...b, items: [...b.items] })),
-      };
-      const removed = next.batches!.splice(batchIdx, 1)[0];
-      if (removed && removed.items.length > 0) {
-        const fallbackIdx = batchIdx === 0 ? 0 : batchIdx - 1;
-        const fallback = next.batches![fallbackIdx]!;
-        fallback.items.push(...removed.items);
-        next.batches![fallbackIdx] = recalcBatch(fallback);
+      let targetIdx = batches.findIndex((b) => b.machineId === machine.id);
+      if (targetIdx === -1) {
+        const p = programs[0];
+        batches.push({
+          machineId: machine.id,
+          machineRef: `${machine.brand} ${machine.model} · ${machine.reference}`,
+          programId: p?.id ?? '',
+          programName: p?.name,
+          capacity: machine.capacity,
+          totalWeight: 0,
+          utilization: 0,
+          contributors: [],
+          items: [],
+        });
+        targetIdx = batches.length - 1;
       }
-      return next;
+      batches[targetIdx] = recalcBatch({
+        ...batches[targetIdx]!,
+        items: [...batches[targetIdx]!.items, ...taken],
+      });
+
+      return { ...(prev ?? {}), batches };
     });
   };
 
-  const allSelected = selectedIds.size === pool.length && pool.length > 0;
-  const someSelected = selectedIds.size > 0;
-  const selectedPieces = pool
-    .filter((o) => selectedIds.has(o.id))
-    .reduce(
-      (s, o) => s + (o.triage?.totalPieces ?? o.receivedPieces ?? 0),
-      0,
-    );
+
+  // ── Groupement pour l'affichage (file d'attente + détail des blocs machine) ──
+  const unassignedGroups = useMemo(() => groupItems(unassigned), [unassigned]);
+  const todayLabel = useMemo(
+    () => new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short' }).format(new Date()),
+    [],
+  );
+
+  const [expandedBatch, setExpandedBatch] = useState<number | null>(null);
+  const [dragOverMachine, setDragOverMachine] = useState<string | null>(null);
+
+  const dragPayload = (data: { sourceIdx: number; itemIdxs: number[] } | { neverComputedOrderId: string }) =>
+    JSON.stringify(data);
+
+  const handleDropOnMachine = (e: React.DragEvent, machine: Machine) => {
+    e.preventDefault();
+    setDragOverMachine(null);
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      if ('neverComputedOrderId' in data) {
+        void placeNeverComputedOrder(data.neverComputedOrderId, machine);
+      } else {
+        dropItemsOnMachine(data.sourceIdx, data.itemIdxs, machine);
+      }
+    } catch {
+      /* payload invalide — ignore */
+    }
+  };
+
+  if (pool.length === 0) {
+    return null;
+  }
 
   return (
-    <section className="card-surface overflow-hidden border-2 border-brand-200">
-      {/* ─── Header sélection ─────────────────────────────────────── */}
-      <div className="px-5 py-4 bg-brand-50/50 border-b border-brand-200 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-input bg-brand-800 text-paper flex items-center justify-center shrink-0">
-          <PlayCircle className="w-5 h-5" strokeWidth={2} />
+    <div className="flex flex-col gap-4">
+      {/* ─── Bannière suggestion de regroupement (uniquement au lavage) ─── */}
+      {suggestOpen && editableProposal?.batches && editableProposal.batches.length > 0 && (
+        <div className="bg-brand-900 text-white p-5">
+          <div className="flex items-start gap-4 flex-wrap">
+            <div className="flex-1 min-w-[250px]">
+              <p className="text-[10px] tracking-[0.18em] uppercase text-terra-600 font-heading font-bold">
+                Suggestion de regroupement
+              </p>
+              <p className="font-heading font-bold text-[22px] mt-1.5 leading-snug">
+                {editableProposal.batches.length} batch
+                {editableProposal.batches.length > 1 ? 'es' : ''} proposé
+                {editableProposal.batches.length > 1 ? 's' : ''}, {pool.length} commande
+                {pool.length > 1 ? 's' : ''} optimisée{pool.length > 1 ? 's' : ''}.
+              </p>
+              <p className="text-[13px] text-[#C9D4E4] mt-2 leading-relaxed max-w-[560px]">
+                Contraintes vérifiées : capacité machine, compatibilité des types de linge,
+                programme de lavage identique. Chaque batch reste modifiable avant démarrage.
+              </p>
+            </div>
+            <div className="flex-none flex gap-2.5">
+              <button
+                onClick={() => {
+                  setEditableProposal(null);
+                  setUnassigned([]);
+                  setSuggestOpen(false);
+                }}
+                className="h-11 px-4.5 border border-brand-600 bg-transparent text-[#C9D4E4] font-heading font-medium text-[13px]"
+                title="Efface la proposition — toutes les commandes repassent en file d'attente pour affectation 100% manuelle"
+              >
+                Ignorer
+              </button>
+              <button
+                onClick={() => persist.mutate()}
+                disabled={persist.isPending}
+                className="h-11 px-5 border-none bg-terra-600 text-white font-heading font-bold text-[13px] disabled:opacity-50"
+              >
+                {persist.isPending ? 'Application…' : `Appliquer les ${editableProposal.batches.length} batches`}
+              </button>
+            </div>
+          </div>
+          <div className="grid gap-3 mt-4.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(214px, 1fr))' }}>
+            {editableProposal.batches.map((b, i) => {
+              const fillPct = Math.min(100, Math.round(b.utilization * 100));
+              return (
+                <div key={i} className="bg-brand-800 border border-brand-600 p-3.5">
+                  <div className="flex justify-between items-center">
+                    <span className="font-heading text-[13px]">{b.machineRef ?? '—'}</span>
+                    <span className="font-heading text-xs text-terra-600">{fillPct}%</span>
+                  </div>
+                  <p className="text-[12.5px] text-[#C9D4E4] mt-2 leading-snug">
+                    {b.totalWeight.toFixed(1)} kg · {b.contributors.length} client
+                    {b.contributors.length > 1 ? 's' : ''} · {b.programName ?? 'programme —'}
+                  </p>
+                  <div className="mt-2.5 h-1 bg-brand-700 overflow-hidden">
+                    <div className="h-full bg-terra-600" style={{ width: `${fillPct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h2 className="font-serif text-lg font-medium text-ink-900">
-            Sélection des commandes à lancer
-          </h2>
-          <p className="text-tiny text-ink-700">
-            {pool.length} commande{pool.length > 1 ? 's' : ''} triée
-            {pool.length > 1 ? 's' : ''} prête
-            {pool.length > 1 ? 's' : ''} — choisis celles à envoyer en production.
-          </p>
-        </div>
-        <div className="hidden sm:flex items-center gap-2 shrink-0">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() =>
-              allSelected ? setSelectedIds(new Set()) : compose()
-            }
-          >
-            {allSelected ? 'Tout désélectionner' : 'Sélection auto'}
-          </Button>
-        </div>
-      </div>
+      )}
 
-      {/* ─── Liste + sélection bulk ───────────────────────────────── */}
-      <div className="p-5 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <label className="flex items-center gap-2 text-sm text-ink-700 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={allSelected}
-              onChange={() =>
-                allSelected
-                  ? setSelectedIds(new Set())
-                  : setSelectedIds(new Set(pool.map((o) => o.id)))
-              }
-              ref={(el) => {
-                if (el) el.indeterminate = someSelected && !allSelected;
-              }}
-              className="w-4 h-4 accent-brand-800"
-            />
-            <span className="font-semibold">
-              {selectedIds.size}/{pool.length} sélectionnée
-              {selectedIds.size > 1 ? 's' : ''}
-            </span>
-            {someSelected && (
-              <span className="text-tiny font-mono tnum text-ink-500">
-                · {selectedPieces} pc · {selectedKg.toFixed(1)} kg
-              </span>
-            )}
-          </label>
-          {someSelected && (
+      {/* ─── Plan de charge machines ─── */}
+      <div className="bg-paper border border-ink-200">
+        <div className="px-5 py-4 border-b border-ink-200 flex items-end justify-between gap-3.5 flex-wrap">
+          <div>
+            <p className="font-heading font-bold text-lg text-ink-900">
+              Plan de charge machines — {todayLabel}
+            </p>
+            <p className="text-[12.5px] text-ink-600 mt-0.5">
+              Glissez une commande de la file d'attente sur une ligne machine.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="inline-flex border border-ink-200 p-0.5 bg-paper">
+              <button
+                type="button"
+                onClick={() => setMode('ai')}
+                className={cn(
+                  'px-2.5 py-1.5 text-tiny font-heading font-semibold flex items-center gap-1',
+                  mode === 'ai' ? 'bg-brand-800 text-white' : 'text-ink-700',
+                )}
+              >
+                <Sparkles className="w-3 h-3" strokeWidth={2} />
+                IA
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('manual')}
+                className={cn(
+                  'px-2.5 py-1.5 text-tiny font-heading font-semibold',
+                  mode === 'manual' ? 'bg-ink-900 text-white' : 'text-ink-700',
+                )}
+              >
+                Heuristique
+              </button>
+            </div>
             <button
               type="button"
-              onClick={() => setSelectedIds(new Set())}
-              className="text-tiny font-semibold text-ink-500 hover:text-rose-700"
+              onClick={async () => {
+                setSuggestOpen(false);
+                setIsRecalculating(true);
+                try {
+                  await compute.mutateAsync();
+                } catch {
+                  /* l'erreur est déjà exposée via compute.isError */
+                } finally {
+                  setIsRecalculating(false);
+                }
+              }}
+              disabled={isRecalculating}
+              className="inline-flex items-center gap-1.5 h-[30px] px-3 border border-ink-200 text-tiny font-heading font-semibold text-ink-700 hover:border-terra-600 hover:text-terra-700 disabled:opacity-50"
+              title="Relance le calcul avec toutes les commandes triées actuellement en attente (y compris les nouvelles)"
             >
-              Effacer
+              {isRecalculating ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.75} />
+              )}
+              Recalculer ({pool.length})
             </button>
-          )}
-        </div>
-
-        <div className="border-hairline border-ink-200 rounded-input divide-y divide-ink-100 bg-paper overflow-hidden">
-          {pool.map((o) => (
-            <PoolRow
-              key={o.id}
-              order={o}
-              selected={selectedIds.has(o.id)}
-              onToggle={() => toggle(o.id)}
-            />
-          ))}
-        </div>
-
-        <CapacityBar selectedKg={selectedKg} totalKg={dailyCapacity} />
-      </div>
-
-      {/* Proposition détaillée + édition manuelle */}
-      {editableProposal && (
-        <div className="px-5 pb-5">
-          <ProposalReview
-            proposal={editableProposal}
-            onMoveItems={moveItems}
-            onSetMachine={setBatchMachine}
-            onSetProgram={setBatchProgram}
-            onAddBatch={addEmptyBatch}
-            onRemoveBatch={removeBatch}
-            machines={availableMachines}
-            programs={programs}
-            onCancel={cancelProposal}
-            onValidate={() => persist.mutate()}
-            validating={persist.isPending}
-          />
-        </div>
-      )}
-
-      {/* ─── Footer actions ──────────────────────────────────────── */}
-      <div className="px-5 py-4 bg-paper-2 border-t border-ink-200 flex items-center justify-between gap-3 flex-wrap">
-        <div className="inline-flex border-hairline border-ink-200 rounded-input p-0.5 bg-paper">
-          <button
-            type="button"
-            onClick={() => setMode('ai')}
-            className={cn(
-              'px-3 py-1.5 text-tiny font-semibold rounded-input transition-colors flex items-center gap-1.5',
-              mode === 'ai'
-                ? 'bg-brand-800 text-paper'
-                : 'text-ink-700 hover:bg-paper-2',
+            {!suggestOpen && editableProposal?.batches && editableProposal.batches.length > 0 && (
+              <Button size="sm" onClick={() => persist.mutate()} disabled={persist.isPending}>
+                {persist.isPending ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <PlayCircle className="w-3.5 h-3.5" strokeWidth={1.75} />
+                )}
+                Valider le plan
+              </Button>
             )}
-            title="Optimisation par IA"
-          >
-            <Sparkles className="w-3 h-3" strokeWidth={2} />
-            Avec IA
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('manual')}
-            className={cn(
-              'px-3 py-1.5 text-tiny font-semibold rounded-input transition-colors',
-              mode === 'manual'
-                ? 'bg-ink-900 text-paper'
-                : 'text-ink-700 hover:bg-paper-2',
-            )}
-            title="Algorithme heuristique simple"
-          >
-            Heuristique
-          </button>
+          </div>
         </div>
 
-        <Button
-          size="lg"
-          onClick={() => compute.mutate()}
-          disabled={
-            selectedIds.size === 0 ||
-            compute.isPending ||
-            editableProposal != null
-          }
-          className="gap-2 h-12 px-5 text-base"
-        >
-          {compute.isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <PlayCircle className="w-4 h-4" strokeWidth={1.75} />
-          )}
-          Démarrer la production
-        </Button>
-      </div>
-    </section>
-  );
-}
-
-function PoolRow({
-  order,
-  selected,
-  onToggle,
-}: {
-  order: MappedOrder;
-  selected: boolean;
-  onToggle: () => void;
-}) {
-  const officialKg = order.receivedWeight
-    ? Math.round((order.receivedWeight / 1000) * 10) / 10
-    : (order.totalWeight ?? 0);
-  const piecesTriaged = order.triage?.totalPieces ?? order.receivedPieces ?? 0;
-
-  return (
-    <label
-      className={cn(
-        'flex items-start gap-3 py-3 px-4 cursor-pointer transition-colors',
-        selected ? 'bg-brand-50' : 'hover:bg-paper-2',
-      )}
-    >
-      <input
-        type="checkbox"
-        checked={selected}
-        onChange={onToggle}
-        className="w-4 h-4 accent-brand-800 mt-0.5"
-      />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <Building2 className="w-4 h-4 text-brand-800 shrink-0" strokeWidth={1.75} />
-          <p className="text-sm font-semibold text-ink-900 truncate">
-            {order.clientName ?? '—'}
+        {compute.isError && (
+          <p className="text-tiny text-danger-600 px-5 pt-3">
+            Échec du calcul — clique sur "Recalculer" pour réessayer.
           </p>
-          <p className="font-mono text-tiny text-ink-500 tnum">{order.orderNumber}</p>
-        </div>
-        <p className="font-mono text-tiny text-ink-500 tnum">
-          {piecesTriaged} pièces · pesé {officialKg.toFixed(1)} kg
-        </p>
-      </div>
-      <div className="text-right shrink-0">
-        <p className="font-mono text-base font-semibold tnum text-ink-900">
-          {officialKg.toFixed(0)}
-          <span className="text-sm font-normal text-ink-500"> kg</span>
-        </p>
-      </div>
-    </label>
-  );
-}
+        )}
+        {dropError && (
+          <div className="mx-5 mt-3 bg-danger-100 border-l-[3px] border-danger-600 px-3.5 py-2.5 text-tiny text-danger-600">
+            {dropError}
+          </div>
+        )}
+        {(
+          <div className="divide-y divide-[#F4F6F9]">
+            {availableMachines.map((m) => {
+              const batchIdx = (editableProposal?.batches ?? []).findIndex((b) => b.machineId === m.id);
+              const rawBatch = batchIdx >= 0 ? editableProposal!.batches![batchIdx] : null;
+              // Un batch vidé de tous ses articles (retiré via ✕/Retirer) redevient "Libre"
+              // à l'affichage plutôt que de rester affiché comme un batch fantôme à 0%.
+              const batch = rawBatch && rawBatch.items.length > 0 ? rawBatch : null;
+              const fillPct = batch ? Math.round(batch.utilization * 100) : 0;
+              const overCap = !!batch && batch.utilization > 1;
+              const isOver = dragOverMachine === m.id;
+              const expanded = expandedBatch === batchIdx && batchIdx >= 0;
+              return (
+                <div key={m.id}>
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragOverMachine(m.id);
+                    }}
+                    onDragLeave={() => setDragOverMachine((v) => (v === m.id ? null : v))}
+                    onDrop={(e) => handleDropOnMachine(e, m)}
+                    className="grid gap-0"
+                    style={{ gridTemplateColumns: '180px minmax(0,1fr)', background: isOver ? '#FCEBD9' : undefined }}
+                  >
+                    <div className="px-4 py-3 border-r border-ink-200 bg-[#FAFBFC]">
+                      <p className="text-sm font-medium text-ink-900">{m.brand} {m.model}</p>
+                      <p className="font-heading text-[11px] text-ink-600 mt-0.5">
+                        {m.capacity} kg{batch?.programName ? ` · ${batch.programName}` : ''}
+                      </p>
+                      <p
+                        className="font-heading text-[11px] font-bold mt-1"
+                        style={{ color: overCap ? '#C1441F' : batch ? '#2C7A4B' : '#8B97A8' }}
+                      >
+                        {batch ? `${fillPct}% engagée` : 'Libre'}
+                      </p>
+                    </div>
+                    <div
+                      className="relative min-h-[72px] flex items-center px-3"
+                      style={{ background: isOver ? undefined : '#fff' }}
+                    >
+                      {batch ? (
+                        <div
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData(
+                              'text/plain',
+                              JSON.stringify({ sourceIdx: batchIdx, itemIdxs: batch.items.map((_, i) => i) }),
+                            );
+                          }}
+                          className="w-full max-w-[420px] py-2.5 px-3 flex items-start gap-2 cursor-grab"
+                          style={{
+                            background: overCap ? '#FBEAE5' : '#FCEBD9',
+                            borderLeft: `3px solid ${overCap ? '#C1441F' : '#DE6B0E'}`,
+                          }}
+                        >
+                          <button
+                            onClick={() => setExpandedBatch(expanded ? null : batchIdx)}
+                            className="text-left flex-1 min-w-0"
+                          >
+                            <p className="font-heading text-[11.5px] font-medium text-ink-900">
+                              {batch.contributors.length} client{batch.contributors.length > 1 ? 's' : ''} ·{' '}
+                              {batch.totalWeight.toFixed(1)} kg
+                            </p>
+                            <p className="text-[10.5px] text-ink-600 mt-0.5 truncate">
+                              {batch.contributors.map((c) => c.clientName).join(', ')}
+                            </p>
+                          </button>
+                          <button
+                            onClick={() => moveItems(batchIdx, batch.items.map((_, i) => i), -1)}
+                            className="flex-none text-ink-500 hover:text-danger-600 text-sm leading-none px-1"
+                            title="Retirer toute la commande de cette machine"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-tiny text-ink-400 italic">
+                          Glisser une commande ici pour démarrer un batch
+                        </p>
+                      )}
+                      {overCap && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 bg-danger-600 text-white px-2.5 py-1.5 text-[11.5px] font-heading font-bold">
+                          Capacité dépassée
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-function CapacityBar({ selectedKg, totalKg }: { selectedKg: number; totalKg: number }) {
-  const pct = Math.min(100, (selectedKg / totalKg) * 100);
-  const overload = selectedKg > totalKg;
-  return (
-    <div className="mt-4">
-      <div className="flex items-baseline justify-between text-tiny text-ink-500 mb-1">
-        <span>Capacité utilisée</span>
-        <span className="font-mono tnum">
-          {selectedKg.toFixed(0)} / {totalKg} kg
-        </span>
+                  {expanded && batch && (
+                    <div className="px-4 py-3 bg-[#FAFBFC] border-t border-ink-200">
+                      {groupItems(batch.items).map((g) => (
+                        <div
+                          key={g.key}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData(
+                              'text/plain',
+                              JSON.stringify({ sourceIdx: batchIdx, itemIdxs: g.itemIdxs }),
+                            );
+                          }}
+                          className="flex items-center justify-between gap-2.5 py-1.5 text-[12.5px] flex-wrap cursor-grab"
+                        >
+                          <span className="text-ink-700 truncate">
+                            {g.clientName} · {g.linenTypeName ?? g.linenTypeCode} ({g.itemIdxs.length})
+                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <select
+                              value=""
+                              onChange={(e) => {
+                                const target = availableMachines.find((mm) => mm.id === e.target.value);
+                                if (target) dropItemsOnMachine(batchIdx, g.itemIdxs, target);
+                              }}
+                              className="h-7 px-1.5 text-tiny font-heading bg-paper border border-ink-300 text-ink-700"
+                            >
+                              <option value="">Déplacer vers…</option>
+                              {availableMachines
+                                .filter((mm) => mm.id !== m.id)
+                                .map((mm) => (
+                                  <option key={mm.id} value={mm.id}>
+                                    {mm.brand} {mm.model}
+                                  </option>
+                                ))}
+                            </select>
+                            <button
+                              onClick={() => moveItems(batchIdx, g.itemIdxs, -1)}
+                              className="text-tiny font-heading font-semibold text-ink-500 hover:text-terra-700"
+                            >
+                              Retirer → file d'attente
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {availableMachines.length === 0 && (
+              <p className="text-tiny text-ink-500 px-5 py-6">Aucune laveuse active.</p>
+            )}
+          </div>
+        )}
       </div>
-      <div className="h-2 bg-ink-100 rounded-pill overflow-hidden">
-        <div
-          className={cn(
-            'h-full rounded-pill transition-all',
-            overload ? 'bg-rose-500' : pct > 70 ? 'bg-baobab-600' : 'bg-brand-800',
+
+      {/* ─── File d'attente ─── */}
+      <div className="bg-paper border border-ink-200 p-4.5">
+        <p className="font-heading font-bold text-[17px] text-ink-900">File d'attente</p>
+        <p className="text-[12.5px] text-ink-600 mt-0.5">
+          {unassignedGroups.length + neverComputedOrders.length} commande(s) triée(s) non affectée(s)
+        </p>
+        <div className="grid gap-2.5 mt-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))' }}>
+          {unassignedGroups.map((g) => (
+            <div
+              key={g.key}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData('text/plain', dragPayload({ sourceIdx: -1, itemIdxs: g.itemIdxs }));
+              }}
+              className="bg-[#FAFBFC] border border-ink-200 p-3.5 cursor-grab"
+              style={{ borderLeft: '3px solid #DE6B0E' }}
+            >
+              <div className="flex justify-between items-center gap-2">
+                <span className="font-heading font-medium text-[12.5px] text-ink-800">
+                  {g.clientName ?? '—'}
+                </span>
+                <span className="font-heading font-semibold text-xs text-ink-800">
+                  {(g.totalWeightG / 1000).toFixed(1)} kg
+                </span>
+              </div>
+              <p className="text-[12.5px] text-ink-600 mt-1.5">{g.linenTypeName ?? g.linenTypeCode}</p>
+            </div>
+          ))}
+          {neverComputedOrders.map((o) => (
+            <div
+              key={o.id}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData('text/plain', dragPayload({ neverComputedOrderId: o.id }));
+              }}
+              className="bg-[#FAFBFC] border border-ink-200 p-3.5 cursor-grab"
+              style={{ borderLeft: '3px solid #8B97A8', opacity: recomputingOrderId === o.id ? 0.5 : 1 }}
+            >
+              <div className="flex justify-between items-center gap-2">
+                <span className="font-heading font-medium text-[12.5px] text-ink-800">{o.orderNumber}</span>
+                <span className="font-heading font-semibold text-xs text-ink-800">
+                  {(o.totalWeight ?? 0).toFixed(1)} kg
+                </span>
+              </div>
+              <p className="text-[12.5px] text-ink-600 mt-1.5">
+                {o.clientName ?? '—'} · pas encore placée (capacité insuffisante)
+              </p>
+            </div>
+          ))}
+          {unassignedGroups.length === 0 && neverComputedOrders.length === 0 && (
+            <div className="border border-dashed border-ink-300 p-5 text-center text-[12.5px] text-ink-600">
+              File vide — toutes les commandes triées sont affectées.
+            </div>
           )}
-          style={{ width: `${pct}%` }}
-        />
+        </div>
       </div>
     </div>
   );
 }
 
-/* ════════════ Proposition détaillée + édition manuelle ════════════ */
+/* ════════════ Proposition détaillée + édition manuelle (stages post-lavage) ════════════ */
 
 function ProposalReview({
   proposal,
@@ -2527,9 +2771,15 @@ function StageLauncher({
   const [base, setBase] = useState<StageProposal | null>(null);
   const [editable, setEditable] = useState<AiProposal | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [unassigned, setUnassigned] = useState<ProposalItem[]>([]);
+  const [expandedBatch, setExpandedBatch] = useState<number | null>(null);
+  const suggestedOnce = useRef(false);
 
+  /** État local, indépendant de suggest.isPending (garantit que le bouton s'arrête toujours). */
+  const [isSuggesting, setIsSuggesting] = useState(false);
   const onSuggest = async () => {
     setError(null);
+    setIsSuggesting(true);
     try {
       const data = await suggest.mutateAsync(stage);
       if (!data.batches || data.batches.length === 0) {
@@ -2540,6 +2790,7 @@ function StageLauncher({
       }
       setBase(data);
       setEditable(JSON.parse(JSON.stringify(stageProposalToEditable(data))));
+      setUnassigned([]);
     } catch (e) {
       const msg =
         // axios error
@@ -2547,8 +2798,21 @@ function StageLauncher({
           ?.response?.data?.error?.message ??
         (e instanceof Error ? e.message : 'Erreur lors du calcul.');
       setError(msg);
+    } finally {
+      setIsSuggesting(false);
     }
   };
+
+  // Étapes machine (pas finition) : calcul automatique dès qu'il y a de l'attente,
+  // comme au lavage — pas de bouton "Proposer" à cliquer.
+  useEffect(() => {
+    if (isFinition) return;
+    if (suggestedOnce.current) return;
+    if (waiting <= 0) return;
+    suggestedOnce.current = true;
+    void onSuggest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFinition, waiting]);
 
   const cancel = () => {
     setBase(null);
@@ -2564,27 +2828,98 @@ function StageLauncher({
     cancel();
   };
 
-  // Mutateurs partagés avec ProposalReview
+  // Mutateurs partagés avec ProposalReview.
+  // sourceIdx/targetIdx === -1 désigne la file d'attente (bucket `unassigned`, hors machine).
+  // `taken` est calculé directement depuis les données déjà connues (pas de tableau
+  // partagé rempli à l'intérieur de deux setState séparés — l'ordre d'exécution des
+  // updaters React n'est pas garanti).
   const moveItems = (sourceIdx: number, itemIdxs: number[], targetIdx: number) => {
     if (sourceIdx === targetIdx || itemIdxs.length === 0) return;
+    const sourceItems = sourceIdx === -1 ? unassigned : (editable?.batches?.[sourceIdx]?.items ?? []);
+    const taken = itemIdxs.map((i) => sourceItems[i]).filter((it): it is ProposalItem => !!it);
+    if (taken.length === 0) return;
+    const takenIds = new Set(taken.map((it) => it.tagId));
+
+    if (sourceIdx === -1) {
+      setUnassigned((prev) => prev.filter((it) => !takenIds.has(it.tagId)));
+    } else {
+      setEditable((prev) => {
+        if (!prev?.batches) return prev;
+        const batches = prev.batches.map((b, idx) =>
+          idx === sourceIdx
+            ? recalcBatch({ ...b, items: b.items.filter((it) => !takenIds.has(it.tagId)) })
+            : b,
+        );
+        return { ...prev, batches };
+      });
+    }
+
+    if (targetIdx === -1) {
+      setUnassigned((prev) => [...prev, ...taken]);
+    } else {
+      setEditable((prev) => {
+        if (!prev?.batches) return prev;
+        const batches = prev.batches.map((b, idx) =>
+          idx === targetIdx ? recalcBatch({ ...b, items: [...b.items, ...taken] }) : b,
+        );
+        return { ...prev, batches };
+      });
+    }
+  };
+
+  const [dropError, setDropError] = useState<string | null>(null);
+  const currentLoadG = (machine: Machine) => {
+    const b = (editable?.batches ?? []).find((x) => x.machineId === machine.id);
+    return (b?.items ?? []).reduce((s, it) => s + (it.weight ?? 0), 0);
+  };
+
+  /** Retire les items de leur source puis les place sur `machine` (créant son batch au besoin).
+   *  Refuse si ça dépasse la capacité de la machine. */
+  const dropItemsOnMachine = (sourceIdx: number, itemIdxs: number[], machine: Machine) => {
+    const sourceItems = sourceIdx === -1 ? unassigned : (editable?.batches?.[sourceIdx]?.items ?? []);
+    const taken = itemIdxs.map((i) => sourceItems[i]).filter((it): it is ProposalItem => !!it);
+    if (taken.length === 0) return;
+    const takenIds = new Set(taken.map((it) => it.tagId));
+    const movingWeightG = taken.reduce((s, it) => s + (it.weight ?? 0), 0);
+    const newTotalKg = (currentLoadG(machine) + movingWeightG) / 1000;
+    if (newTotalKg > machine.capacity) {
+      setDropError(
+        `Capacité dépassée sur ${machine.brand} ${machine.model} : ${newTotalKg.toFixed(1)} kg pour ${machine.capacity} kg max.`,
+      );
+      return;
+    }
+    setDropError(null);
+    if (sourceIdx === -1) {
+      setUnassigned((prev) => prev.filter((it) => !takenIds.has(it.tagId)));
+    }
     setEditable((prev) => {
-      if (!prev?.batches) return prev;
-      const next: AiProposal = {
-        ...prev,
-        batches: prev.batches.map((b) => ({ ...b, items: [...b.items] })),
-      };
-      const source = next.batches![sourceIdx]!;
-      const target = next.batches![targetIdx]!;
-      const sorted = [...itemIdxs].sort((a, b) => b - a);
-      const taken: ProposalItem[] = [];
-      for (const idx of sorted) {
-        const [it] = source.items.splice(idx, 1);
-        if (it) taken.push(it);
+      let batches = (prev?.batches ?? []).map((b) => ({ ...b, items: [...b.items] }));
+      if (sourceIdx !== -1) {
+        batches = batches.map((b, idx) =>
+          idx === sourceIdx
+            ? recalcBatch({ ...b, items: b.items.filter((it) => !takenIds.has(it.tagId)) })
+            : b,
+        );
       }
-      target.items.push(...taken);
-      next.batches![sourceIdx] = recalcBatch(source);
-      next.batches![targetIdx] = recalcBatch(target);
-      return next;
+      let targetIdx = batches.findIndex((b) => b.machineId === machine.id);
+      if (targetIdx === -1) {
+        batches.push({
+          machineId: machine.id,
+          machineRef: `${machine.brand} ${machine.model} · ${machine.reference}`,
+          programId: '',
+          capacity: machine.capacity,
+          totalWeight: 0,
+          utilization: 0,
+          contributors: [],
+          items: [],
+        });
+        targetIdx = batches.length - 1;
+      }
+      batches[targetIdx] = recalcBatch({
+        ...batches[targetIdx]!,
+        items: [...batches[targetIdx]!.items, ...taken],
+      });
+      return { ...(prev ?? {}), batches };
     });
   };
 
@@ -2656,80 +2991,283 @@ function StageLauncher({
     });
   };
 
-  // Pas encore de proposition → CTA initial (+ erreur éventuelle)
-  if (!editable) {
-    return (
-      <div className="space-y-2 mb-3">
-        <div className="rounded-input border-hairline border-baobab-200 bg-baobab-50 p-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <Sparkles className="w-5 h-5 text-baobab-700 shrink-0" strokeWidth={1.75} />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-ink-900">
-                <strong className="text-baobab-800">{waiting}</strong> pièce
-                {waiting > 1 ? 's' : ''} en attente de {stageLabel}
-              </p>
-              <p className="text-tiny text-ink-700">
-                {isFinition
-                  ? 'Pliage / mise en sachet — propose la finition pour valider.'
-                  : 'Génère une proposition (modifiable) avant de créer les batches.'}
-              </p>
-            </div>
-          </div>
-          <Button
-            size="sm"
-            onClick={onSuggest}
-            disabled={suggest.isPending}
-            className="gap-1.5 shrink-0"
-          >
-            {suggest.isPending ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Sparkles className="w-3.5 h-3.5" strokeWidth={1.75} />
-            )}
-            Proposer un plan {stageLabel}
-          </Button>
-        </div>
-
-        {error && (
-          <div className="rounded-input border-hairline border-rose-200 bg-rose-50 px-3 py-2 flex items-start gap-2">
-            <AlertTriangle
-              className="w-4 h-4 text-rose-700 shrink-0 mt-0.5"
-              strokeWidth={1.75}
-            />
-            <div className="text-tiny text-rose-800">
-              <strong className="block">
-                Impossible de générer la proposition
-              </strong>
-              {error}
-              {!isFinition && machines.length === 0 && (
-                <p className="mt-1 text-ink-700">
-                  Aucune machine compatible n'est marquée comme{' '}
-                  <em>Active</em>. Va dans Paramètres → Machines pour vérifier.
+  // Finition : pas de machine (batch virtuel) — flux simple inchangé.
+  if (isFinition) {
+    if (!editable) {
+      return (
+        <div className="space-y-2 mb-3">
+          <div className="rounded-input border-hairline border-baobab-200 bg-baobab-50 p-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Sparkles className="w-5 h-5 text-baobab-700 shrink-0" strokeWidth={1.75} />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink-900">
+                  <strong className="text-baobab-800">{waiting}</strong> pièce
+                  {waiting > 1 ? 's' : ''} en attente de {stageLabel}
                 </p>
-              )}
+                <p className="text-tiny text-ink-700">
+                  Pliage / mise en sachet — propose la finition pour valider.
+                </p>
+              </div>
             </div>
+            <Button
+              size="sm"
+              onClick={onSuggest}
+              disabled={isSuggesting}
+              className="gap-1.5 shrink-0"
+            >
+              {isSuggesting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5" strokeWidth={1.75} />
+              )}
+              Proposer un plan {stageLabel}
+            </Button>
           </div>
-        )}
+
+          {error && (
+            <div className="rounded-input border-hairline border-rose-200 bg-rose-50 px-3 py-2 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-700 shrink-0 mt-0.5" strokeWidth={1.75} />
+              <div className="text-tiny text-rose-800">
+                <strong className="block">Impossible de générer la proposition</strong>
+                {error}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div className="mb-4">
+        <ProposalReview
+          proposal={editable}
+          onMoveItems={moveItems}
+          onSetMachine={setBatchMachine}
+          onSetProgram={setBatchProgram}
+          onAddBatch={addEmptyBatch}
+          onRemoveBatch={removeBatch}
+          machines={machines}
+          programs={programs}
+          onCancel={cancel}
+          onValidate={validate}
+          validating={persist.isPending}
+        />
       </div>
     );
   }
 
-  // Proposition en cours d'édition → ProposalReview avec tous les leviers
+  // Étapes machine (séchage/calandrage/repassage) : plan de charge + file d'attente,
+  // calcul automatique — même logique visuelle que le lavage.
+  if (waiting <= 0) return null;
+
+  const unassignedGroups = groupItems(unassigned);
+  const batches = editable?.batches ?? [];
+
   return (
-    <div className="mb-4">
-      <ProposalReview
-        proposal={editable}
-        onMoveItems={moveItems}
-        onSetMachine={setBatchMachine}
-        onSetProgram={setBatchProgram}
-        onAddBatch={addEmptyBatch}
-        onRemoveBatch={removeBatch}
-        machines={machines}
-        programs={programs}
-        onCancel={cancel}
-        onValidate={validate}
-        validating={persist.isPending}
-      />
+    <div className="mb-4 flex flex-col gap-3">
+      <div className="bg-paper border border-ink-200">
+        <div className="px-4 py-3 border-b border-ink-200 flex items-center justify-between gap-3 flex-wrap">
+          <p className="font-heading font-bold text-[15px] text-ink-900">
+            Plan de charge — {stageLabel}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onSuggest}
+              disabled={isSuggesting}
+              className="inline-flex items-center gap-1.5 h-[30px] px-3 border border-ink-200 text-tiny font-heading font-semibold text-ink-700 hover:border-terra-600 hover:text-terra-700 disabled:opacity-50"
+              title="Relance le calcul avec toutes les pièces actuellement en attente"
+            >
+              {isSuggesting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.75} />
+              )}
+              Recalculer
+            </button>
+            <Button size="sm" onClick={validate} disabled={persist.isPending || !editable}>
+              {persist.isPending ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <PlayCircle className="w-3.5 h-3.5" strokeWidth={1.75} />
+              )}
+              Valider le plan {stageLabel}
+            </Button>
+          </div>
+        </div>
+        {error && (
+          <div className="px-4 pt-2 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-danger-600 shrink-0 mt-0.5" strokeWidth={1.75} />
+            <p className="text-tiny text-danger-600">
+              {error}
+              {machines.length === 0 && ' Aucune machine compatible active — vérifie Paramètres → Machines.'}
+            </p>
+          </div>
+        )}
+        {dropError && (
+          <div className="mx-4 mt-2 bg-danger-100 border-l-[3px] border-danger-600 px-3 py-2 text-tiny text-danger-600">
+            {dropError}
+          </div>
+        )}
+        <div className="divide-y divide-[#F4F6F9]">
+          {machines.map((m) => {
+            const batchIdx = batches.findIndex((b) => b.machineId === m.id);
+            const rawBatch = batchIdx >= 0 ? batches[batchIdx] : null;
+            const batch = rawBatch && rawBatch.items.length > 0 ? rawBatch : null;
+            const fillPct = batch ? Math.round(batch.utilization * 100) : 0;
+            const overCap = !!batch && batch.utilization > 1;
+            const expanded = expandedBatch === batchIdx && batchIdx >= 0;
+            return (
+              <div key={m.id}>
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    try {
+                      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                      dropItemsOnMachine(data.sourceIdx, data.itemIdxs, m);
+                    } catch {
+                      /* payload invalide */
+                    }
+                  }}
+                  className="grid gap-0"
+                  style={{ gridTemplateColumns: '170px minmax(0,1fr)' }}
+                >
+                  <div className="px-4 py-3 border-r border-ink-200 bg-[#FAFBFC]">
+                    <p className="text-sm font-medium text-ink-900">{m.brand} {m.model}</p>
+                    <p className="font-heading text-[11px] text-ink-600 mt-0.5">{m.capacity} kg</p>
+                    <p
+                      className="font-heading text-[11px] font-bold mt-1"
+                      style={{ color: overCap ? '#C1441F' : batch ? '#2C7A4B' : '#8B97A8' }}
+                    >
+                      {batch ? `${fillPct}% engagée` : 'Libre'}
+                    </p>
+                  </div>
+                  <div className="relative min-h-[64px] flex items-center px-3 bg-white">
+                    {batch ? (
+                      <div
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData(
+                            'text/plain',
+                            JSON.stringify({ sourceIdx: batchIdx, itemIdxs: batch.items.map((_, i) => i) }),
+                          );
+                        }}
+                        className="max-w-[420px] py-2.5 px-3 flex items-start gap-2 cursor-grab"
+                        style={{
+                          background: overCap ? '#FBEAE5' : '#FCEBD9',
+                          borderLeft: `3px solid ${overCap ? '#C1441F' : '#DE6B0E'}`,
+                        }}
+                      >
+                        <button
+                          onClick={() => setExpandedBatch(expanded ? null : batchIdx)}
+                          className="text-left flex-1 min-w-0"
+                        >
+                          <p className="font-heading text-[11.5px] font-medium text-ink-900">
+                            {batch.contributors.length} client{batch.contributors.length > 1 ? 's' : ''} ·{' '}
+                            {batch.totalWeight.toFixed(1)} kg
+                          </p>
+                          <p className="text-[10.5px] text-ink-600 mt-0.5 truncate">
+                            {batch.contributors.map((c) => c.clientName).join(', ')}
+                          </p>
+                        </button>
+                        <button
+                          onClick={() => moveItems(batchIdx, batch.items.map((_, i) => i), -1)}
+                          className="flex-none text-ink-500 hover:text-danger-600 text-sm leading-none px-1"
+                          title="Retirer toute la commande de cette machine"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-tiny text-ink-400 italic">Glisser une commande ici</p>
+                    )}
+                  </div>
+                </div>
+
+                {expanded && batch && (
+                  <div className="px-4 py-3 bg-[#FAFBFC] border-t border-ink-200">
+                    {groupItems(batch.items).map((g) => (
+                      <div
+                        key={g.key}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData(
+                            'text/plain',
+                            JSON.stringify({ sourceIdx: batchIdx, itemIdxs: g.itemIdxs }),
+                          );
+                        }}
+                        className="flex items-center justify-between gap-2.5 py-1.5 text-[12.5px] flex-wrap cursor-grab"
+                      >
+                        <span className="text-ink-700 truncate">
+                          {g.clientName} · {g.linenTypeName ?? g.linenTypeCode} ({g.itemIdxs.length})
+                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <select
+                            value=""
+                            onChange={(e) => {
+                              const target = machines.find((mm) => mm.id === e.target.value);
+                              if (target) dropItemsOnMachine(batchIdx, g.itemIdxs, target);
+                            }}
+                            className="h-7 px-1.5 text-tiny font-heading bg-paper border border-ink-300 text-ink-700"
+                          >
+                            <option value="">Déplacer vers…</option>
+                            {machines
+                              .filter((mm) => mm.id !== m.id)
+                              .map((mm) => (
+                                <option key={mm.id} value={mm.id}>
+                                  {mm.brand} {mm.model}
+                                </option>
+                              ))}
+                          </select>
+                          <button
+                            onClick={() => moveItems(batchIdx, g.itemIdxs, -1)}
+                            className="text-tiny font-heading font-semibold text-ink-500 hover:text-terra-700"
+                          >
+                            Retirer → file d'attente
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {machines.length === 0 && (
+            <p className="text-tiny text-ink-500 px-4 py-4">Aucune machine compatible active.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-paper border border-ink-200 p-4">
+        <p className="font-heading font-bold text-sm text-ink-900">File d'attente</p>
+        <div className="grid gap-2 mt-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))' }}>
+          {unassignedGroups.map((g) => (
+            <div
+              key={g.key}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData(
+                  'text/plain',
+                  JSON.stringify({ sourceIdx: -1, itemIdxs: g.itemIdxs }),
+                );
+              }}
+              className="bg-[#FAFBFC] border border-ink-200 p-3 cursor-grab"
+              style={{ borderLeft: '3px solid #DE6B0E' }}
+            >
+              <p className="font-heading font-medium text-[12px] text-ink-800">{g.clientName ?? '—'}</p>
+              <p className="text-[11.5px] text-ink-600 mt-1">
+                {g.linenTypeName ?? g.linenTypeCode} · {(g.totalWeightG / 1000).toFixed(1)} kg
+              </p>
+            </div>
+          ))}
+          {unassignedGroups.length === 0 && (
+            <p className="text-tiny text-ink-500 col-span-full">
+              File vide — toutes les commandes sont affectées.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

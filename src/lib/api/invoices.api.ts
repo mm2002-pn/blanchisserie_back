@@ -93,3 +93,14 @@ export async function listInvoices(params: { status?: string; clientId?: string;
   });
   return data.items.map(mapApiInvoice);
 }
+
+/** Génère (ou récupère si déjà généré) le PDF d'une facture. `pdfUrl` est une URL
+ *  relative servie statiquement (`/uploads/...`), publique, pas besoin de blob authentifié. */
+export async function generateInvoicePdf(id: string, force = false) {
+  const { data } = await api.post<{ pdfUrl: string; regenerated: boolean }>(
+    `/invoices/${id}/pdf`,
+    undefined,
+    force ? { params: { force: 'true' } } : undefined,
+  );
+  return data;
+}

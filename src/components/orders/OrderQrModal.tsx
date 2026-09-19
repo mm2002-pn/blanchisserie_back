@@ -64,7 +64,7 @@ export function OrderQrModal({ open, onClose, order }: Props) {
       return {
         label: 'Procéder au triage',
         icon: <ListChecks className="w-3.5 h-3.5" strokeWidth={1.75} />,
-        path: ROUTES.TRIAGE,
+        path: ROUTES.RECEPTION,
         hint: 'Ventilation par type · génération étiquettes.',
       };
     }

@@ -7,8 +7,8 @@ import {
   BarChart3,
   Truck,
   Settings,
-  ClipboardList,
   Workflow,
+  Scale,
   type LucideIcon,
 } from 'lucide-react';
 import { ROUTES } from './routes';
@@ -52,10 +52,10 @@ export const MAIN_NAVIGATION: NavigationItem[] = [
     permission: MODULES.ORDERS,
   },
   {
-    label: 'Kanban',
-    path: ROUTES.ORDERS_KANBAN,
-    icon: ClipboardList,
-    permission: MODULES.ORDERS,
+    label: 'Réception',
+    path: ROUTES.RECEPTION,
+    icon: Scale,
+    permission: MODULES.PRODUCTION,
   },
   {
     label: 'Atelier du jour',
@@ -143,19 +143,11 @@ export const SETTINGS_NAVIGATION: SettingsNavigationSection[] = [
         label: 'PDA',
         path: ROUTES.SETTINGS_PDAS,
       },
-      {
-        label: 'Modèles de contrat',
-        path: ROUTES.SETTINGS_CONTRACTS,
-      },
     ],
   },
   {
     section: 'Système',
     items: [
-      {
-        label: 'Jours fériés',
-        path: ROUTES.SETTINGS_HOLIDAYS,
-      },
       {
         label: 'Notifications',
         path: ROUTES.SETTINGS_NOTIFICATIONS,

@@ -1,53 +1,55 @@
-import { Search, Bell, RefreshCw } from 'lucide-react';
-import { useAuth } from '@/hooks';
+import { useEffect, useState } from 'react';
+import { usePageHeaderValue } from '@/context/PageHeaderContext';
+import { useRealtime } from '@/hooks/useRealtime';
+
+const DATE_FMT = new Intl.DateTimeFormat('fr-FR', {
+  weekday: 'short',
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+});
 
 export function Header() {
-  const { user } = useAuth();
+  const { eyebrow, title, sub } = usePageHeaderValue();
+  const { connected } = useRealtime();
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const dateLabel = `${DATE_FMT.format(now)} · ${now.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`;
 
   return (
     <header className="sticky top-0 z-30 bg-paper border-b border-hairline border-ink-200 px-7 py-4">
-      <div className="flex items-center justify-between gap-4">
-        {/* Greeting */}
-        <div>
-          <h2 className="font-serif text-xl font-medium tracking-tight text-ink-900">
-            Bonjour, {user?.firstName ?? 'Superviseur'}
-          </h2>
-          <p className="text-tiny text-ink-500 mt-0.5">
-            Blanchisserie SN · Atelier Dakar
-          </p>
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex-1 min-w-[220px]">
+          <div className="caps">{eyebrow}</div>
+          <h1 className="font-heading font-bold text-2xl tracking-tight text-ink-900 mt-1 leading-tight">
+            {title}
+          </h1>
+          {sub ? <p className="text-tiny text-ink-600 mt-0.5">{sub}</p> : null}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3">
-          {/* Search */}
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400"
-              strokeWidth={1.75}
-            />
-            <input
-              type="search"
-              placeholder="Rechercher une commande, un client…"
-              className="w-[360px] pl-9 pr-4 py-2 text-sm bg-paper-2 border-hairline border-ink-200 rounded-input text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-800 focus:border-2"
-            />
-          </div>
-
-          {/* Refresh */}
-          <button
-            className="p-2 rounded-input bg-paper-2 border-hairline border-ink-200 text-ink-700 hover:bg-paper-3 transition-colors"
-            title="Rafraîchir"
+        <div className="flex-none flex items-center gap-2 bg-terra-100 rounded-pill px-3.5 py-1.5">
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              connected ? 'bg-ok-600 animate-pulse' : 'bg-ink-400'
+            }`}
+          />
+          <span
+            className={`text-xs font-medium ${connected ? 'text-ok-700' : 'text-ink-500'}`}
           >
-            <RefreshCw className="w-4 h-4" strokeWidth={1.75} />
-          </button>
+            {connected ? 'Temps réel connecté' : 'Connexion…'}
+          </span>
+        </div>
 
-          {/* Notifications */}
-          <button
-            className="relative p-2 rounded-input bg-paper-2 border-hairline border-ink-200 text-ink-700 hover:bg-paper-3 transition-colors"
-            title="Notifications"
-          >
-            <Bell className="w-4 h-4" strokeWidth={1.75} />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger-600 rounded-full ring-2 ring-paper-2" />
-          </button>
+        <div className="flex-none font-heading text-xs text-ink-600 capitalize">
+          {dateLabel}
         </div>
       </div>
     </header>

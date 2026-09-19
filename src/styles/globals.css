@@ -53,7 +53,7 @@
 @layer components {
   /* Uppercase caps label — labels de section 10px tracking large */
   .caps {
-    @apply text-micro font-sans font-semibold uppercase tracking-caps text-ink-500;
+    @apply text-micro font-heading font-bold uppercase tracking-caps text-terra-700;
   }
 
   /* Titre éditorial Bricolage */

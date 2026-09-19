@@ -1,13 +1,20 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { Droplet, Sparkles, Shield, AlertCircle } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { cn } from '@/lib/utils';
+import { Button, Input, BrandMark } from '@/components/ui';
 import { useAuth } from '@/hooks';
+
+const STATS = [
+  { value: '7', label: 'Étapes de workflow' },
+  { value: '22', label: 'Programmes de lavage' },
+  { value: '100%', label: 'Traçabilité qualité' },
+];
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(true);
+  const [trust, setTrust] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading, error } = useAuth();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -22,167 +29,157 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left banner — brand hero */}
-      <aside className="lg:flex-[1.1] bg-brand-900 text-paper flex flex-col justify-between p-10 lg:p-14 relative overflow-hidden">
-        {/* Ambient shapes */}
-        <div className="pointer-events-none absolute -top-24 -right-24 w-96 h-96 rounded-full bg-brand-800 opacity-60" />
-        <div className="pointer-events-none absolute bottom-10 -left-20 w-72 h-72 rounded-full bg-terra-600 opacity-20" />
-
+      <aside className="lg:flex-[1.05] bg-brand-900 text-paper flex flex-col justify-center gap-10 p-10 lg:p-14">
         {/* Brand */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-11 h-11 bg-terra-600 rounded-xl flex items-center justify-center">
-            <span className="font-serif font-medium text-xl text-paper">B</span>
-          </div>
-          <div>
-            <div className="font-serif text-xl font-medium tracking-tight leading-none">
-              Blanchisserie SN
+        <div className="flex items-center gap-3">
+          <BrandMark variant="full" className="w-11 h-11 shrink-0" />
+          <span className="w-px h-[34px] bg-brand-600" />
+          <div className="leading-none">
+            <div className="font-heading font-bold text-[19px] tracking-tight text-white">
+              B&amp;C
             </div>
-            <div className="text-micro font-mono text-brand-100 mt-1">
-              Admin · Dakar
+            <div className="font-heading font-medium text-[9px] tracking-[0.26em] text-terra-500 mt-1.5">
+              TERANGA
             </div>
           </div>
         </div>
 
         {/* Tagline */}
-        <div className="relative z-10 max-w-md">
-          <div className="caps text-brand-100 mb-4">Gestion professionnelle</div>
-          <h1 className="font-serif text-4xl lg:text-5xl font-medium leading-[1.05] tracking-tight mb-4">
-            Pilote ton atelier comme une rédaction.
+        <div>
+          <div className="font-heading font-bold text-[11px] tracking-[0.22em] uppercase text-terra-500">
+            Poste de pilotage
+          </div>
+          <h1 className="font-heading font-bold text-[38px] leading-[1.04] tracking-tight text-white mt-3.5 max-w-[16ch] text-pretty">
+            De la collecte à la facture, sans ressaisie.
           </h1>
-          <p className="text-sm text-brand-100 leading-relaxed">
-            Commandes, production, facturation, équipes. Tout l'outil de gestion
-            pour les blanchisseries industrielles du Sénégal.
+          <p className="text-[14.5px] text-ink-400 mt-4 leading-relaxed max-w-[40ch]">
+            Commandes, réception du linge, atelier du jour, tournées et
+            facturation — un seul poste de travail pour toute l'usine.
           </p>
         </div>
 
-        {/* Features */}
-        <div className="relative z-10 grid grid-cols-3 gap-6 max-w-lg">
-          <Feature icon={<Droplet className="w-4 h-4" strokeWidth={1.75} />} label="Workflow 7 étapes" />
-          <Feature icon={<Sparkles className="w-4 h-4" strokeWidth={1.75} />} label="Qualité tracée" />
-          <Feature icon={<Shield className="w-4 h-4" strokeWidth={1.75} />} label="Multi-rôles" />
+        {/* Stats */}
+        <div className="flex gap-6 flex-wrap pt-7 border-t border-brand-600">
+          {STATS.map((s) => (
+            <div key={s.label}>
+              <div className="font-heading font-bold text-[22px] leading-none text-white">
+                {s.value}
+              </div>
+              <div className="text-[11px] text-[#8AB8DE] mt-1.5 tracking-[0.04em]">
+                {s.label}
+              </div>
+            </div>
+          ))}
         </div>
       </aside>
 
       {/* Right form */}
-      <main className="flex-[1] flex items-center justify-center p-6 lg:p-12 bg-paper">
+      <main className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-paper">
         <div className="w-full max-w-sm">
-          <div className="caps mb-2">Connexion</div>
-          <h2 className="font-serif text-3xl font-medium tracking-tight text-ink-900 mb-2">
-            Accède à ton espace
-          </h2>
-          <p className="text-tiny text-ink-500 mb-8">
-            Entre tes identifiants pour continuer.
+          <div className="font-heading font-bold text-[27px] tracking-tight text-ink-800">
+            Connexion
+          </div>
+          <p className="text-[13.5px] text-ink-500 mt-1.5 leading-relaxed">
+            Réservé aux comptes usine. Les hôtels et chauffeurs passent par
+            l'application mobile.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="flex items-start gap-2 bg-danger-100 border-hairline border-danger-600 text-danger-600 px-3 py-2.5 rounded-input text-tiny">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" strokeWidth={2} />
-                <span className="font-medium">{error}</span>
-              </div>
-            )}
-
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 mt-6">
             <Input
               type="email"
-              label="Email professionnel"
-              placeholder="nom@etablissement.sn"
+              label="Identifiant"
+              placeholder="prenom.nom@bcteranga.sn"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
             />
 
-            <Input
-              type="password"
-              label="Mot de passe"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  className="w-4 h-4 rounded border-ink-300 text-brand-800 focus:ring-brand-500 focus:ring-offset-0"
-                />
-                <span className="text-tiny text-ink-700">Se souvenir</span>
-              </label>
-              <a
-                href="#"
-                className="text-tiny font-medium text-brand-800 hover:text-brand-700"
-              >
-                Mot de passe oublié ?
-              </a>
+            <div className="w-full">
+              <div className="flex justify-between items-baseline gap-2.5">
+                <label
+                  htmlFor="login-password"
+                  className="block text-tiny font-semibold text-ink-700"
+                >
+                  Mot de passe
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="text-[11.5px] font-semibold text-terra-600 hover:text-terra-700"
+                >
+                  {showPassword ? 'Masquer' : 'Afficher'}
+                </button>
+              </div>
+              <input
+                id="login-password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                className="mt-1.5 w-full px-3 py-2 bg-paper-2 border border-ink-300 rounded-input text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:bg-paper focus:border-brand-800 focus:ring-2 focus:ring-brand-800/15 transition-colors"
+              />
             </div>
+
+            {error && (
+              <div className="flex items-start gap-2.5 bg-terra-100 border-l-[3px] border-danger-600 px-3.5 py-3">
+                <span className="shrink-0 w-[17px] h-[17px] mt-px rounded-full bg-danger-600 text-white text-[11px] font-heading font-bold flex items-center justify-center">
+                  !
+                </span>
+                <span className="flex-1 text-[12.5px] text-danger-600 leading-relaxed">
+                  {error}
+                </span>
+              </div>
+            )}
+
+            <label className="flex items-center gap-2.5 cursor-pointer select-none py-0.5">
+              <input
+                type="checkbox"
+                checked={trust}
+                onChange={(e) => setTrust(e.target.checked)}
+                className="sr-only"
+              />
+              <span
+                className={cn(
+                  'shrink-0 w-[19px] h-[19px] border-[1.5px] flex items-center justify-center text-white text-[11px] font-bold transition-colors',
+                  trust ? 'bg-brand-800 border-brand-800' : 'bg-paper border-ink-300'
+                )}
+              >
+                {trust ? '✓' : ''}
+              </span>
+              <span className="flex-1 text-[12.5px] text-ink-600">
+                Poste de confiance — garder la session 12 h
+              </span>
+            </label>
 
             <Button
               type="submit"
-              className="w-full"
               size="lg"
+              className="w-full !bg-brand-900 hover:!bg-brand-800"
               isLoading={isLoading}
               disabled={!email || !password}
             >
               Se connecter
             </Button>
+
+            <div className="flex justify-between gap-3 text-[12.5px]">
+              <button
+                type="button"
+                className="text-terra-600 font-semibold hover:text-terra-700"
+              >
+                Mot de passe oublié ?
+              </button>
+              <span className="text-ink-500">Aide : 33 869 12 40</span>
+            </div>
           </form>
 
-          {/* Demo creds — clic = pré-remplit le formulaire */}
-          <div className="mt-8 p-4 bg-paper-2 rounded-input border-hairline border-ink-200">
-            <p className="caps mb-2">Accès démo</p>
-            <p className="text-tiny text-ink-600 mb-2">
-              Mot de passe pour tous :{' '}
-              <code className="font-mono text-ink-900">Password!1</code>
-            </p>
-            <div className="space-y-1">
-              {[
-                ['Admin', 'admin@blanchisserie.sn'],
-                ['Manager', 'mgr@blanchisserie.sn'],
-                ['Superviseur', 'sup@blanchisserie.sn'],
-                ['Opérateur', 'op1@blanchisserie.sn'],
-                ['Chauffeur', 'driver@blanchisserie.sn'],
-              ].map(([role, mail]) => (
-                <button
-                  key={mail}
-                  type="button"
-                  onClick={() => {
-                    setEmail(mail);
-                    setPassword('Password!1');
-                  }}
-                  className="w-full flex items-center justify-between gap-3 px-2 py-1 rounded hover:bg-paper text-left transition-colors"
-                >
-                  <span className="text-tiny font-semibold text-ink-700">
-                    {role}
-                  </span>
-                  <code className="font-mono text-tiny text-ink-500 truncate">
-                    {mail}
-                  </code>
-                </button>
-              ))}
-            </div>
-          </div>
-
           <p className="text-center text-micro font-mono text-ink-500 mt-8">
-            Blanchisserie SN · v1.0.0
+            B&amp;C Teranga · v1.0.0
           </p>
         </div>
       </main>
-    </div>
-  );
-}
-
-function Feature({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <div>
-      <div className="w-8 h-8 rounded-lg bg-brand-800 border-hairline border-brand-700 flex items-center justify-center mb-2">
-        {icon}
-      </div>
-      <div className="text-tiny font-medium text-brand-100 leading-snug">
-        {label}
-      </div>
     </div>
   );
 }

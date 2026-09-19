@@ -1,524 +1,540 @@
-import { useMemo, useState } from 'react';
-import {
-  Scale,
-  Search,
-  Truck,
-  ChevronLeft,
-  Loader2,
-  CheckCircle2,
-  Building2,
-  Package,
-  X,
-  Delete,
-  Pencil,
-} from 'lucide-react';
-import { Button, Badge } from '@/components/ui';
-import { OrderDetailsPanel } from '@/components/orders/OrderDetailsPanel';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { X, Delete, CheckCircle2, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import {
   useOrders,
   useOrdersRealtime,
   useReceiveOrder,
 } from '@/hooks/queries/useOrders';
 import { useLinenTypes } from '@/hooks/queries/useLinenTypes';
-import { format, isToday, isYesterday, isThisWeek } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { useCreateTriage } from '@/hooks/queries/useTriage';
+import { openOrderDocument } from '@/lib/api/documents.api';
+import { usePageHeader } from '@/context/PageHeaderContext';
 
 /**
- * Réception atelier — refonte industriel-friendly :
- *  - Liste : KPI strip + cards d'orders à peser (grosses cibles, lecture rapide)
- *  - Form : hero compact + 2 grosses tuiles (Poids / Pièces), chacune tappable
- *  - Focus mode plein écran avec pavé numérique (décimal pour kg, entier pour pcs)
- *  - Pré-remplissage automatique depuis driverWeight / driverPieces
- *  - Aucun seuil d'écart bloquant (acceptDeviation: true en permanence)
+ * Réception atelier — pesée officielle + triage par type de linge, réunis
+ * dans un seul écran (comme dans la maquette) : une commande sélectionnée
+ * dans la file du haut ouvre son panneau de triage juste en dessous.
  */
 
-type DateFilter = 'today' | 'yesterday' | 'week' | 'all';
-const DATE_FILTERS: { key: DateFilter; label: string }[] = [
-  { key: 'today', label: "Aujourd'hui" },
-  { key: 'yesterday', label: 'Hier' },
-  { key: 'week', label: 'Cette semaine' },
-  { key: 'all', label: 'Tout' },
-];
+type QueueOrder = {
+  id: string;
+  orderNumber: string;
+  clientName?: string;
+  apiStatus?: string;
+  driverWeight?: number;
+  driverPieces?: number;
+  receivedWeight?: number;
+  receivedPieces?: number;
+  driverItems?: { type: string; quantity: number }[];
+  estimatedItemsRaw?: { type: string; quantity: number }[];
+};
 
-function matchesDate(filter: DateFilter, date: Date | string | undefined): boolean {
-  if (!date) return filter === 'all';
-  const d = typeof date === 'string' ? new Date(date) : date;
-  if (filter === 'today') return isToday(d);
-  if (filter === 'yesterday') return isYesterday(d);
-  if (filter === 'week') return isThisWeek(d, { weekStartsOn: 1 });
-  return true;
+function round1(n: number) {
+  return Math.round(n * 10) / 10;
 }
 
 export default function ReceptionPage() {
+  usePageHeader({
+    eyebrow: 'Atelier',
+    title: 'Réception',
+    sub: 'Toute commande déposée est pesée puis ventilée par type.',
+  });
+
   useOrdersRealtime();
   const { data: ordersData, isLoading } = useOrders({ pageSize: 200 });
-  const orders = ordersData?.items ?? [];
+  const orders = (ordersData?.items ?? []) as QueueOrder[];
+  const { data: linenTypes = [] } = useLinenTypes();
+  const receive = useReceiveOrder();
+  const triage = useCreateTriage();
 
-  const [dateFilter, setDateFilter] = useState<DateFilter>('today');
-  const [search, setSearch] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  // Pesée n'est éligible QUE pour les commandes déchargées à l'usine
-  // (le chauffeur a confirmé son retour avec les sacs). Tant que la round
-  // n'a pas été déchargée, les commandes restent invisibles côté atelier.
-  const ordersToWeigh = useMemo(
+  const queue = useMemo(
     () =>
       orders.filter(
         (o) =>
-          o.apiStatus === 'collected' &&
-          o.unloadedAt != null &&
-          !o.receivedWeight &&
-          matchesDate(dateFilter, o.collectedAt ?? o.collectionDate),
+          (o.apiStatus === 'collected' && (o as any).unloadedAt != null && !o.receivedWeight) ||
+          o.apiStatus === 'received',
       ),
-    [orders, dateFilter],
+    [orders],
   );
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return ordersToWeigh;
-    return ordersToWeigh.filter((o) =>
-      `${o.orderNumber} ${o.clientName ?? ''}`.toLowerCase().includes(q),
-    );
-  }, [ordersToWeigh, search]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!selectedId && queue.length > 0) setSelectedId(queue[0].id);
+  }, [queue, selectedId]);
 
-  const totalKg = filtered.reduce(
-    (s, o) => s + (o.driverWeight ?? 0) / 1000,
-    0,
-  );
-  const totalPieces = filtered.reduce((s, o) => s + (o.driverPieces ?? 0), 0);
+  const selected = orders.find((o) => o.id === selectedId);
+  const needsTriage = selected?.apiStatus === 'received';
 
-  const selectedOrder = orders.find((o) => o.id === selectedId);
+  const totalKg = queue.reduce((s, o) => s + (o.driverWeight ?? o.receivedWeight ?? 0) / 1000, 0);
 
-  if (selectedOrder) {
-    return (
-      <WeighForm
-        order={selectedOrder}
-        onCancel={() => setSelectedId(null)}
-        onDone={() => setSelectedId(null)}
-      />
-    );
-  }
+  // ── Pesée : draft de poids par commande (kg), init depuis le poids chauffeur ──
+  const [weightDraft, setWeightDraft] = useState<Record<string, number>>({});
+  const getDraftKg = (o: QueueOrder) =>
+    weightDraft[o.id] ?? round1((o.driverWeight ?? 0) / 1000);
+  const bumpWeight = (o: QueueOrder, delta: number) =>
+    setWeightDraft((prev) => ({
+      ...prev,
+      [o.id]: Math.max(0, round1(getDraftKg(o) + delta)),
+    }));
 
-  return (
-    <div className="space-y-5">
-      <div className="flex items-end justify-between gap-4 flex-wrap">
-        <div>
-          <div className="caps mb-1">Atelier</div>
-          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
-            Réception · Pesée
-          </h1>
-          <p className="text-sm text-ink-500 mt-1">
-            Pesée officielle des commandes collectées
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <KpiTile
-            icon={Package}
-            label="Commandes"
-            value={String(filtered.length)}
-          />
-          <KpiTile
-            icon={Scale}
-            label="Poids estimé"
-            value={`${totalKg.toFixed(1)} kg`}
-          />
-          <KpiTile
-            icon={CheckCircle2}
-            label="Pièces"
-            value={String(totalPieces)}
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-1.5">
-          {DATE_FILTERS.map((f) => {
-            const active = dateFilter === f.key;
-            return (
-              <button
-                key={f.key}
-                onClick={() => setDateFilter(f.key)}
-                className={cn(
-                  'inline-flex items-center px-4 py-2 rounded-pill text-sm font-semibold border-hairline transition-colors',
-                  active
-                    ? 'bg-brand-800 text-paper border-brand-800'
-                    : 'bg-paper text-ink-700 border-ink-200 hover:bg-paper-2',
-                )}
-              >
-                {f.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="relative">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400"
-            strokeWidth={1.75}
-          />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher commande / hôtel…"
-            className="w-72 pl-9 pr-4 py-2.5 text-sm bg-paper border-hairline border-ink-200 rounded-input text-ink-900 placeholder:text-ink-400 focus:outline-none focus:border-brand-800 focus:border-2"
-          />
-        </div>
-      </div>
-
-      {isLoading ? (
-        <div className="text-sm text-ink-500 italic px-4 py-8 text-center">
-          Chargement…
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="card-surface p-10 text-center bg-ok-50 border-ok-200">
-          <CheckCircle2
-            className="w-12 h-12 text-ok-700 mx-auto mb-3"
-            strokeWidth={1.5}
-          />
-          <p className="text-base font-semibold text-ok-700">
-            Aucune commande à peser
-          </p>
-          <p className="text-tiny text-ok-700 mt-1">
-            {dateFilter === 'today'
-              ? "Pas de réception aujourd'hui. Les commandes apparaissent ici dès que le chauffeur confirme son arrivée à l'usine."
-              : 'Toutes les commandes déchargées de cette période ont été pesées.'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          {filtered.map((o) => (
-            <OrderTile
-              key={o.id}
-              order={o}
-              onClick={() => setSelectedId(o.id)}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function KpiTile({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Package;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-3 bg-paper border-hairline border-ink-200 rounded-input min-w-[140px]">
-      <div className="w-9 h-9 rounded-input bg-paper-2 flex items-center justify-center">
-        <Icon className="w-4 h-4 text-brand-800" strokeWidth={1.75} />
-      </div>
-      <div>
-        <p className="text-micro text-ink-500 uppercase tracking-wide">{label}</p>
-        <p className="font-mono text-lg font-semibold tnum text-ink-900 leading-tight">
-          {value}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function OrderTile({ order, onClick }: { order: any; onClick: () => void }) {
-  const kg = order.driverWeight ? order.driverWeight / 1000 : 0;
-  const pieces = order.driverPieces ?? 0;
-  const collectedAt = order.collectedAt ? new Date(order.collectedAt) : null;
-  return (
-    <button
-      onClick={onClick}
-      className="card-surface p-4 text-left hover:border-brand-800 hover:shadow-md transition-all group"
-    >
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="flex-1 min-w-0">
-          <p className="font-mono text-tiny text-ink-500 tnum mb-1">
-            {order.orderNumber}
-          </p>
-          <p className="text-base font-semibold text-ink-900 truncate flex items-center gap-1.5">
-            <Building2
-              className="w-4 h-4 text-brand-800 shrink-0"
-              strokeWidth={1.75}
-            />
-            {order.clientName ?? '—'}
-          </p>
-        </div>
-        <Badge variant="info" dot>
-          À peser
-        </Badge>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 mb-3">
-        <div className="bg-paper-2 rounded-input p-2.5 text-center">
-          <p className="font-mono text-xl font-semibold tnum text-ink-900 leading-tight">
-            {kg.toFixed(1)}
-            <span className="text-tiny font-normal text-ink-500"> kg</span>
-          </p>
-          <p className="text-micro text-ink-500 uppercase tracking-wide mt-0.5">
-            Poids driver
-          </p>
-        </div>
-        <div className="bg-paper-2 rounded-input p-2.5 text-center">
-          <p className="font-mono text-xl font-semibold tnum text-ink-900 leading-tight">
-            {pieces}
-          </p>
-          <p className="text-micro text-ink-500 uppercase tracking-wide mt-0.5">
-            Pièces
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between text-tiny text-ink-500">
-        <span className="flex items-center gap-1">
-          <Truck className="w-3 h-3" strokeWidth={1.75} />
-          Collectée{' '}
-          {collectedAt
-            ? format(collectedAt, "d MMM 'à' HH:mm", { locale: fr })
-            : '—'}
-        </span>
-        <span className="text-brand-800 font-semibold group-hover:underline">
-          Peser →
-        </span>
-      </div>
-    </button>
-  );
-}
-
-/* ─── Formulaire de pesée ────────────────────────────────────── */
-
-function WeighForm({
-  order,
-  onCancel,
-  onDone,
-}: {
-  order: any;
-  onCancel: () => void;
-  onDone: () => void;
-}) {
-  const driverKg = order.driverWeight ? order.driverWeight / 1000 : 0;
-  const driverPieces = order.driverPieces ?? 0;
-
-  const { data: linenTypes = [] } = useLinenTypes();
-  const labelByCode = useMemo(() => {
-    const m: Record<string, string> = {};
-    for (const lt of linenTypes) m[lt.code] = lt.name;
-    return m;
-  }, [linenTypes]);
-
-  // Pré-remplissage depuis ce qu'a saisi le driver
-  const [weightKg, setWeightKg] = useState<number>(driverKg);
-  const [pieces, setPieces] = useState<number>(driverPieces);
-  const [focused, setFocused] = useState<'weight' | 'pieces' | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const receive = useReceiveOrder();
-  const valid = weightKg > 0 && pieces > 0;
-
-  const handleSubmit = async () => {
-    if (!valid) {
-      setError('Saisis un poids et un nombre de pièces valides.');
+  const [weighError, setWeighError] = useState<string | null>(null);
+  const handleWeigh = async (o: QueueOrder) => {
+    const kg = getDraftKg(o);
+    if (kg <= 0) {
+      setWeighError('Saisis un poids valide avant de peser.');
       return;
     }
-    setError(null);
+    setWeighError(null);
     try {
       await receive.mutateAsync({
-        id: order.id,
+        id: o.id,
         data: {
-          receivedWeight: Math.round(weightKg * 1000),
-          receivedPieces: pieces,
+          receivedWeight: Math.round(kg * 1000),
+          receivedPieces: o.driverPieces || 1,
           acceptDeviation: true,
         },
       });
-      onDone();
+      setSelectedId(o.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Échec de la pesée.');
+      setWeighError(err instanceof Error ? err.message : 'Échec de la pesée.');
     }
   };
 
-  const driverItems: { type: string; quantity: number }[] =
-    order.driverItems ?? [];
+  // ── Triage : compteurs par type de linge pour la commande sélectionnée ──
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [triageError, setTriageError] = useState<string | null>(null);
+  const [justSubmittedId, setJustSubmittedId] = useState<string | null>(null);
+  const prefilledFor = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!selected || !needsTriage) return;
+    if (prefilledFor.current === selected.id) return;
+    const idByCode: Record<string, string> = {};
+    for (const lt of linenTypes) idByCode[lt.code] = lt.id;
+    const source = selected.driverItems?.length
+      ? selected.driverItems
+      : (selected.estimatedItemsRaw ?? []);
+    const next: Record<string, number> = {};
+    for (const it of source) {
+      const id = idByCode[it.type];
+      if (id && it.quantity > 0) next[id] = it.quantity;
+    }
+    setCounts(next);
+    prefilledFor.current = selected.id;
+  }, [selected, needsTriage, linenTypes]);
+
+  const ltById = useMemo(() => {
+    const m: Record<string, (typeof linenTypes)[number]> = {};
+    for (const lt of linenTypes) m[lt.id] = lt;
+    return m;
+  }, [linenTypes]);
+
+  const totals = useMemo(() => {
+    let pieces = 0;
+    let weightG = 0;
+    for (const [id, n] of Object.entries(counts)) {
+      const lt = ltById[id];
+      if (!lt) continue;
+      pieces += n;
+      weightG += n * (lt.averageWeight ?? 0);
+    }
+    return { pieces, weightKg: weightG / 1000 };
+  }, [counts, ltById]);
+
+  const officialKg = selected ? (selected.receivedWeight ?? 0) / 1000 : 0;
+  const over = officialKg > 0 && totals.weightKg > officialKg * 1.05;
+
+  const bump = (id: string, delta: number) =>
+    setCounts((prev) => ({ ...prev, [id]: Math.max(0, (prev[id] ?? 0) + delta) }));
+
+  const addableTypes = linenTypes.filter((lt) => !counts[lt.id]);
+
+  const handleTriageSubmit = async () => {
+    if (totals.pieces <= 0) {
+      setTriageError('Compte au moins une pièce avant de valider.');
+      return;
+    }
+    setTriageError(null);
+    const items = Object.entries(counts)
+      .filter(([, n]) => n > 0)
+      .map(([linenTypeId, n]) => ({
+        linenTypeId,
+        pieces: n,
+        weight: n * (ltById[linenTypeId]?.averageWeight ?? 0),
+      }));
+    try {
+      await triage.mutateAsync({
+        orderId: selected!.id,
+        data: { items, acceptDeviation: true },
+      });
+      setJustSubmittedId(selected!.id);
+      setCounts({});
+      prefilledFor.current = null;
+      setSelectedId(null);
+    } catch (err) {
+      setTriageError(err instanceof Error ? err.message : 'Échec du triage.');
+    }
+  };
+
+  const [panelOpen, setPanelOpen] = useState(true);
+
+  // ── Clavier plein écran (saisie rapide au gant/à distance) ──
+  const [focusedWeightId, setFocusedWeightId] = useState<string | null>(null);
+  const [focusedTriageId, setFocusedTriageId] = useState<string | null>(null);
+  const focusedWeightOrder = queue.find((o) => o.id === focusedWeightId);
+
+  const [pdfLoadingId, setPdfLoadingId] = useState<string | null>(null);
+  const downloadBordereau = async (orderId: string) => {
+    setPdfLoadingId(orderId);
+    try {
+      await openOrderDocument(orderId, 'bordereau-triage');
+    } finally {
+      setPdfLoadingId(null);
+    }
+  };
 
   return (
-    <div className="space-y-4 pb-32">
-      <div className="flex items-center justify-between gap-3">
-        <Button
-          variant="secondary"
-          size="md"
-          onClick={onCancel}
-          className="gap-1.5"
-        >
-          <ChevronLeft className="w-4 h-4" strokeWidth={1.75} />
-          Retour
-        </Button>
-        <div className="text-right">
-          <p className="text-micro text-ink-500 uppercase tracking-wide">
-            Commande
-          </p>
-          <p className="font-mono text-lg font-semibold tnum text-ink-900 leading-tight">
-            {order.orderNumber}
-          </p>
-        </div>
-      </div>
-
-      {/* Hero : client + référence driver */}
-      <div className="card-surface p-5 bg-paper border-2 border-ink-200">
-        <div className="flex items-start justify-between gap-4">
+    <div className="flex flex-col xl:flex-row gap-4 items-start">
+      {/* Table de pesée — colonne gauche, scroll interne (n'entraîne pas le panneau de droite) */}
+      <div className="flex-1 min-w-0 w-full bg-paper border border-ink-200">
+        <div className="px-5 py-4 border-b border-ink-200 flex items-end justify-between gap-3 flex-wrap">
           <div>
-            <p className="caps">Client</p>
-            <p className="font-serif text-xl font-medium text-ink-900 mt-0.5 flex items-center gap-2">
-              <Building2
-                className="w-5 h-5 text-brand-800"
-                strokeWidth={1.75}
-              />
-              {order.clientName ?? '—'}
+            <p className="font-heading font-bold text-xl text-ink-900">Linge arrivé à l'atelier</p>
+            <p className="text-[12.5px] text-ink-600 mt-0.5">
+              Toute commande déposée est pesée puis ventilée par type. Cliquez une ligne pour la trier.
             </p>
           </div>
-          <div className="text-right">
-            <p className="caps">Référence chauffeur</p>
-            <p className="font-mono text-2xl font-semibold tnum text-ink-700 leading-tight mt-0.5">
-              {driverKg.toFixed(1)} kg
+          <div className="flex items-center gap-3">
+            <p className="text-[12.5px] text-ink-600">
+              {queue.length} commande{queue.length > 1 ? 's' : ''} · {totalKg.toFixed(1)} kg
             </p>
-            <p className="text-tiny text-ink-500">
-              {driverPieces} pièces annoncées
-            </p>
+            <button
+              type="button"
+              onClick={() => setPanelOpen((v) => !v)}
+              className="w-8 h-8 flex items-center justify-center border border-ink-200 text-ink-700 hover:border-terra-600 hover:bg-terra-100 hover:text-terra-700 transition-colors"
+              title={panelOpen ? 'Masquer le panneau de triage' : 'Afficher le panneau de triage'}
+            >
+              {panelOpen ? (
+                <PanelRightClose className="w-4 h-4" strokeWidth={1.75} />
+              ) : (
+                <PanelRightOpen className="w-4 h-4" strokeWidth={1.75} />
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Détail items chauffeur — collapsé visuellement, juste pour comparaison */}
-        {driverItems.length > 0 && (
-          <details className="mt-4 pt-3 border-t border-ink-100">
-            <summary className="caps cursor-pointer select-none flex items-center gap-1.5 hover:text-brand-800">
-              Détail comptage chauffeur ({driverItems.length} type
-              {driverItems.length > 1 ? 's' : ''})
-            </summary>
-            <ul className="mt-2 space-y-1">
-              {driverItems.map((it, i) => (
-                <li
-                  key={`${it.type}-${i}`}
-                  className="flex items-center justify-between gap-2 text-tiny"
-                >
-                  <span className="text-ink-700 truncate">
-                    {labelByCode[it.type] ?? it.type}
-                  </span>
-                  <span className="font-mono tnum font-semibold text-ink-900 shrink-0">
-                    {it.quantity}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </details>
+        <div className="overflow-x-auto">
+          <div className="min-w-[880px]">
+            <div className="grid grid-cols-[110px_minmax(160px,1fr)_80px_90px_160px_90px_110px_100px] gap-3 px-5 py-3 bg-[#FAFBFC] border-b border-ink-200 text-[10px] font-heading font-bold uppercase tracking-[0.12em] text-ink-600 sticky top-0 z-10">
+              <span>Commande</span>
+              <span>Client</span>
+              <span>Estimé</span>
+              <span>Chauffeur</span>
+              <span>Poids officiel</span>
+              <span>Écart</span>
+              <span>État</span>
+              <span />
+            </div>
+
+            <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
+            {isLoading ? (
+              <p className="text-tiny text-ink-500 italic px-5 py-6">Chargement…</p>
+            ) : queue.length === 0 ? (
+              <p className="text-tiny text-ink-500 px-5 py-6">
+                Aucune commande en attente de pesée ou de triage.
+              </p>
+            ) : (
+              queue.map((o) => {
+                const isSelected = o.id === selectedId;
+                const weighed = o.apiStatus !== 'collected';
+                const driverKg = (o.driverWeight ?? 0) / 1000;
+                const officialKgRow = weighed
+                  ? (o.receivedWeight ?? 0) / 1000
+                  : getDraftKg(o);
+                const gapPct =
+                  weighed && driverKg > 0
+                    ? ((officialKgRow - driverKg) / driverKg) * 100
+                    : null;
+
+                return (
+                  <div
+                    key={o.id}
+                    onClick={() => setSelectedId(o.id)}
+                    className="grid grid-cols-[110px_minmax(160px,1fr)_80px_90px_160px_90px_110px_100px] gap-3 px-5 py-3 border-b border-[#F4F6F9] items-center text-[13px] cursor-pointer"
+                    style={{
+                      background: isSelected ? '#FCEBD9' : '#fff',
+                      borderLeft: `3px solid ${weighed ? '#2C7A4B' : '#F0A03D'}`,
+                    }}
+                  >
+                    <span className="font-heading font-semibold text-ink-800 truncate">
+                      {o.orderNumber}
+                    </span>
+                    <span className="truncate">{o.clientName ?? '—'}</span>
+                    <span className="text-ink-600">
+                      {(o as any).estimatedWeight ? `${(o as any).estimatedWeight} kg` : '—'}
+                    </span>
+                    <span className="text-ink-600">{driverKg > 0 ? `${driverKg.toFixed(1)} kg` : '—'}</span>
+
+                    {weighed ? (
+                      <span className="font-heading font-bold text-ink-900">
+                        {officialKgRow.toFixed(1)} kg
+                      </span>
+                    ) : (
+                      <div
+                        className="flex items-center gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={() => bumpWeight(o, -0.5)}
+                          className="w-[30px] h-[30px] flex-none border border-ink-200 bg-[#FAFBFC] text-ink-800 font-heading"
+                        >
+                          −
+                        </button>
+                        <button
+                          onClick={() => setFocusedWeightId(o.id)}
+                          className="flex-1 text-center font-heading font-bold text-sm"
+                          title="Saisie rapide au clavier"
+                        >
+                          {officialKgRow.toFixed(1)}
+                        </button>
+                        <button
+                          onClick={() => bumpWeight(o, 0.5)}
+                          className="w-[30px] h-[30px] flex-none border-none bg-brand-800 text-white font-heading"
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
+
+                    <span
+                      className="font-heading font-bold"
+                      style={{
+                        color:
+                          gapPct == null
+                            ? '#8B97A8'
+                            : Math.abs(gapPct) > 10
+                              ? '#C1441F'
+                              : '#2C7A4B',
+                      }}
+                    >
+                      {gapPct == null ? '—' : `${gapPct > 0 ? '+' : ''}${gapPct.toFixed(1)}%`}
+                    </span>
+
+                    <span
+                      className="text-[10px] font-heading font-bold uppercase tracking-[0.05em] text-center px-2 py-1"
+                      style={{
+                        background: weighed ? '#E4F3E9' : '#FCEBD9',
+                        color: weighed ? '#2C7A4B' : '#B3540A',
+                      }}
+                    >
+                      {weighed ? 'À trier' : 'À peser'}
+                    </span>
+
+                    {weighed ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedId(o.id);
+                        }}
+                        className="h-[34px] border-none bg-brand-800 text-white text-[11.5px] font-heading font-bold"
+                      >
+                        Trier
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleWeigh(o);
+                        }}
+                        disabled={receive.isPending}
+                        className="h-[34px] border-none bg-terra-600 text-white text-[11.5px] font-heading font-bold disabled:opacity-50"
+                      >
+                        Peser
+                      </button>
+                    )}
+                  </div>
+                );
+              })
+            )}
+            </div>
+          </div>
+        </div>
+
+        {weighError && (
+          <p className="px-5 py-2 text-tiny text-danger-600 bg-danger-100">{weighError}</p>
         )}
       </div>
 
-      {/* Tuiles de saisie principales — chacune tappable */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <BigInputTile
-          label="Pesée atelier"
-          unit="kg"
-          value={weightKg > 0 ? weightKg.toFixed(1).replace('.', ',') : '—'}
-          subline={
-            driverKg > 0
-              ? `Référence chauffeur : ${driverKg.toFixed(1)} kg`
-              : 'Aucune référence chauffeur'
-          }
-          icon={Scale}
-          highlight={weightKg > 0}
-          onTap={() => setFocused('weight')}
-        />
-        <BigInputTile
-          label="Nombre de pièces"
-          unit="pcs"
-          value={pieces > 0 ? String(pieces) : '—'}
-          subline={
-            driverPieces > 0
-              ? `Référence chauffeur : ${driverPieces} pièces`
-              : 'Aucune référence chauffeur'
-          }
-          icon={Package}
-          highlight={pieces > 0}
-          onTap={() => setFocused('pieces')}
-        />
-      </div>
-
-      {/* Détails commande (items annoncés + photos) */}
-      <OrderDetailsPanel order={order} />
-
-      {/* Floating action bar — contraint à la zone de contenu (après la sidebar w-64) */}
-      <div className="fixed bottom-4 left-64 right-0 px-4 z-20 pointer-events-none">
-        <div className="mx-auto w-full max-w-[960px] card-surface p-4 shadow-xl border-2 border-brand-800 bg-paper pointer-events-auto">
-          {error && (
-            <p className="text-sm text-rose-700 bg-rose-50 px-3 py-2 rounded-input border-hairline border-rose-200 mb-3">
-              {error}
-            </p>
-          )}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex-1 min-w-0">
-              <p className="text-micro text-ink-500 uppercase tracking-wide">
-                Pesée en cours
-              </p>
-              <p className="font-mono text-2xl font-semibold tnum text-ink-900 leading-tight truncate">
-                {weightKg > 0 ? `${weightKg.toFixed(1)} kg` : '— kg'} ·{' '}
-                <span className="text-ink-700">
-                  {pieces > 0 ? `${pieces} pcs` : '— pcs'}
-                </span>
-              </p>
-            </div>
-            <Button
-              size="lg"
-              onClick={handleSubmit}
-              disabled={!valid || receive.isPending}
-              className="gap-2 h-14 px-6 text-base shrink-0"
+      {/* Panneau de triage — colonne droite, figée : reste visible sans scroller. Repliable. */}
+      {panelOpen && (
+      <div className="w-full xl:w-[400px] flex-none xl:sticky xl:top-4">
+      {selected && needsTriage ? (
+        <div className="bg-paper border border-ink-200 p-5">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setPanelOpen(false)}
+              className="order-last w-7 h-7 flex-none flex items-center justify-center text-ink-500 hover:text-terra-700"
+              title="Masquer le panneau"
             >
-              {receive.isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <CheckCircle2 className="w-5 h-5" strokeWidth={2} />
-              )}
-              Valider la pesée
-            </Button>
+              <X className="w-4 h-4" strokeWidth={1.75} />
+            </button>
+            <div>
+              <p className="caps">Triage de la commande sélectionnée</p>
+              <p className="font-heading font-bold text-lg text-ink-900 mt-1.5">
+                {selected.orderNumber}
+              </p>
+              <p className="text-[12.5px] text-ink-600 mt-0.5">{officialKg.toFixed(1)} kg pesés</p>
+            </div>
+            <div className="text-right">
+              <p
+                className="font-heading font-bold text-[19px]"
+                style={{ color: over ? '#C1441F' : '#17356B' }}
+              >
+                {totals.weightKg.toFixed(1)} / {officialKg.toFixed(1)} kg
+              </p>
+              <p className="text-[11.5px] text-ink-600 mt-0.5">{totals.pieces} pièces comptées</p>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Focus mode keypad */}
-      {focused === 'weight' && (
+          {over && (
+            <div className="mt-4 bg-danger-100 border-l-[3px] border-danger-600 px-3.5 py-3 text-[12.5px] text-danger-600 leading-relaxed">
+              Le total compté dépasse la pesée officielle de plus de 5 %. Vérifie le comptage.
+            </div>
+          )}
+
+          <div className="flex flex-col gap-4 mt-5">
+            {Object.keys(counts).length === 0 ? (
+              <p className="text-tiny text-ink-500">Aucun article pré-rempli — ajoute un type ci-dessous.</p>
+            ) : (
+              Object.entries(counts).map(([id, n]) => {
+                const lt = ltById[id];
+                if (!lt) return null;
+                const pct = officialKg > 0 ? Math.min(100, ((n * lt.averageWeight) / 1000 / officialKg) * 100) : 0;
+                return (
+                  <div key={id}>
+                    <div className="flex items-center justify-between gap-3.5">
+                      <span className="text-[13.5px] font-medium text-ink-900">{lt.name}</span>
+                      <div className="flex items-center gap-1 flex-none">
+                        <button
+                          onClick={() => bump(id, -1)}
+                          className="w-[30px] h-[30px] border border-ink-200 bg-[#FAFBFC] font-heading text-ink-800"
+                        >
+                          −
+                        </button>
+                        <button
+                          onClick={() => setFocusedTriageId(id)}
+                          className="w-12 text-center font-heading font-bold text-[13.5px]"
+                          title="Saisie rapide au clavier"
+                        >
+                          {n}
+                        </button>
+                        <button
+                          onClick={() => bump(id, 1)}
+                          className="w-[30px] h-[30px] border-none bg-brand-800 text-white font-heading"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-1.5 h-[7px] bg-ink-200 overflow-hidden">
+                      <div
+                        className="h-full bg-brand-800"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {addableTypes.length > 0 && (
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value) bump(e.target.value, 1);
+              }}
+              className="mt-4 h-9 px-2 text-tiny font-heading bg-paper-2 border border-ink-300 rounded-input text-ink-700"
+            >
+              <option value="">+ Ajouter un type d'article…</option>
+              {addableTypes.map((lt) => (
+                <option key={lt.id} value={lt.id}>
+                  {lt.name}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {triageError && (
+            <p className="mt-3 text-tiny text-danger-600">{triageError}</p>
+          )}
+
+          <div className="flex gap-2.5 mt-4">
+            <button
+              onClick={handleTriageSubmit}
+              disabled={triage.isPending}
+              className="flex-1 h-11 border-none bg-brand-800 text-white font-heading font-bold text-[12.5px] disabled:opacity-50"
+            >
+              Valider et envoyer au triage
+            </button>
+            <button
+              onClick={() => downloadBordereau(selected.id)}
+              disabled={pdfLoadingId === selected.id}
+              className="h-11 px-4 border border-ink-200 bg-paper text-ink-800 font-heading font-bold text-[12.5px] disabled:opacity-50"
+            >
+              Bordereau PDF
+            </button>
+          </div>
+          <p className="mt-3 pt-3 border-t border-ink-200 text-[12px] text-ink-600 leading-relaxed">
+            Une fois triée, la commande rejoint le linge prêt pour l'atelier. Le lancement en production reste une décision distincte, prise dans l'atelier du jour.
+          </p>
+        </div>
+      ) : justSubmittedId ? (
+        <div className="bg-ok-100 border-l-[3px] border-ok-600 px-4 py-3 text-sm text-ok-700">
+          Triage confirmé ✓ — la commande a rejoint le linge prêt pour l'atelier.
+        </div>
+      ) : (
+        <div className="border border-dashed border-ink-300 p-6 text-center text-tiny text-ink-500">
+          Sélectionne une commande dans la liste pour la peser ou la trier.
+        </div>
+      )}
+      </div>
+      )}
+
+      {/* Clavier plein écran — pesée (décimal) */}
+      {focusedWeightOrder && (
         <FocusKeypad
           mode="decimal"
           title="Pesée atelier"
           subtitle={
-            driverKg > 0
-              ? `Référence chauffeur : ${driverKg.toFixed(1)} kg`
+            focusedWeightOrder.driverWeight
+              ? `Référence chauffeur : ${(focusedWeightOrder.driverWeight / 1000).toFixed(1)} kg`
               : undefined
           }
           unit="kg"
-          initialValue={weightKg}
-          onCancel={() => setFocused(null)}
+          initialValue={getDraftKg(focusedWeightOrder)}
+          onCancel={() => setFocusedWeightId(null)}
           onValidate={(v) => {
-            setWeightKg(v);
-            setFocused(null);
+            setWeightDraft((prev) => ({ ...prev, [focusedWeightOrder.id]: round1(v) }));
+            setFocusedWeightId(null);
           }}
         />
       )}
-      {focused === 'pieces' && (
+
+      {/* Clavier plein écran — triage (entier + quick-add) */}
+      {focusedTriageId && ltById[focusedTriageId] && (
         <FocusKeypad
           mode="integer"
-          title="Nombre de pièces"
-          subtitle={
-            driverPieces > 0
-              ? `Référence chauffeur : ${driverPieces} pièces`
-              : undefined
-          }
+          title={ltById[focusedTriageId].name}
+          subtitle={`${ltById[focusedTriageId].code} · ${ltById[focusedTriageId].averageWeight}g/pièce`}
           unit="pcs"
-          initialValue={pieces}
-          onCancel={() => setFocused(null)}
+          quickAdd={[5, 10, 25]}
+          initialValue={counts[focusedTriageId] ?? 0}
+          onCancel={() => setFocusedTriageId(null)}
           onValidate={(v) => {
-            setPieces(Math.round(v));
-            setFocused(null);
+            setCounts((prev) => ({ ...prev, [focusedTriageId]: Math.round(v) }));
+            setFocusedTriageId(null);
           }}
         />
       )}
@@ -526,83 +542,14 @@ function WeighForm({
   );
 }
 
-/* ─── Grosse tuile de saisie : valeur + bouton modifier ───────── */
-
-function BigInputTile({
-  label,
-  value,
-  unit,
-  subline,
-  icon: Icon,
-  highlight,
-  onTap,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-  subline?: string;
-  icon: typeof Scale;
-  highlight?: boolean;
-  onTap: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onTap}
-      className={cn(
-        'rounded-input border-2 transition-all p-5 text-left flex flex-col gap-3 group',
-        highlight
-          ? 'border-brand-800 bg-brand-50 shadow-sm'
-          : 'border-dashed border-ink-300 bg-paper hover:border-brand-800',
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <p className="caps flex items-center gap-1.5">
-          <Icon className="w-3.5 h-3.5 text-brand-800" strokeWidth={1.75} />
-          {label}
-        </p>
-        <Pencil
-          className={cn(
-            'w-4 h-4 transition-colors',
-            highlight
-              ? 'text-brand-800'
-              : 'text-ink-400 group-hover:text-brand-800',
-          )}
-          strokeWidth={1.75}
-        />
-      </div>
-
-      <div className="flex items-baseline gap-2">
-        <span
-          className={cn(
-            'font-mono text-5xl font-semibold tnum leading-none',
-            highlight ? 'text-brand-800' : 'text-ink-400',
-          )}
-        >
-          {value}
-        </span>
-        <span
-          className={cn(
-            'font-mono text-base',
-            highlight ? 'text-brand-800' : 'text-ink-400',
-          )}
-        >
-          {unit}
-        </span>
-      </div>
-
-      {subline && <p className="text-tiny text-ink-500">{subline}</p>}
-    </button>
-  );
-}
-
-/* ─── Focus mode : pavé numérique plein écran ─────────────────── */
+/* ─── Clavier plein écran (décimal pour kg, entier pour pièces) ─── */
 
 function FocusKeypad({
   mode,
   title,
   subtitle,
   unit,
+  quickAdd,
   initialValue,
   onCancel,
   onValidate,
@@ -611,12 +558,11 @@ function FocusKeypad({
   title: string;
   subtitle?: string;
   unit: string;
+  quickAdd?: number[];
   initialValue: number;
   onCancel: () => void;
   onValidate: (n: number) => void;
 }) {
-  // En décimal on stocke "12,5" comme string pour permettre la saisie
-  // progressive (12, 12,, 12,5). En entier on stocke juste les chiffres.
   const [draft, setDraft] = useState<string>(() => {
     if (initialValue === 0) return '';
     if (mode === 'decimal') return initialValue.toString().replace('.', ',');
@@ -630,62 +576,61 @@ function FocusKeypad({
 
   const pressDigit = (d: string) => {
     setDraft((prev) => {
-      // Pas de zéro initial sauf si déjà décimal
       if (prev === '0' && d !== ',') return d;
-      // Si vide et on tape virgule → "0,"
       if (prev === '' && d === ',') return '0,';
-      // Si on tape virgule alors qu'il y en a déjà une → ignore
       if (d === ',' && prev.includes(',')) return prev;
-      // Cap longueur raisonnable
       const next = `${prev}${d}`;
-      if (next.length > 7) return prev;
-      return next;
+      return next.length > 7 ? prev : next;
     });
   };
   const pressBack = () => setDraft((prev) => prev.slice(0, -1));
   const pressClear = () => setDraft('');
+  const bump = (delta: number) => setDraft(String(Math.max(0, parsed + delta)));
 
   return (
     <div className="fixed inset-0 z-40 bg-ink-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="w-full sm:max-w-md card-surface bg-paper shadow-2xl rounded-t-2xl sm:rounded-input border-2 border-brand-800 flex flex-col max-h-[100dvh] sm:max-h-[calc(100dvh-2rem)] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-3 p-3 sm:p-4 border-b border-ink-200 shrink-0">
+      <div className="w-full sm:max-w-md bg-paper shadow-2xl border-2 border-brand-800 flex flex-col max-h-[100dvh] sm:max-h-[calc(100dvh-2rem)] overflow-hidden">
+        <div className="flex items-center justify-between gap-3 p-4 border-b border-ink-200 shrink-0">
           <div className="min-w-0 flex-1">
-            <p className="font-serif text-lg sm:text-xl font-medium text-ink-900 truncate">
-              {title}
-            </p>
+            <p className="font-heading font-bold text-lg text-ink-900 truncate">{title}</p>
             {subtitle && (
-              <p className="font-mono text-tiny text-ink-500 mt-0.5 truncate">
-                {subtitle}
-              </p>
+              <p className="text-tiny text-ink-600 mt-0.5 truncate">{subtitle}</p>
             )}
           </div>
           <button
             type="button"
             onClick={onCancel}
-            className="w-10 h-10 rounded-input flex items-center justify-center text-ink-500 hover:bg-paper-2 shrink-0"
+            className="w-10 h-10 flex items-center justify-center text-ink-500 hover:bg-paper-2 shrink-0"
             aria-label="Fermer"
           >
             <X className="w-5 h-5" strokeWidth={2} />
           </button>
         </div>
 
-        {/* Scrollable body : display + keypad shrink ensemble si la hauteur est limitée */}
         <div className="flex-1 min-h-0 overflow-y-auto">
-          {/* Display */}
-          <div className="px-4 py-4 sm:py-6 bg-brand-50">
-            <p className="text-center text-micro text-ink-500 uppercase tracking-wide mb-2">
-              Saisie
-            </p>
-            <p className="font-mono text-5xl sm:text-6xl md:text-7xl font-semibold tnum text-brand-800 text-center leading-none break-all">
+          <div className="px-4 py-5 bg-terra-100">
+            <p className="text-center text-micro text-ink-600 uppercase tracking-wide mb-2">Saisie</p>
+            <p className="font-heading text-6xl font-bold text-brand-800 text-center leading-none break-all">
               {draft || '0'}
-              <span className="text-2xl sm:text-3xl font-normal text-brand-800/60 ml-2">
-                {unit}
-              </span>
+              <span className="text-2xl font-normal text-brand-800/60 ml-2">{unit}</span>
             </p>
           </div>
 
-          {/* Numeric keypad */}
+          {quickAdd && (
+            <div className="grid grid-cols-3 gap-2 p-3 border-b border-ink-200">
+              {quickAdd.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => bump(n)}
+                  className="h-11 bg-brand-800 text-white font-heading font-semibold text-sm"
+                >
+                  +{n}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="grid grid-cols-3 gap-2 p-3">
             {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
               <KeypadBtn key={d} onClick={() => pressDigit(d)}>
@@ -706,14 +651,12 @@ function FocusKeypad({
               <Delete className="w-6 h-6" strokeWidth={2} />
             </KeypadBtn>
           </div>
-
-          {/* C button row for decimal mode (no room in main grid) */}
           {mode === 'decimal' && (
             <div className="px-3 pb-3">
               <button
                 type="button"
                 onClick={pressClear}
-                className="w-full h-12 rounded-input bg-paper-2 text-ink-700 font-mono text-sm font-semibold hover:bg-ink-100 active:scale-95 transition-all"
+                className="w-full h-11 bg-paper-2 text-ink-700 font-heading text-sm font-semibold"
               >
                 Effacer
               </button>
@@ -721,25 +664,23 @@ function FocusKeypad({
           )}
         </div>
 
-        {/* Action buttons — toujours visibles */}
         <div className="flex gap-2 p-3 border-t border-ink-200 shrink-0">
-          <Button
-            variant="secondary"
-            size="lg"
+          <button
+            type="button"
             onClick={onCancel}
-            className="flex-1 h-12 sm:h-14 text-sm sm:text-base"
+            className="flex-1 h-12 border border-ink-300 bg-paper text-ink-800 font-heading font-semibold text-sm"
           >
             Annuler
-          </Button>
-          <Button
-            size="lg"
+          </button>
+          <button
+            type="button"
             onClick={() => onValidate(parsed)}
             disabled={parsed <= 0}
-            className="flex-[2] h-12 sm:h-14 text-sm sm:text-base gap-2"
+            className="flex-[2] h-12 bg-brand-800 text-white font-heading font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <CheckCircle2 className="w-5 h-5" strokeWidth={2} />
+            <CheckCircle2 className="w-4 h-4" strokeWidth={2} />
             Valider
-          </Button>
+          </button>
         </div>
       </div>
     </div>
@@ -759,12 +700,11 @@ function KeypadBtn({
     <button
       type="button"
       onClick={onClick}
-      className={cn(
-        'h-16 rounded-input font-mono text-2xl font-semibold tnum flex items-center justify-center transition-colors active:scale-95',
+      className={
         variant === 'muted'
-          ? 'bg-paper-2 text-ink-700 hover:bg-ink-100'
-          : 'bg-paper border-hairline border-ink-200 text-ink-900 hover:bg-paper-2 active:bg-ink-100',
-      )}
+          ? 'h-14 bg-paper-2 text-ink-700 font-heading text-xl font-semibold flex items-center justify-center'
+          : 'h-14 bg-paper border border-ink-200 text-ink-900 font-heading text-xl font-semibold flex items-center justify-center'
+      }
     >
       {children}
     </button>

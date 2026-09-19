@@ -1,453 +1,175 @@
-import { Card } from '@/components/ui';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import {
-  Calendar,
-  Download,
-  TrendingUp,
-  ShoppingCart,
-  Weight,
-  Users,
-  Package,
-  CheckCircle2,
-  Truck,
-} from 'lucide-react';
-import { formatCurrency, formatWeight } from '@/lib/utils';
-import { useDashboard } from '@/hooks/queries/useReports';
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ReferenceLine,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
+import { useMemo } from 'react';
+import { useDashboard, useProductionReport } from '@/hooks/queries/useReports';
+import { useAuditLogs } from '@/hooks/queries/useAuditLogs';
+import { useMachines } from '@/hooks/queries/useMachines';
+import { usePageHeader } from '@/context/PageHeaderContext';
 
-const BRAND_800 = '#2C3C79';
-const BRAND_100 = '#DDE2F0';
-const TERRA_600 = '#CF7B4B';
-const INK_200 = '#E4E0DA';
-const INK_400 = '#A39E93';
-const INK_500 = '#807A6F';
-const INK_900 = '#1A1712';
-const PAPER = '#FCFBF9';
+const TERRA_600 = '#DE6B0E';
+const BRAND_800 = '#17356B';
+
+function last14DaysRange() {
+  const to = new Date();
+  const from = new Date(to);
+  from.setDate(from.getDate() - 13);
+  return { from: from.toISOString(), to: to.toISOString() };
+}
 
 export default function DashboardPage() {
+  usePageHeader({
+    eyebrow: 'Pilotage',
+    title: 'Tableau de bord',
+    sub: "Vue consolidée de l'activité du jour",
+  });
+
   const { data: dash } = useDashboard();
+  const period = useMemo(last14DaysRange, []);
+  const { data: production } = useProductionReport(period);
+  const { data: auditLogs } = useAuditLogs();
+  const { data: machines } = useMachines();
+
   const monthRevenueM = dash ? Number(dash.revenue.monthInvoicedFcfa) / 1_000_000 : 0;
   const totalOrders = dash
     ? Object.values(dash.orders.byStatus).reduce((s, n) => s + n, 0)
     : 0;
+
+  const encoursTotal = dash ? Number(dash.invoices.pendingTotalFcfa) : 0;
+  const encoursEchu = dash ? Number(dash.invoices.overdueTotalFcfa) : 0;
+
   const kpis = [
     {
-      label: "Chiffre d'affaires",
-      value: monthRevenueM.toFixed(1).replace('.', ','),
-      unit: 'M F',
-      delta: '',
-      sub: 'mois en cours',
-      icon: TrendingUp,
+      label: 'Commandes du jour',
+      value: dash ? String(dash.orders.today) : '—',
+      sub: dash ? `${totalOrders} au total · ${dash.orders.last7Days} / 7j` : '—',
+      accent: TERRA_600,
     },
     {
-      label: 'Commandes',
-      value: String(totalOrders),
-      unit: '',
-      delta: '',
-      sub: dash ? `${dash.orders.last7Days} sur 7 derniers jours` : '—',
-      icon: ShoppingCart,
-    },
-    {
-      label: 'Volume reçu (7j)',
-      value: dash ? dash.production.kgReceivedLast7Days.toFixed(1).replace('.', ',') : '0',
-      unit: 'kg',
-      delta: '',
+      label: 'Poids traité (7j)',
+      value: dash ? `${dash.production.kgReceivedLast7Days.toFixed(0)} kg` : '—',
       sub: 'pesées atelier',
-      icon: Weight,
+      accent: '#2C7A4B',
     },
     {
-      label: 'Factures en attente',
-      value: dash ? String(dash.invoices.pendingCount) : '0',
-      unit: '',
-      delta: dash ? `${dash.invoices.overdueCount} en retard` : '',
-      sub: dash ? `${(Number(dash.invoices.pendingTotalFcfa) / 1_000_000).toFixed(1)} M F` : '—',
-      icon: Users,
+      label: "Chiffre d'affaires",
+      value: `${monthRevenueM.toFixed(1).replace('.', ',')} M`,
+      sub: 'facturé ce mois-ci',
+      accent: BRAND_800,
+    },
+    {
+      label: 'Encours client',
+      value: `${(encoursTotal / 1_000_000).toFixed(1)} M`,
+      sub: dash ? `dont ${(encoursEchu / 1_000_000).toFixed(1)} M échu` : '—',
+      accent: '#C1441F',
     },
   ];
 
-  const revenueData = [
-    { month: 'M', revenue: 26, objective: 30 },
-    { month: 'J', revenue: 28, objective: 30 },
-    { month: 'J', revenue: 32, objective: 30 },
-    { month: 'A', revenue: 30, objective: 30 },
-    { month: 'S', revenue: 29, objective: 30 },
-    { month: 'O', revenue: 34, objective: 30 },
-    { month: 'N', revenue: 36, objective: 30 },
-    { month: 'D', revenue: 38, objective: 30 },
-    { month: 'J', revenue: 35, objective: 30 },
-    { month: 'F', revenue: 40, objective: 30 },
-    { month: 'M', revenue: 38, objective: 30 },
-    { month: 'A', revenue: 42.8, objective: 30 },
-  ];
+  const chart = production?.kgByDay ?? [];
+  const maxKg = Math.max(1, ...chart.map((d) => d.kg));
 
-  const linenDistribution = [
-    { name: 'Draps', value: 42, color: BRAND_800 },
-    { name: 'Serviettes', value: 26, color: '#4A62BC' },
-    { name: 'Nappes', value: 18, color: TERRA_600 },
-    { name: 'Uniformes', value: 9, color: INK_400 },
-    { name: 'Autres', value: 5, color: '#CDC8BF' },
-  ];
-
-  const activities = [
-    {
-      icon: ShoppingCart,
-      title: 'Nouvelle commande',
-      sub: 'Hôtel Radisson Blu · 150 kg',
-      when: 'Il y a 2 h',
-      tint: 'info' as const,
-    },
-    {
-      icon: CheckCircle2,
-      title: 'Production terminée',
-      sub: 'Lot LP-2024-001 · 200 pièces',
-      when: 'Il y a 4 h',
-      tint: 'success' as const,
-    },
-    {
-      icon: Truck,
-      title: 'Livraison effectuée',
-      sub: 'Hôtel Marriott · CMD-2024-089',
-      when: 'Il y a 6 h',
-      tint: 'brand' as const,
-    },
-    {
-      icon: Package,
-      title: 'Collecte reçue',
-      sub: 'Terrou-Bi · 96 pièces · 24,5 kg',
-      when: 'Hier · 17:20',
-      tint: 'neutral' as const,
-    },
-  ];
+  const alerts = (machines ?? []).filter((m) => m.status !== 'Active').slice(0, 4);
+  const audit = (auditLogs ?? []).slice(0, 6);
 
   return (
-    <div className="space-y-5">
-      {/* Page Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="caps mb-2">Tableau de bord</div>
-          <h1 className="font-serif text-3xl font-medium tracking-tight text-ink-900">
-            Vue consolidée · Avril 2026
-          </h1>
-          <p className="text-sm text-ink-500 mt-1">
-            Activité de l'atelier Dakar Nord pour le mois en cours.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant="secondary" size="sm" className="gap-1.5">
-            <Calendar className="w-3.5 h-3.5" strokeWidth={1.75} />
-            Avril 2026
-          </Button>
-          <Button variant="primary" size="sm" className="gap-1.5">
-            <Download className="w-3.5 h-3.5" strokeWidth={1.75} />
-            Export
-          </Button>
-        </div>
-      </div>
-
+    <div className="flex flex-col gap-4">
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        {kpis.map((k) => {
-          const Icon = k.icon;
-          return (
-            <Card key={k.label} padding="md">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-tiny font-medium text-ink-500">{k.label}</p>
-                  <div className="flex items-baseline gap-1.5 mt-2">
-                    <span className="font-serif text-3xl font-medium tnum tracking-tight text-ink-900 leading-none">
-                      {k.value}
-                    </span>
-                    {k.unit && (
-                      <span className="text-sm text-ink-500">{k.unit}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="w-9 h-9 rounded-input bg-paper-2 border-hairline border-ink-200 flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4 text-brand-800" strokeWidth={1.75} />
-                </div>
-              </div>
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-tiny tnum font-semibold text-ok-700">
-                  ↗ {k.delta}
-                </span>
-                <span className="text-tiny text-ink-500">{k.sub}</span>
-              </div>
-            </Card>
-          );
-        })}
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        {kpis.map((k) => (
+          <div
+            key={k.label}
+            className="bg-paper border border-hairline border-ink-200 rounded-card p-4.5 pt-4"
+            style={{ borderTop: `3px solid ${k.accent}` }}
+          >
+            <div className="caps" style={{ color: k.accent }}>
+              {k.label}
+            </div>
+            <div className="font-heading font-bold text-[28px] tracking-tight mt-2 leading-none text-ink-900 tnum">
+              {k.value}
+            </div>
+            <div className="text-xs text-ink-600 mt-1.5 font-medium">{k.sub}</div>
+          </div>
+        ))}
       </div>
 
-      {/* Revenue + Donut */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        {/* Revenue */}
-        <Card padding="lg" className="lg:col-span-2">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h3 className="font-serif text-lg font-medium tracking-tight text-ink-900">
-                Chiffre d'affaires · 12 mois
-              </h3>
-              <p className="text-tiny text-ink-500 mt-1">
-                Mai 2025 — Avril 2026 · en millions XOF
-              </p>
-            </div>
-            <div className="flex items-center gap-3 text-tiny">
-              <LegendDot color={BRAND_800} label="CA" />
-              <LegendDot color={TERRA_600} label="Objectif" dashed />
-            </div>
+      {/* Chart + Alerts */}
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))' }}>
+        <div className="bg-paper border border-hairline border-ink-200 rounded-card p-5">
+          <div className="flex justify-between items-baseline gap-3">
+            <h3 className="font-heading font-bold text-[17px] text-ink-900">
+              Poids traité — 14 derniers jours
+            </h3>
+            <span className="font-heading text-[11.5px] text-ink-600">kg / jour</span>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart
-              data={revenueData}
-              margin={{ top: 5, right: 10, left: -18, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient id="ca-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={BRAND_100} stopOpacity={0.9} />
-                  <stop offset="100%" stopColor={BRAND_100} stopOpacity={0.1} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke={INK_200} strokeDasharray="0" vertical={false} />
-              <XAxis
-                dataKey="month"
-                stroke={INK_500}
-                tick={{ fontSize: 11, fill: INK_500 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                stroke={INK_500}
-                tick={{ fontSize: 10, fill: INK_500, fontFamily: 'DM Mono' }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(v) => `${v}M`}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: PAPER,
-                  border: `0.5px solid ${INK_200}`,
-                  borderRadius: 10,
-                  fontSize: 12,
-                  color: INK_900,
-                }}
-                formatter={(value) => [`${value} M F CFA`, 'CA']}
-              />
-              <ReferenceLine
-                y={30}
-                stroke={TERRA_600}
-                strokeDasharray="4 4"
-                strokeWidth={1}
-              />
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                stroke={BRAND_800}
-                strokeWidth={2}
-                fill="url(#ca-fill)"
-                activeDot={{ r: 5, fill: BRAND_800, stroke: PAPER, strokeWidth: 2 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* Donut */}
-        <Card padding="lg">
-          <h3 className="font-serif text-lg font-medium tracking-tight text-ink-900">
-            Répartition · types
-          </h3>
-          <p className="text-tiny text-ink-500 mt-1 mb-4">
-            18,6 tonnes ce mois
-          </p>
-
-          <div className="flex items-center gap-4">
-            <div className="relative w-[130px] h-[130px] shrink-0">
-              <ResponsiveContainer width={130} height={130}>
-                <PieChart>
-                  <Pie
-                    data={linenDistribution}
-                    dataKey="value"
-                    innerRadius={42}
-                    outerRadius={62}
-                    startAngle={90}
-                    endAngle={-270}
-                    stroke="none"
-                  >
-                    {linenDistribution.map((e) => (
-                      <Cell key={e.name} fill={e.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-micro text-ink-500">Total</span>
-                <span className="font-serif text-lg font-medium text-ink-900 tnum">
-                  18,6 t
-                </span>
-              </div>
-            </div>
-            <div className="flex-1 space-y-2">
-              {linenDistribution.map((d) => (
+          <div className="flex items-end gap-1.5 mt-5" style={{ height: 180 }}>
+            {chart.length === 0 ? (
+              <p className="text-tiny text-ink-500 self-center mx-auto">Pas encore de données.</p>
+            ) : (
+              chart.map((d) => (
                 <div
-                  key={d.name}
-                  className="flex items-center justify-between gap-2 text-tiny"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span
-                      className="w-2.5 h-2.5 rounded-sm shrink-0"
-                      style={{ backgroundColor: d.color }}
-                    />
-                    <span className="text-ink-700 truncate">{d.name}</span>
-                  </div>
-                  <span className="font-mono text-ink-900 font-medium">
-                    {d.value}%
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Recent activity + Secondary KPIs row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <Card padding="lg" className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-serif text-lg font-medium tracking-tight text-ink-900">
-                Activité récente
-              </h3>
-              <p className="text-tiny text-ink-500 mt-1">
-                Dernières 24 heures
-              </p>
-            </div>
-            <Button variant="ghost" size="sm">
-              Tout voir
-            </Button>
-          </div>
-          <div className="space-y-1">
-            {activities.map((a, i) => {
-              const Icon = a.icon;
-              const iconBg =
-                a.tint === 'success'
-                  ? 'bg-ok-100 text-ok-700'
-                  : a.tint === 'info'
-                    ? 'bg-brand-100 text-brand-800'
-                    : a.tint === 'brand'
-                      ? 'bg-brand-800 text-paper'
-                      : 'bg-paper-2 text-ink-700';
-              return (
-                <div
-                  key={i}
-                  className={`flex items-center gap-3 py-3 ${
-                    i < activities.length - 1
-                      ? 'border-b border-hairline border-ink-200'
-                      : ''
-                  }`}
+                  key={d.day}
+                  className="flex-1 flex flex-col items-center gap-1.5 justify-end h-full"
+                  title={`${d.kg} kg`}
                 >
                   <div
-                    className={`w-9 h-9 rounded-input flex items-center justify-center shrink-0 ${iconBg}`}
-                  >
-                    <Icon className="w-4 h-4" strokeWidth={1.75} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-ink-900 truncate">
-                      {a.title}
-                    </p>
-                    <p className="text-tiny text-ink-500 truncate">{a.sub}</p>
-                  </div>
-                  <span className="text-micro font-mono text-ink-500 shrink-0">
-                    {a.when}
+                    className="w-full bg-brand-700 rounded-t-sm"
+                    style={{ height: `${Math.max(3, (d.kg / maxKg) * 100)}%` }}
+                  />
+                  <span className="font-heading text-[10px] text-ink-600">
+                    {new Date(d.day).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
                   </span>
                 </div>
-              );
-            })}
+              ))
+            )}
           </div>
-        </Card>
+        </div>
 
-        {/* Ops snapshot */}
-        <Card padding="lg">
-          <h3 className="font-serif text-lg font-medium tracking-tight text-ink-900">
-            Opérations · aujourd'hui
-          </h3>
-          <p className="text-tiny text-ink-500 mt-1 mb-4">
-            Atelier · 07:00 – 19:00
-          </p>
-          <div className="space-y-3">
-            <OpsLine label="Collectes planifiées" value="18" caption="12 faites" />
-            <OpsLine label="Livraisons à honorer" value="9" caption="4 en route" />
-            <OpsLine label="Cycles machines" value="27" caption="3 laveuses actives" />
-            <div className="pt-3 mt-2 border-t border-hairline border-ink-200 flex items-center justify-between">
-              <span className="text-tiny text-ink-500">Qualité moyenne</span>
-              <Badge variant="success" dot>
-                98,6 %
-              </Badge>
+        <div className="bg-paper border border-hairline border-ink-200 rounded-card p-5">
+          <h3 className="font-heading font-bold text-[17px] text-ink-900">Alertes</h3>
+          <div className="flex flex-col gap-2.5 mt-3.5">
+            {alerts.length === 0 ? (
+              <p className="text-tiny text-ink-500">Aucune alerte machine active.</p>
+            ) : (
+              alerts.map((m) => (
+                <div
+                  key={m.id}
+                  className="border-l-[3px] border-danger-600 bg-danger-100 px-3.5 py-3"
+                >
+                  <div className="font-heading font-bold text-[13px] text-danger-600">
+                    {m.reference} · {m.brand} {m.model}
+                  </div>
+                  <div className="text-[12.5px] text-danger-600 mt-1 leading-snug">
+                    {m.status}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Audit log */}
+      <div className="bg-paper border border-hairline border-ink-200 rounded-card overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-hairline border-ink-200 font-heading font-bold text-[17px] text-ink-900">
+          Journal d'audit — activité récente
+        </div>
+        {audit.length === 0 ? (
+          <p className="text-tiny text-ink-500 px-5 py-4">Aucune activité récente.</p>
+        ) : (
+          audit.map((a) => (
+            <div
+              key={a.id}
+              className="px-5 py-3 border-b border-ink-100 last:border-0 flex gap-4 items-center text-sm flex-wrap"
+            >
+              <span className="flex-none font-heading text-xs text-ink-600 w-14">
+                {new Date(a.at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              <span className="flex-none w-36 font-medium text-ink-900 truncate">{a.actor}</span>
+              <span className="flex-1 min-w-[160px] text-ink-600 truncate">
+                {a.entity} · {a.details}
+              </span>
+              <span className="flex-none font-heading text-xs text-ink-800">{a.action}</span>
             </div>
-          </div>
-        </Card>
+          ))
+        )}
       </div>
-
-      <p className="text-center text-micro font-mono text-ink-500 py-2">
-        {formatCurrency(53000989)} · {formatWeight(1022000)} consolidés depuis janvier
-      </p>
-    </div>
-  );
-}
-
-function LegendDot({
-  color,
-  label,
-  dashed,
-}: {
-  color: string;
-  label: string;
-  dashed?: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-1.5 text-ink-500">
-      <span
-        className="inline-block w-4 h-px"
-        style={{
-          backgroundColor: color,
-          borderTop: dashed ? `1px dashed ${color}` : undefined,
-          borderTopWidth: dashed ? 1 : 2,
-          height: 0,
-        }}
-      />
-      <span>{label}</span>
-    </div>
-  );
-}
-
-function OpsLine({
-  label,
-  value,
-  caption,
-}: {
-  label: string;
-  value: string;
-  caption: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="min-w-0">
-        <p className="text-sm text-ink-700">{label}</p>
-        <p className="text-tiny text-ink-500">{caption}</p>
-      </div>
-      <span className="font-serif text-xl font-medium text-ink-900 tnum">
-        {value}
-      </span>
     </div>
   );
 }

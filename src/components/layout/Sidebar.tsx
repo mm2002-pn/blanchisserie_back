@@ -3,6 +3,7 @@ import { LogOut } from 'lucide-react';
 import { MAIN_NAVIGATION } from '@/lib/constants';
 import { usePermissions, useAuth } from '@/hooks';
 import { cn } from '@/lib/utils';
+import { BrandMark } from '@/components/ui';
 
 export function Sidebar() {
   const { canView, user } = usePermissions();
@@ -11,27 +12,22 @@ export function Sidebar() {
   const visible = MAIN_NAVIGATION.filter((item) => canView(item.permission));
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-paper border-r border-hairline border-ink-200 flex flex-col">
+    <aside className="fixed left-0 top-0 h-full w-64 bg-brand-900 text-white flex flex-col px-3.5 py-5">
       {/* Brand header */}
-      <div className="px-5 py-5 bg-brand-900 text-paper">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-terra-600 rounded-[10px] flex items-center justify-center">
-            <span className="font-serif font-medium text-xl text-paper">B</span>
-          </div>
-          <div>
-            <h1 className="font-serif text-lg font-medium tracking-tight leading-tight">
-              Blanchisserie SN
-            </h1>
-            <p className="text-micro text-brand-100 font-mono mt-0.5">
-              Admin · v1.0
-            </p>
-          </div>
+      <div className="flex items-center gap-3 px-1.5 pb-5">
+        <BrandMark variant="line" className="w-9 h-9 flex-none text-white" />
+        <div className="min-w-0">
+          <h1 className="font-heading font-bold text-sm tracking-tight leading-tight truncate">
+            B&amp;C <span className="text-terra-600">Teranga</span>
+          </h1>
+          <p className="text-[10px] text-brand-100/70 tracking-[0.16em] uppercase mt-0.5">
+            Back-office
+          </p>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-        <div className="caps px-3 pb-2">Navigation</div>
+      <nav className="flex-1 overflow-y-auto flex flex-col gap-0.5">
         {visible.map((item) => {
           const Icon = item.icon;
           return (
@@ -41,23 +37,20 @@ export function Sidebar() {
               end={item.path === '/'}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-input transition-colors group',
+                  'flex items-center gap-2.5 px-3 py-2.5 rounded-[8px] transition-colors font-heading text-[13.5px] font-medium',
                   isActive
-                    ? 'bg-brand-100 text-brand-800'
-                    : 'text-ink-700 hover:bg-paper-2'
+                    ? 'bg-terra-600 text-white'
+                    : 'text-brand-100 hover:bg-brand-800'
                 )
               }
             >
               {({ isActive }) => (
                 <>
                   <Icon
-                    className={cn(
-                      'w-4 h-4 transition-colors',
-                      isActive ? 'text-brand-800' : 'text-ink-500 group-hover:text-ink-700'
-                    )}
+                    className={cn('w-4 h-4 shrink-0', isActive ? 'text-white' : 'text-brand-100')}
                     strokeWidth={isActive ? 2 : 1.75}
                   />
-                  <span className="text-sm font-medium">{item.label}</span>
+                  <span className="flex-1 truncate">{item.label}</span>
                 </>
               )}
             </NavLink>
@@ -66,31 +59,30 @@ export function Sidebar() {
       </nav>
 
       {/* User profile */}
-      <div className="px-3 py-4 border-t border-hairline border-ink-200">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-10 h-10 rounded-[10px] bg-terra-600 flex items-center justify-center shrink-0">
-            <span className="text-paper font-sans font-semibold text-sm">
+      <div className="mt-auto pt-4 px-1 border-t border-brand-700">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 flex-none rounded-full bg-terra-600 flex items-center justify-center">
+            <span className="font-heading font-bold text-xs text-brand-900">
               {(user?.firstName?.[0] ?? '').toUpperCase()}
               {(user?.lastName?.[0] ?? '').toUpperCase() || 'U'}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-ink-900 truncate">
+            <p className="text-[12.5px] font-medium truncate">
               {user?.firstName} {user?.lastName}
             </p>
-            <p className="text-micro font-mono text-ink-500 truncate capitalize">
+            <p className="text-[10.5px] text-brand-100/70 tracking-[0.1em] uppercase truncate">
               {user?.role ?? '—'}
             </p>
           </div>
-          <button
-            onClick={logout}
-            className="text-ink-400 hover:text-danger-600 transition-colors p-1"
-            title="Déconnexion"
-            aria-label="Déconnexion"
-          >
-            <LogOut className="w-4 h-4" strokeWidth={1.75} />
-          </button>
         </div>
+        <button
+          onClick={logout}
+          className="mt-3 w-full h-9 rounded-[8px] border border-brand-700 text-brand-100/80 text-xs font-medium font-heading flex items-center justify-center gap-2 hover:text-white hover:border-terra-600 transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
+          Se déconnecter
+        </button>
       </div>
     </aside>
   );
